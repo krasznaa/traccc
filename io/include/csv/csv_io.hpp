@@ -1,7 +1,7 @@
 /** TRACCC library, part of the ACTS project (R&D line)
- * 
+ *
  * (c) 2021 CERN for the benefit of the ACTS project
- * 
+ *
  * Mozilla Public License Version 2.0
  */
 
@@ -15,6 +15,7 @@
 #include <dfe/dfe_namedtuple.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 
+#include <cassert>
 #include <fstream>
 #include <climits>
 #include <map>
@@ -22,7 +23,7 @@
 namespace traccc {
 
   struct csv_cell {
-    
+
     uint64_t geometry_id = 0;
     uint64_t hit_id = 0;
     channel_id channel0 = 0;
@@ -51,7 +52,7 @@ namespace traccc {
   };
 
   using measurement_writer = dfe::NamedTupleCsvWriter<csv_measurement>;
-  
+
   struct csv_spacepoint {
 
     uint64_t geometry_id = 0;
@@ -66,7 +67,7 @@ namespace traccc {
   using spacepoint_writer = dfe::NamedTupleCsvWriter<csv_spacepoint>;
 
   struct csv_surface {
-    
+
     uint64_t geometry_id = 0;
     scalar cx, cy, cz;
     scalar rot_xu,rot_xv,rot_xw;
@@ -90,7 +91,7 @@ namespace traccc {
     while (sreader.read(iosurface)){
 
       geometry_id module = iosurface.geometry_id;
-      
+
       vector3 t{iosurface.cx, iosurface.cy, iosurface.cz};
       vector3 x{iosurface.rot_xu, iosurface.rot_yu, iosurface.rot_zu};
       vector3 z{iosurface.rot_xw, iosurface.rot_yw, iosurface.rot_zw};
@@ -103,21 +104,22 @@ namespace traccc {
   }
 
   /// Read the collection of cells per module and fill into a collection
-  /// 
+  ///
   /// @param creader The cellreader type
   /// @param tfmap the (optional) transform map
   /// @param max_cells the (optional) maximum number of cells to be read in
-  std::vector<cell_collection> read_cells(cell_reader& creader, 
-            const std::map<geometry_id, transform3>& tfmap ={}, 
+  cell_container read_cells(cell_reader& creader,
+            const std::map<geometry_id, transform3>& tfmap ={},
                 unsigned int max_cells = std::numeric_limits<unsigned int>::max()){
 
     uint64_t reference_id = 0;
-    std::vector<cell_collection> cell_container;
+    cell_container cellc;
 
     bool first_line_read = false;
     unsigned int read_cells = 0;
     csv_cell iocell;
     cell_collection cells;
+    cell_module module;
     while (creader.read(iocell)){
 
       if (first_line_read and iocell.geometry_id != reference_id){
@@ -125,46 +127,50 @@ namespace traccc {
         if (not tfmap.empty()){
           auto tfentry = tfmap.find(iocell.geometry_id);
           if (tfentry != tfmap.end()){
-             cells.placement = tfentry->second;
+             module.placement = tfentry->second;
           }
         }
         // Sort in column major order
-        std::sort(cells.items.begin(), cells.items.end(), [](const auto& a, const auto& b){ return a.channel1 < b.channel1; } );
-        cell_container.push_back(cells);
+        std::sort(cells.begin(), cells.end(), [](const auto& a, const auto& b){ return a.channel1 < b.channel1; } );
+        cellc.cells.push_back(cells);
+        cellc.modules.push_back(module);
         // Clear for next round
         cells = cell_collection();
+        module = cell_module();
       }
       first_line_read = true;
       reference_id = static_cast<uint64_t>(iocell.geometry_id);
 
-      cells.module = reference_id;
-      cells.range0[0] = std::min(cells.range0[0],iocell.channel0);
-      cells.range0[1] = std::max(cells.range0[1],iocell.channel0);
-      cells.range1[0] = std::min(cells.range1[0],iocell.channel1);
-      cells.range1[1] = std::max(cells.range1[1],iocell.channel1);
+      module.module = reference_id;
+      module.range0[0] = std::min(module.range0[0],iocell.channel0);
+      module.range0[1] = std::max(module.range0[1],iocell.channel0);
+      module.range1[0] = std::min(module.range1[0],iocell.channel1);
+      module.range1[1] = std::max(module.range1[1],iocell.channel1);
 
-      cells.items.push_back(cell{iocell.channel0, iocell.channel1, iocell.value, iocell.timestamp});
+      cells.push_back(cell{iocell.channel0, iocell.channel1, iocell.value, iocell.timestamp});
       if (++read_cells >= max_cells){
         break;
       }
-    }    
+    }
 
     // Clean up after loop
     // Sort in column major order
-    std::sort(cells.items.begin(), cells.items.end(), [](const auto& a, const auto& b){ return a.channel1 < b.channel1; } );
-    cell_container.push_back(cells);
+    std::sort(cells.begin(), cells.end(), [](const auto& a, const auto& b){ return a.channel1 < b.channel1; } );
+    cellc.cells.push_back(cells);
+    cellc.modules.push_back(module);
+    assert( cellc.cells.size() == cellc.modules.size() );
 
-    return cell_container;
+    return cellc;
   }
 
   /// Read the collection of cells per module and fill into a collection
   /// of truth clusters.
-  /// 
+  ///
   /// @param creader The cellreader type
   /// @param tfmap the (optional) transform map
   /// @param max_clusters the (optional) maximum number of cells to be read in
-  std::vector<cluster_collection> read_truth_clusters(cell_reader& creader, 
-            const std::map<geometry_id, transform3>& tfmap ={}, 
+  std::vector<cluster_collection> read_truth_clusters(cell_reader& creader,
+            const std::map<geometry_id, transform3>& tfmap ={},
                 unsigned int max_cells = std::numeric_limits<unsigned int>::max()){
 
     // Reference for switching the container
@@ -199,7 +205,7 @@ namespace traccc {
       if (first_line_read and truth_id != iocell.hit_id){
           truth_clusters.items.push_back({truth_cells});
           truth_cells.clear();
-      } 
+      }
       truth_cells.push_back(cell{iocell.channel0, iocell.channel1, iocell.value, iocell.timestamp});
 
       first_line_read = true;
@@ -209,7 +215,7 @@ namespace traccc {
       if (++read_cells >= max_cells){
         break;
       }
-    }    
+    }
 
     return cluster_container;
   }

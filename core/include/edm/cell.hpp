@@ -1,7 +1,7 @@
 /** TRACCC library, part of the ACTS project (R&D line)
- * 
+ *
  * (c) 2021 CERN for the benefit of the ACTS project
- * 
+ *
  * Mozilla Public License Version 2.0
  */
 
@@ -9,6 +9,8 @@
 
 #include "definitions/algebra.hpp"
 #include "definitions/primitives.hpp"
+
+#include <array>
 #include <vector>
 #include <limits>
 
@@ -16,7 +18,7 @@ namespace traccc {
 
     using channel_id = unsigned int;
 
-    /// A cell definition: 
+    /// A cell definition:
     ///
     /// maximum two channel identifiers
     /// and one activiation value, such as a time stamp
@@ -27,23 +29,22 @@ namespace traccc {
         scalar time = 0.;
     };
 
-    /// A cell collection: 
-    ///
-    /// it remembers the moduleentifier and also 
-    /// keeps track of the cell ranges for chosing optimal
-    /// algorithm.
-    struct cell_collection { 
+    using cell_collection = std::vector<cell>;
 
+    /// Cells belonging to a single detector element/module
+    ///
+    struct cell_module {
         event_id event = 0;
         geometry_id module = 0;
         transform3 placement = transform3{};
 
-        std::vector<cell> items;
         std::array<channel_id,2> range0 = {std::numeric_limits<channel_id>::max(), 0};
-        std::array<channel_id,2> range1 = {std::numeric_limits<channel_id>::max(), 0};         
+        std::array<channel_id,2> range1 = {std::numeric_limits<channel_id>::max(), 0};
     };
 
-    using cell_container = std::vector<cell_collection>;
-
+    /// Main cell container
+    struct cell_container {
+        std::vector<cell_collection> cells;
+        std::vector<cell_module> modules;
+    };
 }
-

@@ -1,7 +1,7 @@
 /** TRACCC library, part of the ACTS project (R&D line)
- * 
+ *
  * (c) 2021 CERN for the benefit of the ACTS project
- * 
+ *
  * Mozilla Public License Version 2.0
  */
 
@@ -54,24 +54,24 @@ int seq_run(const std::string& detector_file, const std::string& cells_dir, unsi
         std::string io_cells_file = data_directory+cells_dir+std::string("/event")+event_string+std::string("-cells.csv");
         traccc::cell_reader creader(io_cells_file, {"geometry_id", "hit_id", "cannel0", "channel1", "activation", "time"});
         traccc::cell_container cells_per_event = traccc::read_cells(creader, surface_transforms);
-        m_modules += cells_per_event.size();
+        m_modules += cells_per_event.modules.size();
 
         // Output containers
         traccc::measurement_container measurements_per_event;
         traccc::spacepoint_container spacepoints_per_event;
-        measurements_per_event.reserve(cells_per_event.size());
-        spacepoints_per_event.reserve(cells_per_event.size());
+        measurements_per_event.reserve(cells_per_event.modules.size());
+        spacepoints_per_event.reserve(cells_per_event.modules.size());
 
-        for (auto &cells_per_module : cells_per_event)
+        for (std::size_t i = 0; i < cells_per_event.cells.size(); ++i )
         {
             // The algorithmic code part: start
-            traccc::cluster_collection clusters_per_module =  cc(cells_per_module);
+            traccc::cluster_collection clusters_per_module =  cc(cells_per_event.cells[i], cells_per_event.modules[i]);
             clusters_per_module.position_from_cell = traccc::pixel_segmentation{-8.425, -36.025, 0.05, 0.05};
             traccc::measurement_collection measurements_per_module = mt(clusters_per_module);
             traccc::spacepoint_collection spacepoints_per_module = sp(measurements_per_module);
             // The algorithmnic code part: end
-            
-            n_cells += cells_per_module.items.size();
+
+            n_cells += cells_per_event.cells[i].size();
             n_clusters += clusters_per_module.items.size();
             n_measurements += measurements_per_module.items.size();
             n_space_points += spacepoints_per_module.items.size();
@@ -79,7 +79,7 @@ int seq_run(const std::string& detector_file, const std::string& cells_dir, unsi
             measurements_per_event.push_back(std::move(measurements_per_module));
             spacepoints_per_event.push_back(std::move(spacepoints_per_module));
         }
-    
+
         traccc::measurement_writer mwriter{std::string("event")+event_number+"-measurements.csv"};
         for (const auto& measurements_per_module : measurements_per_event){
             auto module = measurements_per_module.module;
