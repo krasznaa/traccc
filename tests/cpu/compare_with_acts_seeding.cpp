@@ -119,7 +119,6 @@ TEST(algorithms, compare_with_acts_seeding) {
     for (std::size_t i_h = 0; i_h < spacepoints_per_event.size(); i_h++) {
         auto& items = spacepoints_per_event.get_items()[i_h];
         for (auto& sp : items) {
-
             SpacePoint* acts_sp =
                 new SpacePoint{static_cast<float>(sp.global[0]),
                                static_cast<float>(sp.global[1]),
@@ -174,8 +173,8 @@ TEST(algorithms, compare_with_acts_seeding) {
     config.minPt = traccc_config.minPt;
     config.bFieldInZ = traccc_config.bFieldInZ;
 
-    config.beamPos[0] = traccc_config.beamPos[0];
-    config.beamPos[1] = traccc_config.beamPos[1];
+    config.beamPos[0] = traccc_config.beamPos_x;
+    config.beamPos[1] = traccc_config.beamPos_y;
 
     config.impactMax = traccc_config.impactMax;
 
