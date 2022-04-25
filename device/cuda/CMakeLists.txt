@@ -35,6 +35,7 @@ traccc_add_library( traccc_cuda cuda TYPE SHARED
   "src/seeding/triplet_counting.cu"
   "src/seeding/weight_updating.cu"
   "src/seeding/track_params_estimation.cu"
+  "src/seeding/seed_finding.cpp"
   "src/seeding/seed_selecting.cu"
   "src/seeding/spacepoint_binning.cu"
   "src/seeding/triplet_finding.cu"
