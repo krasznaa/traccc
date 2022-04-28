@@ -24,7 +24,7 @@ namespace traccc::cuda {
 
 /// Seed finding for cuda
 class seed_finding : public algorithm<host_seed_collection(
-                         host_spacepoint_container&&, sp_grid_view&&)> {
+                         const host_spacepoint_container&, const const_sp_grid_view&)> {
 
     public:
     /// Constructor for the cuda seed finding
@@ -37,8 +37,8 @@ class seed_finding : public algorithm<host_seed_collection(
     /// Callable operator for the seed finding
     ///
     /// @return seed_collection is the vector of seeds per event
-    output_type operator()(host_spacepoint_container&& spacepoints,
-                           sp_grid_view&& g2_view) const override;
+    output_type operator()(const host_spacepoint_container& spacepoints,
+                           const const_sp_grid_view& g2_view) const override;
 
     private:
     seedfinder_config m_seedfinder_config;

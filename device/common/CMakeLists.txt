@@ -13,6 +13,8 @@ traccc_add_library( traccc_device_common device_common TYPE SHARED
    "include/traccc/device/get_prefix_sum.hpp"
    "include/traccc/device/impl/get_prefix_sum.ipp"
    "src/get_prefix_sum.cpp"
+   # EDM class(es).
+   "include/traccc/edm/device/doublet_counter.hpp"
    # Spacepoint binning function(s).
    "include/traccc/seeding/device/count_grid_capacities.hpp"
    "include/traccc/seeding/device/impl/count_grid_capacities.ipp"
