@@ -32,10 +32,14 @@ namespace traccc::cuda {
 namespace kernels {
 
 /// CUDA kernel for running @c traccc::device::count_doublets
-__global__
-void count_doublets(seedfinder_config config, const_sp_grid_view sp_view, device::doublet_counter_container_view doublet_view, vecmem::data::vector_view<const device::prefix_sum_element_t> sp_prefix_sum) {
+__global__ void count_doublets(
+    seedfinder_config config, sp_grid_const_view sp_view,
+    device::doublet_counter_container_view doublet_view,
+    vecmem::data::vector_view<const device::prefix_sum_element_t>
+        sp_prefix_sum) {
 
-    device::count_doublets(threadIdx.x + blockIdx.x * blockDim.x, config, sp_view, doublet_view, sp_prefix_sum);
+    device::count_doublets(threadIdx.x + blockIdx.x * blockDim.x, config,
+                           sp_view, doublet_view, sp_prefix_sum);
 }
 
 }  // namespace kernels
@@ -45,7 +49,8 @@ seed_finding::seed_finding(const seedfinder_config& config,
     : m_seedfinder_config(config), m_mr(mr) {}
 
 seed_finding::output_type seed_finding::operator()(
-    const host_spacepoint_container& spacepoints, const const_sp_grid_view& g2_view) const {
+    const host_spacepoint_container& spacepoints,
+    const sp_grid_const_view& g2_view) const {
 
     // Helper object for the data management.
     vecmem::copy copy;
@@ -57,9 +62,13 @@ seed_finding::output_type seed_finding::operator()(
 
     // Set up the doublet counter buffer.
     auto sp_grid_sizes = copy.get_sizes(g2_view._data_view);
-    const device::doublet_counter_container_buffer::header_vector::size_type doublet_counter_buffer_size = sp_grid_sizes.size();
-    device::doublet_counter_container_buffer doublet_counter_buffer{{doublet_counter_buffer_size, m_mr.get()},
-                                                            {std::vector<std::size_t>(sp_grid_sizes.size(), 0), std::vector<std::size_t>(sp_grid_sizes.begin(), sp_grid_sizes.end()), m_mr.get()}};
+    const device::doublet_counter_container_buffer::header_vector::size_type
+        doublet_counter_buffer_size = sp_grid_sizes.size();
+    device::doublet_counter_container_buffer doublet_counter_buffer{
+        {doublet_counter_buffer_size, m_mr.get()},
+        {std::vector<std::size_t>(sp_grid_sizes.size(), 0),
+         std::vector<std::size_t>(sp_grid_sizes.begin(), sp_grid_sizes.end()),
+         m_mr.get()}};
     copy.setup(doublet_counter_buffer.headers);
     copy.setup(doublet_counter_buffer.items);
 
@@ -68,7 +77,9 @@ seed_finding::output_type seed_finding::operator()(
     const unsigned int nBlocks = sp_grid_prefix_sum.size() / nThreads + 1;
 
     // Count the number of doublets that we need to produce.
-    kernels::count_doublets<<<nThreads, nBlocks>>>(m_seedfinder_config, g2_view, doublet_counter_buffer, vecmem::get_data(sp_grid_prefix_sum));
+    kernels::count_doublets<<<nThreads, nBlocks>>>(
+        m_seedfinder_config, g2_view, doublet_counter_buffer,
+        vecmem::get_data(sp_grid_prefix_sum));
     CUDA_ERROR_CHECK(cudaGetLastError());
     CUDA_ERROR_CHECK(cudaDeviceSynchronize());
 
@@ -150,7 +161,8 @@ seed_finding::output_type seed_finding::operator()(
     // // Run triplet finding
     // traccc::cuda::triplet_finding(
     //     m_seedfinder_config, m_seedfilter_config, tcc_headers, g2_view,
-    //     dcc_buffer, mbc_buffer, mtc_buffer, tcc_buffer, tc_buffer, m_mr.get());
+    //     dcc_buffer, mbc_buffer, mtc_buffer, tcc_buffer, tc_buffer,
+    //     m_mr.get());
 
     // // Take header of the triplet container buffer into host
     // vecmem::vector<triplet_per_bin> tc_headers(&m_mr.get());
@@ -169,7 +181,8 @@ seed_finding::output_type seed_finding::operator()(
     // copy.setup(seed_buffer);
 
     // // Run seed selecting
-    // traccc::cuda::seed_selecting(m_seedfilter_config, dcc_headers, spacepoints,
+    // traccc::cuda::seed_selecting(m_seedfilter_config, dcc_headers,
+    // spacepoints,
     //                              g2_view, dcc_buffer, tcc_buffer, tc_buffer,
     //                              seed_buffer, m_mr.get());
 

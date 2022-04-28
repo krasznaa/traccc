@@ -33,7 +33,7 @@ set( ALGEBRA_PLUGINS_SETUP_VC TRUE CACHE BOOL
 set( ALGEBRA_PLUGINS_USE_SYSTEM_VC FALSE CACHE BOOL
    "Have Algebra Plugins build Vc itself" )
 set( ALGEBRA_PLUGINS_SETUP_EIGEN3 FALSE CACHE BOOL
-   "Do not set up Eigen4=3 in Algebra Plugins" )
+   "Do not set up Eigen3 in Algebra Plugins" )
 set( ALGEBRA_PLUGINS_SETUP_VECMEM FALSE CACHE BOOL
    "Do not set up VecMem in Algebra Plugins" )
 set( ALGEBRA_PLUGINS_SETUP_GOOGLETEST FALSE CACHE BOOL
