@@ -27,7 +27,7 @@ namespace cuda {
 /// @param doublet_counter_container vecmem container for doublet_counter
 /// @param resource vecmem memory resource
 void doublet_counting(const seedfinder_config& config,
-                      sp_grid_view internal_sp_view,
+                      sp_grid_const_view internal_sp_view,
                       doublet_counter_container_view dcc_view,
                       vecmem::memory_resource& resource);
 

@@ -10,12 +10,11 @@
 #include "traccc/cuda/utils/definitions.hpp"
 
 // Project include(s).
+#include "traccc/cuda/seeding/detail/doublet_counter.hpp"
+#include "traccc/cuda/seeding/doublet_counting.hpp"
 #include "traccc/device/get_prefix_sum.hpp"
 #include "traccc/edm/device/doublet_counter.hpp"
 #include "traccc/seeding/device/count_doublets.hpp"
-
-// #include "traccc/cuda/seeding/detail/doublet_counter.hpp"
-// #include "traccc/cuda/seeding/doublet_counting.hpp"
 // #include "traccc/cuda/seeding/doublet_finding.hpp"
 // #include "traccc/cuda/seeding/seed_selecting.hpp"
 // #include "traccc/cuda/seeding/triplet_counting.hpp"
@@ -26,7 +25,18 @@
 #include "vecmem/utils/copy.hpp"
 
 // System include(s).
+#include <iostream>
+#include <string>
 #include <vector>
+
+/// Temporary macro for comparing the old and new code
+#define CHECK(EXP)                                        \
+    do {                                                  \
+        const bool result = EXP;                          \
+        if (!result) {                                    \
+            std::cerr << "Failed: " << #EXP << std::endl; \
+        }                                                 \
+    } while (false)
 
 namespace traccc::cuda {
 namespace kernels {
@@ -66,11 +76,16 @@ seed_finding::output_type seed_finding::operator()(
         doublet_counter_buffer_size = sp_grid_sizes.size();
     device::doublet_counter_container_buffer doublet_counter_buffer{
         {doublet_counter_buffer_size, m_mr.get()},
-        {std::vector<std::size_t>(sp_grid_sizes.size(), 0),
+        {std::vector<std::size_t>(doublet_counter_buffer_size, 0),
          std::vector<std::size_t>(sp_grid_sizes.begin(), sp_grid_sizes.end()),
          m_mr.get()}};
     copy.setup(doublet_counter_buffer.headers);
     copy.setup(doublet_counter_buffer.items);
+
+    // Make sure that the summary values are set to zero in the counter buffer.
+    std::memset(
+        doublet_counter_buffer.headers.ptr(), 0,
+        doublet_counter_buffer_size * sizeof(device::doublet_counter_header));
 
     // Calculate the number of threads and thread blocks to run the kernels for.
     const unsigned int nThreads = WARP_SIZE * 2;
@@ -83,28 +98,42 @@ seed_finding::output_type seed_finding::operator()(
     CUDA_ERROR_CHECK(cudaGetLastError());
     CUDA_ERROR_CHECK(cudaDeviceSynchronize());
 
-    // vecmem::cuda::copy copy;
-    // unsigned int nbins = g2_view._data_view.m_size;
+    // Get the summary values per bin.
+    vecmem::vector<device::doublet_counter_header> doublet_counts(
+        &(m_mr.get()));
+    copy(doublet_counter_buffer.headers, doublet_counts);
 
-    // // Fill the size vector for double counter container
-    // std::vector<size_t> n_spm_per_bin;
-    // n_spm_per_bin.reserve(nbins);
-    // for (unsigned int i = 0; i < nbins; ++i) {
-    //     n_spm_per_bin.push_back(g2_view._data_view.m_ptr[i].size());
-    // }
+    {
+        unsigned int nbins = g2_view._data_view.m_size;
 
-    // // Create doublet counter container buffer
-    // doublet_counter_container_buffer dcc_buffer{{nbins, m_mr.get()},
-    //                                             {n_spm_per_bin, m_mr.get()}};
-    // copy.setup(dcc_buffer.headers);
+        // Fill the size vector for double counter container
+        std::vector<size_t> n_spm_per_bin;
+        n_spm_per_bin.reserve(nbins);
+        for (unsigned int i = 0; i < nbins; ++i) {
+            n_spm_per_bin.push_back(g2_view._data_view.m_ptr[i].size());
+        }
 
-    // // Run doublet counting
-    // traccc::cuda::doublet_counting(m_seedfinder_config, g2_view, dcc_buffer,
-    //                                m_mr.get());
+        // Create doublet counter container buffer
+        doublet_counter_container_buffer dcc_buffer{
+            {nbins, m_mr.get()}, {n_spm_per_bin, m_mr.get()}};
+        copy.setup(dcc_buffer.headers);
 
-    // // Take header of the doublet counter container into host
-    // vecmem::vector<doublet_counter_per_bin> dcc_headers(&m_mr.get());
-    // copy(dcc_buffer.headers, dcc_headers);
+        // Run doublet counting
+        traccc::cuda::doublet_counting(m_seedfinder_config, g2_view, dcc_buffer,
+                                       m_mr.get());
+
+        // Take header of the doublet counter container into host
+        vecmem::vector<doublet_counter_per_bin> dcc_headers(&m_mr.get());
+        copy(dcc_buffer.headers, dcc_headers);
+
+        // Compare the "new" implementation with the "old" one.
+        CHECK(doublet_counts.size() == dcc_headers.size());
+        for (std::size_t i = 0; i < doublet_counts.size(); ++i) {
+            CHECK(doublet_counts[i].m_nSpM == dcc_headers[i].n_spM);
+            CHECK(doublet_counts[i].m_nMidBot == dcc_headers[i].n_mid_bot);
+            CHECK(doublet_counts[i].m_nMidTop == dcc_headers[i].n_mid_top);
+        }
+    }
 
     // // Fill the size vectors for doublet containers
     // std::vector<size_t> n_mid_bot_per_bin;

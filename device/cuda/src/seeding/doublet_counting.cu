@@ -33,11 +33,11 @@ __global__ void set_zero_kernel(doublet_counter_container_view dcc_view) {
 /// @param internal_sp_view vecmem container for internal spacepoint
 /// @param doublet_count_view vecmem container for doublet_counter
 __global__ void doublet_counting_kernel(
-    const seedfinder_config config, sp_grid_view internal_sp_view,
+    const seedfinder_config config, sp_grid_const_view internal_sp_view,
     doublet_counter_container_view doublet_count_view);
 
 void doublet_counting(const seedfinder_config& config,
-                      sp_grid_view internal_sp_view,
+                      sp_grid_const_view internal_sp_view,
                       doublet_counter_container_view dcc_view,
                       vecmem::memory_resource& resource) {
 
@@ -80,11 +80,11 @@ void doublet_counting(const seedfinder_config& config,
 }
 
 __global__ void doublet_counting_kernel(
-    const seedfinder_config config, sp_grid_view internal_sp_view,
+    const seedfinder_config config, sp_grid_const_view internal_sp_view,
     doublet_counter_container_view doublet_counter_view) {
 
     // Get device container for input parameters
-    sp_grid_device internal_sp_device(internal_sp_view);
+    const_sp_grid_device internal_sp_device(internal_sp_view);
 
     device_doublet_counter_container doublet_counter_device(
         doublet_counter_view);

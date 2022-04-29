@@ -48,7 +48,7 @@ struct doublet_counter {
 
     /// The number of compatible middle-top doublets for a the middle
     /// spacepoint.
-    unsigned int n_mid_top = 0;
+    unsigned int n_nMidTop = 0;
 
 };  // struct doublet_counter
 
