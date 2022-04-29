@@ -19,15 +19,14 @@
 namespace traccc::device {
 
 TRACCC_HOST_DEVICE
-void count_doublets(std::size_t globalIndex, const seedfinder_config& config,
-                    const sp_grid_const_view& sp_view,
-                    doublet_counter_container_view& doublet_view,
-                    const vecmem::data::vector_view<const prefix_sum_element_t>&
-                        sp_prefix_sum_view) {
+void count_doublets(
+    std::size_t globalIndex, const seedfinder_config& config,
+    const sp_grid_const_view& sp_view,
+    const vecmem::data::vector_view<const prefix_sum_element_t>& sp_ps_view,
+    doublet_counter_container_view& doublet_view) {
 
     // Check if anything needs to be done.
-    vecmem::device_vector<const prefix_sum_element_t> sp_prefix_sum(
-        sp_prefix_sum_view);
+    vecmem::device_vector<const prefix_sum_element_t> sp_prefix_sum(sp_ps_view);
     if (globalIndex >= sp_prefix_sum.size()) {
         return;
     }

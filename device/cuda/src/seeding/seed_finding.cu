@@ -43,13 +43,12 @@ namespace kernels {
 
 /// CUDA kernel for running @c traccc::device::count_doublets
 __global__ void count_doublets(
-    seedfinder_config config, sp_grid_const_view sp_view,
-    device::doublet_counter_container_view doublet_view,
-    vecmem::data::vector_view<const device::prefix_sum_element_t>
-        sp_prefix_sum) {
+    seedfinder_config config, sp_grid_const_view sp_grid,
+    vecmem::data::vector_view<const device::prefix_sum_element_t> sp_prefix_sum,
+    device::doublet_counter_container_view doublet_counter) {
 
     device::count_doublets(threadIdx.x + blockIdx.x * blockDim.x, config,
-                           sp_view, doublet_view, sp_prefix_sum);
+                           sp_grid, sp_prefix_sum, doublet_counter);
 }
 
 }  // namespace kernels
@@ -93,8 +92,8 @@ seed_finding::output_type seed_finding::operator()(
 
     // Count the number of doublets that we need to produce.
     kernels::count_doublets<<<nThreads, nBlocks>>>(
-        m_seedfinder_config, g2_view, doublet_counter_buffer,
-        vecmem::get_data(sp_grid_prefix_sum));
+        m_seedfinder_config, g2_view, vecmem::get_data(sp_grid_prefix_sum),
+        doublet_counter_buffer);
     CUDA_ERROR_CHECK(cudaGetLastError());
     CUDA_ERROR_CHECK(cudaDeviceSynchronize());
 
