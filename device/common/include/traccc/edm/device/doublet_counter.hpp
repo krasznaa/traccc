@@ -8,6 +8,7 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/definitions/qualifiers.hpp"
 #include "traccc/seeding/detail/singlet.hpp"
 
 namespace traccc::device {
@@ -31,6 +32,10 @@ struct doublet_counter_header {
     /// geometric bin.
     unsigned int m_nMidTop = 0;
 
+    /// Temporary compatibility function
+    TRACCC_HOST_DEVICE
+    unsigned int get_ref_num() const { return m_nSpM; }
+
 };  // struct doublet_counter_header
 
 /// Item type for the "doublet container"
@@ -48,9 +53,23 @@ struct doublet_counter {
 
     /// The number of compatible middle-top doublets for a the middle
     /// spacepoint.
-    unsigned int n_nMidTop = 0;
+    unsigned int m_nMidTop = 0;
 
 };  // struct doublet_counter
+
+/// Convenience declaration for the doublet_counter collection type to use in
+/// host code
+using host_doublet_counter_collection = vecmem::vector<doublet_counter>;
+
+/// Convenience declaration for the doublet_counter collection type to use in
+/// device code (non-const)
+using device_doublet_counter_collection =
+    vecmem::device_vector<doublet_counter>;
+
+/// Convenience declaration for the doublet_counter collection type to use in
+/// device code (const)
+using device_doublet_counter_const_collection =
+    vecmem::device_vector<const doublet_counter>;
 
 /// Convenience declaration for the doublet_counter container type to use in
 /// host code
