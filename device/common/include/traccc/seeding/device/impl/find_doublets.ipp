@@ -25,8 +25,8 @@ void find_doublets(
     const device::doublet_counter_container_const_view& doublet_view,
     const vecmem::data::vector_view<const prefix_sum_element_t>&
         doublet_ps_view,
-    doublet_container_view& mb_doublets_view,
-    doublet_container_view& mt_doublets_view) {
+    doublet_container_view mb_doublets_view,
+    doublet_container_view mt_doublets_view) {
 
     // Check if anything needs to be done.
     vecmem::device_vector<const prefix_sum_element_t> doublet_prefix_sum(
