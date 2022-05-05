@@ -19,6 +19,7 @@
 #include "traccc/edm/device/doublet_counter.hpp"
 #include "traccc/seeding/device/count_doublets.hpp"
 #include "traccc/seeding/device/find_doublets.hpp"
+#include "traccc/seeding/device/make_doublet_counter_buffer.hpp"
 
 // VecMem include(s).
 #include "vecmem/utils/copy.hpp"
@@ -71,21 +72,8 @@ seed_finding::output_type seed_finding::operator()(
         device::get_prefix_sum(g2_view._data_view, m_mr.get(), copy);
 
     // Set up the doublet counter buffer.
-    auto sp_grid_sizes = copy.get_sizes(g2_view._data_view);
-    const device::doublet_counter_container_buffer::header_vector::size_type
-        doublet_counter_buffer_size = sp_grid_sizes.size();
-    device::doublet_counter_container_buffer doublet_counter_buffer{
-        {doublet_counter_buffer_size, m_mr.get()},
-        {std::vector<std::size_t>(doublet_counter_buffer_size, 0),
-         std::vector<std::size_t>(sp_grid_sizes.begin(), sp_grid_sizes.end()),
-         m_mr.get()}};
-    copy.setup(doublet_counter_buffer.headers);
-    copy.setup(doublet_counter_buffer.items);
-
-    // Make sure that the summary values are set to zero in the counter buffer.
-    std::memset(
-        doublet_counter_buffer.headers.ptr(), 0,
-        doublet_counter_buffer_size * sizeof(device::doublet_counter_header));
+    device::doublet_counter_container_buffer doublet_counter_buffer =
+        device::make_doublet_counter_buffer(g2_view, copy, m_mr.get());
 
     // Calculate the number of threads and thread blocks to run the doublet
     // counting kernel for.
