@@ -22,6 +22,7 @@
 #include "traccc/seeding/detail/triplet.hpp"
 #include "traccc/seeding/device/count_doublets.hpp"
 #include "traccc/seeding/device/find_doublets.hpp"
+#include "traccc/seeding/device/make_doublet_buffers.hpp"
 #include "traccc/seeding/device/make_doublet_counter_buffer.hpp"
 
 // VecMem include(s).
@@ -89,30 +90,8 @@ seed_finding::output_type seed_finding::operator()(
     copy(doublet_counter_buffer.headers, doublet_counts);
 
     // Set up the doublet buffers.
-    std::vector<std::size_t> mb_buffer_sizes(doublet_counts.size()),
-        mt_buffer_sizes(doublet_counts.size());
-    std::transform(
-        doublet_counts.begin(), doublet_counts.end(), mb_buffer_sizes.begin(),
-        [](const device::doublet_counter_header& dc) { return dc.m_nMidBot; });
-    std::transform(
-        doublet_counts.begin(), doublet_counts.end(), mt_buffer_sizes.begin(),
-        [](const device::doublet_counter_header& dc) { return dc.m_nMidTop; });
-    const doublet_container_buffer::header_vector::size_type mb_buffer_size =
-        mb_buffer_sizes.size();
-    doublet_container_buffer mb_buffer{{mb_buffer_size, m_mr.get()},
-                                       {mb_buffer_sizes, m_mr.get()}};
-    copy.setup(mb_buffer.headers);
-    copy.setup(mb_buffer.items);
-    const doublet_container_buffer::header_vector::size_type mt_buffer_size =
-        mt_buffer_sizes.size();
-    doublet_container_buffer mt_buffer{{mt_buffer_size, m_mr.get()},
-                                       {mt_buffer_sizes, m_mr.get()}};
-    copy.setup(mt_buffer.headers);
-    copy.setup(mt_buffer.items);
-
-    // Make sure that the summary values are set to zero in the doublet buffers.
-    copy.memset(mb_buffer.headers, 0);
-    copy.memset(mt_buffer.headers, 0);
+    device::doublet_buffer_pair doublet_buffers =
+        device::make_doublet_buffers(doublet_counter_buffer, copy, m_mr.get());
 
     // Get the prefix sum for the doublet counter buffer.
     const device::prefix_sum_t doublet_prefix_sum =
@@ -129,8 +108,8 @@ seed_finding::output_type seed_finding::operator()(
                                          doubletFindLocalSize);
 
     // Find all of the spacepoint doublets.
-    doublet_container_view mb_view = mb_buffer;
-    doublet_container_view mt_view = mt_buffer;
+    doublet_container_view mb_view = doublet_buffers.middleBottom;
+    doublet_container_view mt_view = doublet_buffers.middleTop;
     details::get_queue(m_queue)
         .submit([&](::sycl::handler& h) {
             h.parallel_for<kernels::find_doublets>(
@@ -150,7 +129,12 @@ seed_finding::output_type seed_finding::operator()(
     const std::size_t nbins = g2_view._data_view.m_size;
 
     vecmem::vector<doublet_per_bin> mb_headers(&m_mr.get());
-    copy(mb_buffer.headers, mb_headers);
+    copy(doublet_buffers.middleBottom.headers, mb_headers);
+
+    std::vector<std::size_t> mb_buffer_sizes(doublet_counts.size());
+    std::transform(
+        doublet_counts.begin(), doublet_counts.end(), mb_buffer_sizes.begin(),
+        [](const device::doublet_counter_header& dc) { return dc.m_nMidBot; });
 
     // create the triplet_counter container with the number of doublets
     host_triplet_counter_container triplet_counter_container(nbins,

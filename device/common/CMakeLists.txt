@@ -26,6 +26,8 @@ traccc_add_library( traccc_device_common device_common TYPE SHARED
    "include/traccc/seeding/device/find_doublets.hpp"
    "include/traccc/seeding/device/impl/find_doublets.ipp"
    "include/traccc/seeding/device/make_doublet_counter_buffer.hpp"
-   "src/seeding/make_doublet_counter_buffer.cpp" )
+   "src/seeding/make_doublet_counter_buffer.cpp"
+   "include/traccc/seeding/device/make_doublet_buffers.hpp"
+   "src/seeding/make_doublet_buffers.cpp" )
 target_link_libraries( traccc_device_common
    PUBLIC traccc::core vecmem::core )

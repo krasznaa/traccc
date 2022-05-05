@@ -19,6 +19,7 @@
 #include "traccc/edm/device/doublet_counter.hpp"
 #include "traccc/seeding/device/count_doublets.hpp"
 #include "traccc/seeding/device/find_doublets.hpp"
+#include "traccc/seeding/device/make_doublet_buffers.hpp"
 #include "traccc/seeding/device/make_doublet_counter_buffer.hpp"
 
 // VecMem include(s).
@@ -94,32 +95,8 @@ seed_finding::output_type seed_finding::operator()(
     copy(doublet_counter_buffer.headers, doublet_counts);
 
     // Set up the doublet buffers.
-    std::vector<std::size_t> mb_buffer_sizes(doublet_counts.size()),
-        mt_buffer_sizes(doublet_counts.size());
-    std::transform(
-        doublet_counts.begin(), doublet_counts.end(), mb_buffer_sizes.begin(),
-        [](const device::doublet_counter_header& dc) { return dc.m_nMidBot; });
-    std::transform(
-        doublet_counts.begin(), doublet_counts.end(), mt_buffer_sizes.begin(),
-        [](const device::doublet_counter_header& dc) { return dc.m_nMidTop; });
-    const doublet_container_buffer::header_vector::size_type mb_buffer_size =
-        mb_buffer_sizes.size();
-    doublet_container_buffer mb_buffer{{mb_buffer_size, m_mr.get()},
-                                       {mb_buffer_sizes, m_mr.get()}};
-    copy.setup(mb_buffer.headers);
-    copy.setup(mb_buffer.items);
-    const doublet_container_buffer::header_vector::size_type mt_buffer_size =
-        mt_buffer_sizes.size();
-    doublet_container_buffer mt_buffer{{mt_buffer_size, m_mr.get()},
-                                       {mt_buffer_sizes, m_mr.get()}};
-    copy.setup(mt_buffer.headers);
-    copy.setup(mt_buffer.items);
-
-    // Make sure that the summary values are set to zero in the doublet buffers.
-    std::memset(mb_buffer.headers.ptr(), 0,
-                mb_buffer_sizes.size() * sizeof(doublet_per_bin));
-    std::memset(mt_buffer.headers.ptr(), 0,
-                mt_buffer_sizes.size() * sizeof(doublet_per_bin));
+    device::doublet_buffer_pair doublet_buffers =
+        device::make_doublet_buffers(doublet_counter_buffer, copy, m_mr.get());
 
     // Get the prefix sum for the doublet counter buffer.
     const device::prefix_sum_t doublet_prefix_sum =
@@ -134,23 +111,29 @@ seed_finding::output_type seed_finding::operator()(
     // Find all of the spacepoint doublets.
     kernels::find_doublets<<<nDoubletFindThreads, nDoubletFindBlocks>>>(
         m_seedfinder_config, g2_view, doublet_counter_buffer,
-        vecmem::get_data(doublet_prefix_sum), mb_buffer, mt_buffer);
+        vecmem::get_data(doublet_prefix_sum), doublet_buffers.middleBottom,
+        doublet_buffers.middleTop);
     CUDA_ERROR_CHECK(cudaGetLastError());
     CUDA_ERROR_CHECK(cudaDeviceSynchronize());
 
     vecmem::vector<doublet_per_bin> mb_headers(&m_mr.get());
-    copy(mb_buffer.headers, mb_headers);
+    copy(doublet_buffers.middleBottom.headers, mb_headers);
 
     // Create triplet counter container buffer
     unsigned int nbins = g2_view._data_view.m_size;
+    std::vector<std::size_t> mb_buffer_sizes(doublet_counts.size());
+    std::transform(
+        doublet_counts.begin(), doublet_counts.end(), mb_buffer_sizes.begin(),
+        [](const device::doublet_counter_header& dc) { return dc.m_nMidBot; });
     triplet_counter_container_buffer tcc_buffer{{nbins, m_mr.get()},
                                                 {mb_buffer_sizes, m_mr.get()}};
     copy.setup(tcc_buffer.headers);
 
     // Run triplet counting
-    traccc::cuda::triplet_counting(m_seedfinder_config, mb_headers, g2_view,
-                                   doublet_counter_buffer, mb_buffer, mt_buffer,
-                                   tcc_buffer, m_mr.get());
+    traccc::cuda::triplet_counting(
+        m_seedfinder_config, mb_headers, g2_view, doublet_counter_buffer,
+        doublet_buffers.middleBottom, doublet_buffers.middleTop, tcc_buffer,
+        m_mr.get());
 
     // Take header of the triplet counter container buffer into host
     vecmem::vector<triplet_counter_per_bin> tcc_headers(&m_mr.get());
@@ -169,10 +152,10 @@ seed_finding::output_type seed_finding::operator()(
     copy.setup(tc_buffer.headers);
 
     // Run triplet finding
-    traccc::cuda::triplet_finding(m_seedfinder_config, m_seedfilter_config,
-                                  tcc_headers, g2_view, doublet_counter_buffer,
-                                  mb_buffer, mt_buffer, tcc_buffer, tc_buffer,
-                                  m_mr.get());
+    traccc::cuda::triplet_finding(
+        m_seedfinder_config, m_seedfilter_config, tcc_headers, g2_view,
+        doublet_counter_buffer, doublet_buffers.middleBottom,
+        doublet_buffers.middleTop, tcc_buffer, tc_buffer, m_mr.get());
 
     // Take header of the triplet container buffer into host
     vecmem::vector<triplet_per_bin> tc_headers(&m_mr.get());
