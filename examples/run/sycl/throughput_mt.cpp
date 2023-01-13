@@ -8,7 +8,8 @@
 // Local include(s).
 #include "../common/throughput_mt.hpp"
 
-#include "full_chain_algorithm.hpp"
+// Project include(s).
+#include "traccc/sycl/full_chain_algorithm.hpp"
 
 // VecMem include(s).
 #include <vecmem/memory/sycl/host_memory_resource.hpp>

@@ -1,6 +1,6 @@
 # TRACCC library, part of the ACTS project (R&D line)
 #
-# (c) 2021-2022 CERN for the benefit of the ACTS project
+# (c) 2021-2023 CERN for the benefit of the ACTS project
 #
 # Mozilla Public License Version 2.0
 
@@ -77,7 +77,10 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/seeding/seed_finding.hpp"
   "src/seeding/seed_finding.cpp"
   "include/traccc/seeding/spacepoint_binning.hpp"
-  "src/seeding/spacepoint_binning.cpp" )
+  "src/seeding/spacepoint_binning.cpp"
+  # Full chain algorithmic code.
+  "include/traccc/full_chain_algorithm.hpp"
+  "src/full_chain_algorithm.cpp" )
 target_link_libraries( traccc_core
   PUBLIC Eigen3::Eigen vecmem::core detray::core ActsCore
          traccc::Thrust traccc::algebra )

@@ -22,6 +22,7 @@ traccc_add_library( traccc_sycl sycl TYPE SHARED
   "include/traccc/sycl/utils/queue_wrapper.hpp"
   "include/traccc/sycl/utils/calculate1DimNdRange.hpp"
   "include/traccc/sycl/utils/make_prefix_sum_buff.hpp"
+  "include/traccc/sycl/full_chain_algorithm.hpp"
   # implementation files
   "src/clusterization/clusterization_algorithm.sycl"
   "src/seeding/seed_finding.sycl"
@@ -32,7 +33,8 @@ traccc_add_library( traccc_sycl sycl TYPE SHARED
   "src/utils/get_queue.sycl"
   "src/utils/queue_wrapper.cpp" 
   "src/utils/calculate1DimNdRange.sycl"
-  "src/utils/make_prefix_sum_buff.sycl" )
+  "src/utils/make_prefix_sum_buff.sycl"
+  "src/full_chain_algorithm.sycl" )
 target_link_libraries( traccc_sycl
   PUBLIC vecmem::core traccc::core
   PRIVATE traccc::device_common vecmem::sycl )

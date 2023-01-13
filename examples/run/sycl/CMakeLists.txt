@@ -32,20 +32,12 @@ target_compile_definitions( traccc_seq_example_sycl
 #
 # Set up the "throughput applications".
 #
-add_library( traccc_examples_sycl STATIC
-   "full_chain_algorithm.hpp"
-   "full_chain_algorithm.sycl" )
-target_link_libraries( traccc_examples_sycl
-   PUBLIC vecmem::core vecmem::sycl traccc::core traccc::device_common traccc::sycl )
-target_compile_definitions( traccc_examples_sycl
-   PUBLIC EIGEN_NO_CUDA EIGEN_NO_HIP )
-
 traccc_add_executable( throughput_st_sycl "throughput_st.cpp"
    LINK_LIBRARIES vecmem::core vecmem::sycl traccc::io traccc::performance
                   traccc::core traccc::device_common traccc::sycl
-                  traccc::options traccc_examples_sycl )
+                  traccc::options )
 
 traccc_add_executable( throughput_mt_sycl "throughput_mt.cpp"
    LINK_LIBRARIES TBB::tbb vecmem::core vecmem::sycl traccc::io traccc::performance
                   traccc::core traccc::device_common traccc::sycl
-                  traccc::options traccc_examples_sycl )
+                  traccc::options )

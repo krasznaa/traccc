@@ -1,12 +1,14 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
 
 // Local include(s).
-#include "full_chain_algorithm.hpp"
+#include "traccc/cuda/full_chain_algorithm.hpp"
+
+#include "traccc/cuda/utils/definitions.hpp"
 
 // CUDA include(s).
 #include <cuda_runtime_api.h>
@@ -14,16 +16,6 @@
 // System include(s).
 #include <iostream>
 #include <stdexcept>
-
-/// Helper macro for checking the return value of CUDA function calls
-#define CUDA_ERROR_CHECK(EXP)                                                  \
-    do {                                                                       \
-        const cudaError_t errorCode = EXP;                                     \
-        if (errorCode != cudaSuccess) {                                        \
-            throw std::runtime_error(std::string("Failed to run " #EXP " (") + \
-                                     cudaGetErrorString(errorCode) + ")");     \
-        }                                                                      \
-    } while (false)
 
 namespace traccc::cuda {
 

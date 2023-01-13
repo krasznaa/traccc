@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -74,7 +74,7 @@ class full_chain_algorithm
     /// Device caching memory resource
     std::unique_ptr<vecmem::binary_page_memory_resource> m_cached_device_mr;
     /// (Asynchronous) Memory copy object
-    mutable vecmem::cuda::async_copy m_copy;
+    vecmem::cuda::async_copy m_copy;
 
     /// @name Sub-algorithms used by this full-chain algorithm
     /// @{
