@@ -1,6 +1,6 @@
 # TRACCC library, part of the ACTS project (R&D line)
 #
-# (c) 2022 CERN for the benefit of the ACTS project
+# (c) 2022-2023 CERN for the benefit of the ACTS project
 #
 # Mozilla Public License Version 2.0
 
@@ -26,3 +26,5 @@ traccc_add_test(
     traccc::io
     traccc_tests_common
 )
+target_compile_definitions( traccc_test_sycl
+   PRIVATE EIGEN_NO_CUDA EIGEN_NO_HIP )
