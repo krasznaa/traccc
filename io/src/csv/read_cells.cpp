@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -25,27 +25,34 @@ const auto comp = [](const traccc::cell& c1, const traccc::cell& c2) {
 };
 
 /// Helper function which finds module from csv::cell in the geometry and
-/// digitization config, and initializes the modules limits with the cell's
+/// digitization config, and initializes the module limits with the cell's
 /// properties
-traccc::cell_module get_module(traccc::io::csv::cell c,
-                               const traccc::geometry* geom,
-                               const traccc::digitization_config* dconfig) {
+std::size_t fill_module(edm::pixel_module_container::host& modules,
+                        const traccc::io::csv::cell& c,
+                        const traccc::geometry* geom,
+                        const traccc::digitization_config* dconfig) {
 
-    traccc::cell_module result;
-    result.surface_link = detray::geometry::barcode{c.geometry_id};
+    // Add a new module. Remembering its position.
+    const std::size_t pos = modules.size();
+    modules.resize(pos + 1);
+
+    // Set the module's surface link.
+    const detray::geometry::barcode surface_link{c.geometry_id};
+    edm::pixel_module_container::surface_link::get(modules)[pos] = surface_link;
 
     // Find/set the 3D position of the detector module.
     if (geom != nullptr) {
 
         // Check if the module ID is known.
-        if (!geom->contains(result.surface_link.value())) {
+        if (!geom->contains(surface_link.value())) {
             throw std::runtime_error(
                 "Could not find placement for geometry ID " +
                 std::to_string(result.surface_link.value()));
         }
 
         // Set the value on the module description.
-        result.placement = (*geom)[result.surface_link.value()];
+        edm::pixel_module_container::placement::get(modules)[pos] =
+            (*geom)[result.surface_link.value()];
     }
 
     // Find/set the digitization configuration of the detector module.
@@ -53,7 +60,7 @@ traccc::cell_module get_module(traccc::io::csv::cell c,
 
         // Check if the module ID is known.
         const traccc::digitization_config::Iterator geo_it =
-            dconfig->find(result.surface_link.value());
+            dconfig->find(surface_link.value());
         if (geo_it == dconfig->end()) {
             throw std::runtime_error(
                 "Could not find digitization config for geometry ID " +
@@ -63,8 +70,9 @@ traccc::cell_module get_module(traccc::io::csv::cell c,
         // Set the value on the module description.
         const auto& binning_data = geo_it->segmentation.binningData();
         assert(binning_data.size() >= 2);
-        result.pixel = {binning_data[0].min, binning_data[1].min,
-                        binning_data[0].step, binning_data[1].step};
+        edm::pixel_module_container::pixel_data::get(modules)[pos] =
+            {binning_data[0].min, binning_data[1].min,
+             binning_data[0].step, binning_data[1].step};
     }
 
     return result;
@@ -74,18 +82,20 @@ traccc::cell_module get_module(traccc::io::csv::cell c,
 
 namespace traccc::io::csv {
 
-void read_cells(cell_reader_output& out, std::string_view filename,
+void read_cells(edm::pixel_cell_container::host &cells,
+                edm::pixel_module_container::host &modules,
+                std::string_view filename,
                 const geometry* geom, const digitization_config* dconfig) {
 
     // Construct the cell reader object.
     auto reader = make_cell_reader(filename);
 
-    // Create cell counter vector.
+    // Create a cell counter vector.
     std::vector<unsigned int> cellCounts;
     cellCounts.reserve(5000);
 
-    cell_module_collection_types::host& result_modules = out.modules;
-    result_modules.reserve(5000);
+    // Reserve a reasonable amount of space for the modules.
+    modules.reserve(5000);
 
     // Create a cell collection, which holds on to a flat list of all the cells
     // and the position of their respective cell counter & module.
@@ -96,13 +106,12 @@ void read_cells(cell_reader_output& out, std::string_view filename,
     csv::cell iocell;
     while (reader.read(iocell)) {
 
-        // Look for current module in cell counter vector.
-        auto rit = std::find_if(result_modules.rbegin(), result_modules.rend(),
-                                [&iocell](const cell_module& mod) {
-                                    return mod.surface_link.value() ==
-                                           iocell.geometry_id;
-                                });
-        if (rit == result_modules.rend()) {
+        // Check whether this cell's module is already known to us.
+        auto& surface_links =
+            edm::pixel_module_container::surface_link::get(modules);
+        auto rit = std::find(surface_links.rbegin(), surface_links.rend(),
+                             iocell.geometry_id);
+        if (rit == surface_links.rend()) {
             // Add new cell and new cell counter if a new module is found
             const cell_module mod = get_module(iocell, geom, dconfig);
             allCells.push_back({iocell, result_modules.size()});
