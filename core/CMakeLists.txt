@@ -29,6 +29,8 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/edm/track_candidate.hpp"
   "include/traccc/edm/track_state.hpp"
   "include/traccc/edm/cell.hpp"
+  "include/traccc/edm/pixel_cell_container.hpp"
+  "include/traccc/edm/pixel_module_container.hpp"
   # Geometry description.
   "include/traccc/geometry/module_map.hpp"
   "include/traccc/geometry/geometry.hpp"
