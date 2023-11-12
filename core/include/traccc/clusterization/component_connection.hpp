@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
+ * (c) 2021-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -8,7 +8,7 @@
 #pragma once
 
 // Library include(s).
-#include "traccc/edm/cell.hpp"
+#include "traccc/edm/pixel_cell_container.hpp"
 #include "traccc/edm/cluster.hpp"
 #include "traccc/utils/algorithm.hpp"
 
@@ -31,7 +31,7 @@ namespace traccc {
 /// implementation internally.
 ///
 class component_connection : public algorithm<cluster_container_types::host(
-                                 const cell_collection_types::host&)> {
+                                 const edm::pixel_cell_container::host&)> {
 
     public:
     /// Constructor for component_connection
@@ -51,7 +51,7 @@ class component_connection : public algorithm<cluster_container_types::host(
     /// @return a cluster collection
     ///
     output_type operator()(
-        const cell_collection_types::host& cells) const override;
+        const edm::pixel_cell_container::host& cells) const override;
 
     /// @}
 

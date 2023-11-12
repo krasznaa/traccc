@@ -27,11 +27,11 @@ namespace traccc::edm {
 /// had at least one active cell in an event.
 ///
 struct pixel_module_container
-    : public vecmem::edm::container<vecmem::edm::schema<
+    : public vecmem::edm::container<
           vecmem::edm::type::vector<detray::geometry::barcode>,
           vecmem::edm::type::vector<transform3>,
           vecmem::edm::type::vector<scalar>,
-          vecmem::edm::type::vector<pixel_data> > > {
+          vecmem::edm::type::vector<pixel_data> > {
 
     /// @name Accessors for the individual container variables
     /// @{

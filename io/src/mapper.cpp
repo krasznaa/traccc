@@ -205,14 +205,13 @@ generate_measurement_cell_map(std::size_t event,
     auto digi_cfg = io::read_digitization_config(digi_config_file);
 
     // Read the cells from the relevant event file
-    traccc::io::cell_reader_output readOut(&resource);
-    io::read_cells(readOut, event, cells_dir, traccc::data_format::csv,
+    traccc::edm::pixel_cell_container::host cells(resource);
+    traccc::edm::pixel_module_container::host modules(resource);
+    io::read_cells(cells, modules, event, cells_dir, traccc::data_format::csv,
                    &surface_transforms, &digi_cfg);
-    cell_collection_types::host& cells_per_event = readOut.cells;
-    cell_module_collection_types::host& modules_per_event = readOut.modules;
 
-    auto clusters_per_event = cc(cells_per_event);
-    auto measurements_per_event = mc(clusters_per_event, modules_per_event);
+    auto clusters_per_event = cc(cells);
+    auto measurements_per_event = mc(clusters_per_event, modules);
 
     assert(measurements_per_event.size() == clusters_per_event.size());
     for (unsigned int i = 0; i < measurements_per_event.size(); ++i) {

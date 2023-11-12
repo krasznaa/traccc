@@ -14,18 +14,6 @@
 
 namespace traccc::io {
 
-void read_cells(cell_reader_output&, std::size_t,
-                std::string_view, data_format,
-                const geometry*, const digitization_config*) {
-
-}
-
-void read_cells(cell_reader_output&, std::string_view,
-                data_format, const geometry*,
-                const digitization_config*) {
-
-}
-
 void read_cells(edm::pixel_cell_container::host &cells,
                 edm::pixel_module_container::host &modules, std::size_t event,
                 std::string_view directory, data_format format,
@@ -37,17 +25,6 @@ void read_cells(edm::pixel_cell_container::host &cells,
                        data_directory() + directory.data() +
                            get_event_filename(event, "-cells.csv"),
                        format, geom, dconfig);
-            break;
-        }
-        case data_format::binary: {
-            /*
-            details::read_binary_collection<cell_collection_types::host>(
-                out.cells, data_directory() + directory.data() +
-                               get_event_filename(event, "-cells.dat"));
-            details::read_binary_collection<cell_module_collection_types::host>(
-                out.modules, data_directory() + directory.data() +
-                                 get_event_filename(event, "-modules.dat"));
-                                 */
             break;
         }
         default:

@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
+ * (c) 2021-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -33,7 +33,7 @@ void read(demonstrator_input& out, std::size_t events,
     // Read in the cell data for all events. In parallel if possible.
 #pragma omp parallel for
     for (std::size_t event = 0; event < events; ++event) {
-        io::read_cells(out[event], event, directory, format, &geom, &digi_cfg);
+        io::read_cells(out[event].cells, out[event].modules, event, directory, format, &geom, &digi_cfg);
     }
 }
 
