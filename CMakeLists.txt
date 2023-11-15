@@ -92,6 +92,9 @@ option( TRACCC_USE_SYSTEM_EIGEN3
 if( TRACCC_SETUP_EIGEN3 )
    if( TRACCC_USE_SYSTEM_EIGEN3 )
       find_package( Eigen3 REQUIRED )
+      # Suppress some specific warnings for CUDA.
+      target_compile_options( Eigen3::Eigen INTERFACE
+         $<$<COMPILE_LANGUAGE:CUDA>:-Xcudafe --diag_suppress=20012,20236> )
    else()
       add_subdirectory( extern/eigen3 )
    endif()
