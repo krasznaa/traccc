@@ -37,13 +37,13 @@ struct pixel_module_container
     /// @{
 
     /// Barcode of the surface that is on this module.
-    using surface_link = vecmem::edm::accessor<0, schema>;
+    using surface_link = vecmem::edm::accessor<0, schema_type>;
     /// Local<->Global transformation of the module's surface
-    using placement = vecmem::edm::accessor<1, schema>;
+    using placement = vecmem::edm::accessor<1, schema_type>;
     /// Pixel activation threshold for the module
-    using threshold = vecmem::edm::accessor<2, schema>;
+    using threshold = vecmem::edm::accessor<2, schema_type>;
     /// Information about the module's segmentation
-    using pixel_data = vecmem::edm::accessor<3, schema>;
+    using pixel_data = vecmem::edm::accessor<3, schema_type>;
 
     /// @}
 

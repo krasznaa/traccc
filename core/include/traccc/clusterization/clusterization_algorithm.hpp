@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
+ * (c) 2021-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -10,8 +10,9 @@
 // Library include(s).
 #include "traccc/clusterization/component_connection.hpp"
 #include "traccc/clusterization/measurement_creation.hpp"
-#include "traccc/edm/cell.hpp"
 #include "traccc/edm/measurement.hpp"
+#include "traccc/edm/pixel_cell_container.hpp"
+#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/utils/algorithm.hpp"
 
 // VecMem include(s).
@@ -29,8 +30,8 @@ namespace traccc {
 ///
 class clusterization_algorithm
     : public algorithm<measurement_collection_types::host(
-          const cell_collection_types::host&,
-          const cell_module_collection_types::host&)> {
+          const edm::pixel_cell_container::host&,
+          const edm::pixel_module_container::host&)> {
 
     public:
     /// Clusterization algorithm constructor
@@ -46,8 +47,8 @@ class clusterization_algorithm
     /// @return The measurements reconstructed for every detector module
     ///
     output_type operator()(
-        const cell_collection_types::host& cells,
-        const cell_module_collection_types::host& modules) const override;
+        const edm::pixel_cell_container::host& cells,
+        const edm::pixel_module_container::host& modules) const override;
 
     private:
     /// @name Sub-algorithms used by this algorithm

@@ -29,15 +29,15 @@ struct pixel_cell_container
     /// @{
 
     /// First (x) channel identifier of the cell
-    using channel0 = vecmem::edm::accessor<0, schema>;
+    using channel0 = vecmem::edm::accessor<0, schema_type>;
     /// Second (y) channel identifier of the cell
-    using channel1 = vecmem::edm::accessor<1, schema>;
+    using channel1 = vecmem::edm::accessor<1, schema_type>;
     /// Activation / signal strength of the cell
-    using activation = vecmem::edm::accessor<2, schema>;
+    using activation = vecmem::edm::accessor<2, schema_type>;
     /// Time of the cell signal
-    using time = vecmem::edm::accessor<3, schema>;
+    using time = vecmem::edm::accessor<3, schema_type>;
     /// Index of the pixel module that the pixel cell belongs to
-    using module_index = vecmem::edm::accessor<4, schema>;
+    using module_index = vecmem::edm::accessor<4, schema_type>;
 
     /// @}
 

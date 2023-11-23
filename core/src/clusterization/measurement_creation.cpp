@@ -18,7 +18,8 @@ measurement_creation::measurement_creation(vecmem::memory_resource &mr)
 
 measurement_creation::output_type measurement_creation::operator()(
     const cluster_container_types::host &clusters,
-    const cell_module_collection_types::host &modules) const {
+    const edm::pixel_cell_container::host &cells,
+    const edm::pixel_module_container::host &modules) const {
 
     // Create the result object.
     output_type result(&(m_mr.get()));
@@ -43,12 +44,8 @@ measurement_creation::output_type measurement_creation::operator()(
         // A security check.
         assert(cluster.empty() == false);
 
-        // Get the cell module
-        const auto module_link = cluster.at(0).module_link;
-        const auto &module = modules.at(module_link);
-
-        // Fill measurement from cluster
-        detail::fill_measurement(result, cluster, module, module_link);
+        // Fill measurement from the cluster (cell indices)
+        detail::fill_measurement(result, cluster, cells, modules);
     }
 
     return result;

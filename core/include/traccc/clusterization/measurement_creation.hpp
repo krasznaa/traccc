@@ -8,9 +8,10 @@
 #pragma once
 
 // Library include(s).
-#include "traccc/edm/cell.hpp"
 #include "traccc/edm/cluster.hpp"
 #include "traccc/edm/measurement.hpp"
+#include "traccc/edm/pixel_cell_container.hpp"
+#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/utils/algorithm.hpp"
 
 // VecMem include(s).
@@ -30,7 +31,8 @@ namespace traccc {
 class measurement_creation
     : public algorithm<measurement_collection_types::host(
           const cluster_container_types::host &,
-          const cell_module_collection_types::host &)> {
+          const edm::pixel_cell_container::host &,
+          const edm::pixel_module_container::host &)> {
 
     public:
     /// Measurement_creation algorithm constructor
@@ -52,7 +54,8 @@ class measurement_creation
     /// slightly smaller than the input
     output_type operator()(
         const cluster_container_types::host &clusters,
-        const cell_module_collection_types::host &modules) const override;
+        const edm::pixel_cell_container::host &cells,
+        const edm::pixel_module_container::host &modules) const override;
 
     private:
     /// The memory resource used by the algorithm
