@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -11,9 +11,10 @@
 #include "traccc/sycl/utils/queue_wrapper.hpp"
 
 // Project include(s).
-#include "traccc/edm/cell.hpp"
 #include "traccc/edm/cluster.hpp"
 #include "traccc/edm/measurement.hpp"
+#include "traccc/edm/pixel_cell_container.hpp"
+#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/memory_resource.hpp"
@@ -29,8 +30,8 @@ namespace traccc::sycl {
 class clusterization_algorithm
     : public algorithm<std::pair<spacepoint_collection_types::buffer,
                                  vecmem::data::vector_buffer<unsigned int>>(
-          const cell_collection_types::const_view&,
-          const cell_module_collection_types::const_view&)> {
+          const edm::pixel_cell_container::const_view&,
+          const edm::pixel_module_container::const_view&)> {
 
     public:
     /// Constructor for clusterization algorithm
@@ -51,8 +52,8 @@ class clusterization_algorithm
     /// @return a spacepoint collection (buffer) and a collection (buffer) of
     /// links from cells to the spacepoints they belong to.
     output_type operator()(
-        const cell_collection_types::const_view& cells,
-        const cell_module_collection_types::const_view& modules) const override;
+        const edm::pixel_cell_container::const_view& cells,
+        const edm::pixel_module_container::const_view& modules) const override;
 
     private:
     /// The average number of cells in each partition
