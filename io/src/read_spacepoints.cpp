@@ -32,12 +32,12 @@ void read_spacepoints(spacepoint_reader_output& out, std::size_t event,
             break;
         }
         case data_format::binary: {
-            details::read_binary_collection<spacepoint_collection_types::host>(
-                out.spacepoints, data_directory() + directory.data() +
-                                     get_event_filename(event, "-hits.dat"));
-            details::read_binary_collection<cell_module_collection_types::host>(
-                out.modules, data_directory() + directory.data() +
-                                 get_event_filename(event, "-modules.dat"));
+            // details::read_binary_collection<spacepoint_collection_types::host>(
+            //     out.spacepoints, data_directory() + directory.data() +
+            //                          get_event_filename(event, "-hits.dat"));
+            // details::read_binary_collection<cell_module_collection_types::host>(
+            //     out.modules, data_directory() + directory.data() +
+            //                      get_event_filename(event, "-modules.dat"));
             break;
         }
         default:

@@ -22,6 +22,10 @@
 #include "traccc/clusterization/component_connection.hpp"
 #include "traccc/clusterization/measurement_creation.hpp"
 
+// System include(s).
+#include <cassert>
+#include <memory_resource>
+
 namespace traccc {
 
 particle_map generate_particle_map(std::size_t event,
@@ -136,7 +140,11 @@ hit_cell_map generate_hit_cell_map(std::size_t event,
                                    const std::string& hits_dir,
                                    const geoId_link_map& link_map) {
 
-    hit_cell_map result;
+    auto* mr = std::pmr::get_default_resource();
+    assert(mr != nullptr);
+    hit_cell_map result{{}, {*mr}};
+    auto& hit_map = std::get<0>(result);
+    auto& cells = std::get<1>(result);
 
     auto hmap = generate_hit_map(event, hits_dir);
 
@@ -154,9 +162,20 @@ hit_cell_map generate_hit_cell_map(std::size_t event,
         if (it != link_map.end()) {
             link = (*it).second;
         }
-        result[hmap[iocell.hit_id]].push_back(
-            cell{iocell.channel0, iocell.channel1, iocell.value,
-                 iocell.timestamp, link});
+
+        const std::size_t cell_index = cells.size();
+        cells.resize(cells.size() + 1);
+        edm::pixel_cell_container::channel0::get(cells)[cell_index] =
+            iocell.channel0;
+        edm::pixel_cell_container::channel1::get(cells)[cell_index] =
+            iocell.channel1;
+        edm::pixel_cell_container::activation::get(cells)[cell_index] =
+            iocell.value;
+        edm::pixel_cell_container::time::get(cells)[cell_index] =
+            iocell.timestamp;
+        edm::pixel_cell_container::module_index::get(cells)[cell_index] = link;
+
+        hit_map[hmap[iocell.hit_id]].push_back(cell_index);
     }
     return result;
 }
@@ -167,25 +186,25 @@ cell_particle_map generate_cell_particle_map(std::size_t event,
                                              const std::string& particle_dir,
                                              const geoId_link_map& link_map) {
 
-    cell_particle_map result;
-
     auto h_p_map =
         generate_hit_particle_map(event, hits_dir, particle_dir, link_map);
 
     auto h_c_map = generate_hit_cell_map(event, cells_dir, hits_dir, link_map);
 
+    cell_particle_map result{{}, std::get<1>(h_c_map)};
+
     for (auto const& [hit, ptc] : h_p_map) {
-        auto& cells = h_c_map[hit];
+        auto& cells = std::get<0>(h_c_map)[hit];
 
         for (auto& c : cells) {
-            result[c] = ptc;
+            std::get<0>(result)[c] = ptc;
         }
     }
 
     return result;
 }
 
-std::tuple<measurement_cell_map, cell_module_collection_types::host>
+std::tuple<measurement_cell_map, edm::pixel_module_container::host>
 generate_measurement_cell_map(std::size_t event,
                               const std::string& detector_file,
                               const std::string& digi_config_file,
@@ -211,7 +230,7 @@ generate_measurement_cell_map(std::size_t event,
                    &surface_transforms, &digi_cfg);
 
     auto clusters_per_event = cc(cells);
-    auto measurements_per_event = mc(clusters_per_event, modules);
+    auto measurements_per_event = mc(clusters_per_event, cells, modules);
 
     assert(measurements_per_event.size() == clusters_per_event.size());
     for (unsigned int i = 0; i < measurements_per_event.size(); ++i) {
@@ -220,7 +239,7 @@ generate_measurement_cell_map(std::size_t event,
         result[measurements_per_event[i]] = clus;
     }
 
-    return {result, modules_per_event};
+    return {result, modules};
 }
 
 measurement_particle_map generate_measurement_particle_map(
@@ -241,7 +260,8 @@ measurement_particle_map generate_measurement_particle_map(
     geoId_link_map link_map;
 
     for (unsigned int i = 0; i < modules.size(); ++i) {
-        link_map[modules[i].surface_link.value()] = i;
+        link_map[edm::pixel_module_container::surface_link::get(modules)[i]
+                     .value()] = i;
     }
 
     // generate cell particle map
@@ -250,7 +270,7 @@ measurement_particle_map generate_measurement_particle_map(
 
     for (auto const& [meas, cells] : m_c_map) {
         for (const auto& c : cells) {
-            result[meas][c_p_map[c]]++;
+            result[meas][std::get<0>(c_p_map)[c]]++;
         }
     }
 
@@ -268,17 +288,18 @@ measurement_particle_map generate_measurement_particle_map(
     auto surface_transforms = io::read_geometry(detector_file);
 
     // Read the spacepoints from the relevant event file
-    traccc::io::spacepoint_reader_output readOut(&resource);
+    traccc::io::spacepoint_reader_output readOut(resource);
     io::read_spacepoints(readOut, event, hits_dir, surface_transforms,
                          traccc::data_format::csv);
     spacepoint_collection_types::host& spacepoints_per_event =
         readOut.spacepoints;
-    cell_module_collection_types::host& modules = readOut.modules;
+    edm::pixel_module_container::host& modules = readOut.modules;
 
     geoId_link_map link_map;
 
     for (unsigned int i = 0; i < modules.size(); ++i) {
-        link_map[modules[i].surface_link.value()] = i;
+        link_map[edm::pixel_module_container::surface_link::get(modules)[i]
+                     .value()] = i;
     }
 
     auto h_p_map =

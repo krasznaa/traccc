@@ -8,10 +8,10 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/definitions/common.hpp"
 #include "traccc/definitions/primitives.hpp"
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/definitions/track_parametrization.hpp"
-#include "traccc/edm/cell.hpp"
 #include "traccc/edm/container.hpp"
 #include "traccc/utils/subspace.hpp"
 
@@ -40,8 +40,7 @@ struct measurement {
     detray::geometry::barcode surface_link;
 
     /// Link to Module vector index
-    using link_type = cell_module_collection_types::view::size_type;
-    link_type module_link = 0;
+    unsigned int module_link = 0;
 
     /// Cluster link
     std::size_t cluster_link = std::numeric_limits<std::size_t>::max();
@@ -95,6 +94,6 @@ struct measurement_equal_comp {
 /// Declare all measurement collection types
 using measurement_collection_types = collection_types<measurement>;
 /// Declare all measurement container types
-using measurement_container_types = container_types<cell_module, measurement>;
+using measurement_container_types = container_types<unsigned int, measurement>;
 
 }  // namespace traccc

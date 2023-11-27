@@ -15,6 +15,9 @@
 // Detray include(s).
 #include "detray/geometry/barcode.hpp"
 
+// VecMem include(s).
+#include "vecmem/memory/host_memory_resource.hpp"
+
 // System include(s).
 #include <algorithm>
 #include <map>
@@ -26,7 +29,8 @@ void read_spacepoints(spacepoint_reader_output& out, std::string_view filename,
                       std::string_view meas_hit_map_filename,
                       const geometry& geom) {
     // Read measurements
-    measurement_reader_output meas_reader_out;
+    vecmem::host_memory_resource host_mr;
+    measurement_reader_output meas_reader_out{host_mr};
     read_measurements(meas_reader_out, meas_filename, false);
 
     // Measurement hit id reader
@@ -43,7 +47,7 @@ void read_spacepoints(spacepoint_reader_output& out, std::string_view filename,
 
     // Create the result collection.
     spacepoint_collection_types::host& result_spacepoints = out.spacepoints;
-    cell_module_collection_types::host& result_modules = out.modules;
+    edm::pixel_module_container::host& result_modules = out.modules;
 
     std::map<geometry_id, unsigned int> m;
 
@@ -57,10 +61,12 @@ void read_spacepoints(spacepoint_reader_output& out, std::string_view filename,
         } else {
             link = result_modules.size();
             m[iohit.geometry_id] = link;
-            cell_module mod;
-            mod.surface_link = detray::geometry::barcode{iohit.geometry_id};
-            mod.placement = geom[iohit.geometry_id];
-            result_modules.push_back(mod);
+            result_modules.resize(link + 1);
+            edm::pixel_module_container::surface_link::get(
+                result_modules)[link] =
+                detray::geometry::barcode{iohit.geometry_id};
+            edm::pixel_module_container::placement::get(result_modules)[link] =
+                geom[iohit.geometry_id];
         }
 
         // Construct the global 3D position of the spacepoint.

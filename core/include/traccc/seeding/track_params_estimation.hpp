@@ -8,7 +8,6 @@
 #pragma once
 
 // Library include(s).
-#include "traccc/edm/cell.hpp"
 #include "traccc/edm/seed.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/edm/track_parameters.hpp"
