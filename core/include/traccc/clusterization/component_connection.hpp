@@ -8,8 +8,8 @@
 #pragma once
 
 // Library include(s).
-#include "traccc/edm/pixel_cell_container.hpp"
 #include "traccc/edm/cluster.hpp"
+#include "traccc/edm/pixel_cell_container.hpp"
 #include "traccc/utils/algorithm.hpp"
 
 // VecMem include(s).

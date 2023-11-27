@@ -26,8 +26,8 @@ namespace traccc::io::csv {
 /// @param geom The description of the detector geometry
 /// @param dconfig The detector's digitization configuration
 ///
-void read_cells(traccc::edm::pixel_cell_container::host &cells,
-                traccc::edm::pixel_module_container::host &modules,
+void read_cells(traccc::edm::pixel_cell_container::host& cells,
+                traccc::edm::pixel_module_container::host& modules,
                 std::string_view filename, const geometry* geom = nullptr,
                 const digitization_config* dconfig = nullptr);
 

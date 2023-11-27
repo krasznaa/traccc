@@ -36,8 +36,8 @@ namespace traccc::io {
 /// @param dconfig The detector's digitization configuration
 ///
 void read_cells(edm::pixel_cell_container::host &cells,
-                edm::pixel_module_container::host &modules,
-                std::size_t event, std::string_view directory,
+                edm::pixel_module_container::host &modules, std::size_t event,
+                std::string_view directory,
                 data_format format = data_format::csv,
                 const geometry *geom = nullptr,
                 const digitization_config *dconfig = nullptr);

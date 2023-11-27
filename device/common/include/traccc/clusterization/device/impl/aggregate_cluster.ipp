@@ -14,8 +14,8 @@ namespace traccc::device {
 
 TRACCC_HOST_DEVICE
 inline void aggregate_cluster(
-    const cell_collection_types::const_device& cells,
-    const cell_module_collection_types::const_device& modules,
+    const edm::pixel_cell_container::const_device& cells,
+    const edm::pixel_module_container::const_device& modules,
     const vecmem::data::vector_view<unsigned short> f_view,
     const unsigned int start, const unsigned int end, const unsigned short cid,
     measurement& out, vecmem::data::vector_view<unsigned int> cell_links,
@@ -32,8 +32,8 @@ inline void aggregate_cluster(
      */
     scalar totalWeight = 0.;
     point2 mean{0., 0.}, var{0., 0.};
-    const auto module_link = cells[cid + start].module_link;
-    const cell_module this_module = modules.at(module_link);
+    const unsigned int module_index =
+        edm::pixel_cell_container::module_index::get(cells)[cid + start];
     const unsigned short partition_size = end - start;
 
     channel_id maxChannel1 = std::numeric_limits<channel_id>::min();
@@ -47,11 +47,10 @@ inline void aggregate_cluster(
          * Terminate the process earlier if we have reached a cell sufficiently
          * in a different module.
          */
-        if (cells[pos].module_link != module_link) {
+        if (edm::pixel_cell_container::module_index::get(cells)[pos] !=
+            module_index) {
             break;
         }
-
-        const cell this_cell = cells[pos];
 
         /*
          * If the value of this cell is equal to our, that means it
@@ -60,17 +59,22 @@ inline void aggregate_cluster(
          */
         if (f[j] == cid) {
 
-            if (this_cell.channel1 > maxChannel1) {
-                maxChannel1 = this_cell.channel1;
+            const unsigned int channel1 =
+                edm::pixel_cell_container::channel1::get(cells)[pos];
+            if (channel1 > maxChannel1) {
+                maxChannel1 = channel1;
             }
 
+            const scalar activation =
+                edm::pixel_cell_container::activation::get(cells)[pos];
             const float weight = traccc::detail::signal_cell_modelling(
-                this_cell.activation, this_module);
+                activation, modules, module_index);
 
-            if (weight > this_module.threshold) {
-                totalWeight += this_cell.activation;
-                const point2 cell_position =
-                    traccc::detail::position_from_cell(this_cell, this_module);
+            if (weight > edm::pixel_module_container::threshold::get(
+                             modules)[module_index]) {
+                totalWeight += activation;
+                const point2 cell_position = traccc::detail::position_from_cell(
+                    cells, pos, modules, module_index);
                 const point2 prev = mean;
                 const point2 diff = cell_position - prev;
 
@@ -88,7 +92,8 @@ inline void aggregate_cluster(
          * Terminate the process earlier if we have reached a cell sufficiently
          * far away from the cluster in the dominant axis.
          */
-        if (this_cell.channel1 > maxChannel1 + 1) {
+        if (edm::pixel_cell_container::channel1::get(cells)[pos] >
+            maxChannel1 + 1) {
             break;
         }
     }
@@ -96,7 +101,9 @@ inline void aggregate_cluster(
         for (char i = 0; i < 2; ++i) {
             var[i] /= totalWeight;
         }
-        const auto pitch = this_module.pixel.get_pitch();
+        const auto pitch =
+            edm::pixel_module_container::pixel_data::get(modules)[module_index]
+                .get_pitch();
         var = var + point2{pitch[0] * pitch[0] / static_cast<scalar>(12.),
                            pitch[1] * pitch[1] / static_cast<scalar>(12.)};
     }
@@ -106,8 +113,9 @@ inline void aggregate_cluster(
      */
     out.local = mean;
     out.variance = var;
-    out.surface_link = this_module.surface_link;
-    out.module_link = module_link;
+    out.surface_link =
+        edm::pixel_module_container::surface_link::get(modules)[module_index];
+    out.module_link = module_index;
     // The following will need to be filled properly "soon".
     out.meas_dim = 2u;
 }

@@ -10,8 +10,8 @@
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/device/fill_prefix_sum.hpp"
-#include "traccc/edm/cell.hpp"
 #include "traccc/edm/measurement.hpp"
+#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/edm/spacepoint.hpp"
 
 // Vecmem include(s).
@@ -36,7 +36,7 @@ TRACCC_HOST_DEVICE
 inline void form_spacepoints(
     const std::size_t globalIndex,
     measurement_collection_types::const_view measurements_view,
-    cell_module_collection_types::const_view modules_view,
+    edm::pixel_module_container::const_view modules_view,
     const unsigned int measurement_count,
     spacepoint_collection_types::view spacepoints_view);
 

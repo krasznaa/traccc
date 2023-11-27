@@ -19,11 +19,11 @@ namespace traccc::edm {
 
 /// Pixel cell (SoA) container
 struct pixel_cell_container
-    : vecmem::edm::container<
-          vecmem::edm::type::vector<channel_id>,
-          vecmem::edm::type::vector<channel_id>,
-          vecmem::edm::type::vector<scalar>, vecmem::edm::type::vector<scalar>,
-          vecmem::edm::type::vector<unsigned int> > {
+    : vecmem::edm::container<vecmem::edm::type::vector<channel_id>,
+                             vecmem::edm::type::vector<channel_id>,
+                             vecmem::edm::type::vector<scalar>,
+                             vecmem::edm::type::vector<scalar>,
+                             vecmem::edm::type::vector<unsigned int> > {
 
     /// @name Accessors for the individual container variables
     /// @{

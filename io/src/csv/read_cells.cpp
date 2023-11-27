@@ -33,7 +33,8 @@ std::size_t fill_module(traccc::edm::pixel_module_container::host& modules,
 
     // Set the module's surface link.
     const detray::geometry::barcode surface_link{c.geometry_id};
-    traccc::edm::pixel_module_container::surface_link::get(modules)[pos] = surface_link;
+    traccc::edm::pixel_module_container::surface_link::get(modules)[pos] =
+        surface_link;
 
     // Find/set the 3D position of the detector module.
     if (geom != nullptr) {
@@ -65,9 +66,9 @@ std::size_t fill_module(traccc::edm::pixel_module_container::host& modules,
         // Set the value on the module description.
         const auto& binning_data = geo_it->segmentation.binningData();
         assert(binning_data.size() >= 2);
-        traccc::edm::pixel_module_container::pixel_data::get(modules)[pos] =
-            {binning_data[0].min, binning_data[1].min,
-             binning_data[0].step, binning_data[1].step};
+        traccc::edm::pixel_module_container::pixel_data::get(modules)[pos] = {
+            binning_data[0].min, binning_data[1].min, binning_data[0].step,
+            binning_data[1].step};
     }
 
     // Return the position of the new element.
@@ -78,10 +79,10 @@ std::size_t fill_module(traccc::edm::pixel_module_container::host& modules,
 
 namespace traccc::io::csv {
 
-void read_cells(traccc::edm::pixel_cell_container::host &cells,
-                traccc::edm::pixel_module_container::host &modules,
-                std::string_view filename,
-                const geometry* geom, const digitization_config* dconfig) {
+void read_cells(traccc::edm::pixel_cell_container::host& cells,
+                traccc::edm::pixel_module_container::host& modules,
+                std::string_view filename, const geometry* geom,
+                const digitization_config* dconfig) {
 
     // Construct the cell reader object.
     auto reader = make_cell_reader(filename);

@@ -13,7 +13,7 @@ TRACCC_HOST_DEVICE
 inline void form_spacepoints(
     const std::size_t globalIndex,
     measurement_collection_types::const_view measurements_view,
-    cell_module_collection_types::const_view modules_view,
+    edm::pixel_module_container::const_view modules_view,
     const unsigned int measurement_count,
     spacepoint_collection_types::view spacepoints_view) {
 
@@ -27,7 +27,7 @@ inline void form_spacepoints(
     }
 
     // Get device copy of input parameters
-    const cell_module_collection_types::const_device modules_device(
+    const edm::pixel_module_container::const_device modules_device(
         modules_view);
 
     spacepoint_collection_types::device spacepoints_device(spacepoints_view);
@@ -35,10 +35,12 @@ inline void form_spacepoints(
     // Get the measurement for this index
     const measurement& meas = measurements_device.at(globalIndex);
     // Get the current cell module
-    const cell_module& mod = modules_device.at(meas.module_link);
+    const unsigned int module_index = meas.module_link;
     // Form a spacepoint based on this measurement
     point3 local_3d = {meas.local[0], meas.local[1], 0.};
-    point3 global = mod.placement.point_to_global(local_3d);
+    point3 global = edm::pixel_module_container::placement::get(
+                        modules_device)[module_index]
+                        .point_to_global(local_3d);
 
     // Fill the result object with this spacepoint
     spacepoints_device[globalIndex] = {global, meas};

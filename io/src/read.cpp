@@ -33,7 +33,8 @@ void read(demonstrator_input& out, std::size_t events,
     // Read in the cell data for all events. In parallel if possible.
 #pragma omp parallel for
     for (std::size_t event = 0; event < events; ++event) {
-        io::read_cells(out[event].cells, out[event].modules, event, directory, format, &geom, &digi_cfg);
+        io::read_cells(out[event].cells, out[event].modules, event, directory,
+                       format, &geom, &digi_cfg);
     }
 }
 
