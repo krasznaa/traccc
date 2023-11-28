@@ -45,25 +45,24 @@ TEST_P(SurfaceBinningTests, Run) {
     traccc::spacepoint_formation sf(host_mr);
 
     // Read the cells from the relevant event file
-    traccc::io::cell_reader_output readOut(&host_mr);
-    traccc::io::read_cells(readOut, event, data_dir, traccc::data_format::csv,
-                           &surface_transforms, &digi_cfg);
-
-    const traccc::cell_collection_types::host& cells_truth = readOut.cells;
-    const traccc::cell_module_collection_types::host& modules = readOut.modules;
+    traccc::edm::pixel_cell_container::host cells{host_mr};
+    traccc::edm::pixel_module_container::host modules{host_mr};
+    traccc::io::read_cells(cells, modules, event, data_dir,
+                           traccc::data_format::csv, &surface_transforms,
+                           &digi_cfg);
 
     // Get Reconstructed Spacepoints
-    auto measurements_recon = ca(cells_truth, modules);
+    auto measurements_recon = ca(cells, modules);
     auto spacepoints_recon = sf(measurements_recon, modules);
 
     // Read the hits from the relevant event file
-    traccc::io::spacepoint_reader_output sp_readOut(&host_mr);
+    traccc::io::spacepoint_reader_output sp_readOut(host_mr);
     traccc::io::read_spacepoints(sp_readOut, event, data_dir,
                                  surface_transforms, traccc::data_format::csv);
 
     const traccc::spacepoint_collection_types::host& spacepoints_truth =
         sp_readOut.spacepoints;
-    const traccc::cell_module_collection_types::host& modules_2 =
+    const traccc::edm::pixel_module_container::host& modules_2 =
         sp_readOut.modules;
 
     // Check the size of spacepoints
@@ -76,8 +75,11 @@ TEST_P(SurfaceBinningTests, Run) {
         const auto& sp_truth = spacepoints_truth[i];
 
         // Check that the spacepoints belong to the same module
-        EXPECT_EQ(modules.at(sp_recon.meas.module_link).surface_link,
-                  modules_2.at(sp_truth.meas.module_link).surface_link);
+        EXPECT_EQ(
+            traccc::edm::pixel_module_container::surface_link::get(modules).at(
+                sp_recon.meas.module_link),
+            traccc::edm::pixel_module_container::surface_link::get(modules_2)
+                .at(sp_truth.meas.module_link));
 
         // Make sure that the difference in spacepoint position is less than
         // 1%

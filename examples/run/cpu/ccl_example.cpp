@@ -8,7 +8,8 @@
 
 // Project include(s).
 #include "traccc/clusterization/component_connection.hpp"
-#include "traccc/edm/cell.hpp"
+#include "traccc/edm/pixel_cell_container.hpp"
+#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/io/read_cells.hpp"
 
 // VecMem include(s).
@@ -29,7 +30,7 @@ double delta_ms(std::chrono::high_resolution_clock::time_point s,
 }
 }  // namespace
 
-void print_statistics(const traccc::cell_collection_types::host& data) {
+void print_statistics(const traccc::edm::pixel_cell_container::host& data) {
     static std::vector<std::size_t> bins_edges = {
         0,   1,   2,    3,    4,    6,    8,    11,   16,
         23,  32,  45,   64,   91,   128,  181,  256,  362,
@@ -42,7 +43,8 @@ void print_statistics(const traccc::cell_collection_types::host& data) {
     unsigned int last = std::numeric_limits<unsigned int>::max();
     std::size_t count = 0;
     for (std::size_t i = 0; i < data.size(); ++i) {
-        if (last == data.at(i).module_link) {
+        if (last ==
+            traccc::edm::pixel_cell_container::module_index::get(data).at(i)) {
             count++;
         } else {
             for (std::size_t j = 0; j < bins_edges.size(); ++j) {
@@ -53,7 +55,9 @@ void print_statistics(const traccc::cell_collection_types::host& data) {
                 }
             }
             count = 1;
-            last = data.at(i).module_link;
+            last =
+                traccc::edm::pixel_cell_container::module_index::get(data).at(
+                    i);
         }
     }
 
@@ -84,7 +88,7 @@ void print_statistics(const traccc::cell_collection_types::host& data) {
 }
 
 void run_on_event(traccc::component_connection& cc,
-                  traccc::cell_collection_types::host& data) {
+                  traccc::edm::pixel_cell_container::host& data) {
     traccc::cluster_container_types::host clusters = cc(data);
 }
 
@@ -105,27 +109,27 @@ int main(int argc, char* argv[]) {
 
     auto time_read_start = std::chrono::high_resolution_clock::now();
 
-    traccc::io::cell_reader_output readOut(&mem);
-    traccc::io::read_cells(readOut, event_file);
-    traccc::cell_collection_types::host data = readOut.cells;
+    traccc::edm::pixel_cell_container::host cells{mem};
+    traccc::edm::pixel_module_container::host modules{mem};
+    traccc::io::read_cells(cells, modules, event_file);
 
     auto time_read_end = std::chrono::high_resolution_clock::now();
 
-    print_statistics(data);
+    print_statistics(cells);
 
     auto time_process_p1 = std::chrono::high_resolution_clock::now();
 
-    run_on_event(cc, data);
+    run_on_event(cc, cells);
 
     auto time_process_p2 = std::chrono::high_resolution_clock::now();
 
     for (std::size_t i = 0; i < 10; ++i) {
-        run_on_event(cc, data);
+        run_on_event(cc, cells);
     }
 
     auto time_process_p3 = std::chrono::high_resolution_clock::now();
 
-    run_on_event(cc, data);
+    run_on_event(cc, cells);
 
     auto time_process_p4 = std::chrono::high_resolution_clock::now();
 

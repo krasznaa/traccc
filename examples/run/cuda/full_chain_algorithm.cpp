@@ -88,15 +88,15 @@ full_chain_algorithm::~full_chain_algorithm() {
 }
 
 full_chain_algorithm::output_type full_chain_algorithm::operator()(
-    const cell_collection_types::host& cells,
-    const cell_module_collection_types::host& modules) const {
+    const edm::pixel_cell_container::host& cells,
+    const edm::pixel_module_container::host& modules) const {
 
     // Create device copy of input collections
-    cell_collection_types::buffer cells_buffer(cells.size(),
-                                               *m_cached_device_mr);
+    edm::pixel_cell_container::buffer cells_buffer(cells.size(),
+                                                   *m_cached_device_mr);
     m_copy(vecmem::get_data(cells), cells_buffer);
-    cell_module_collection_types::buffer modules_buffer(modules.size(),
-                                                        *m_cached_device_mr);
+    edm::pixel_module_container::buffer modules_buffer(modules.size(),
+                                                       *m_cached_device_mr);
     m_copy(vecmem::get_data(modules), modules_buffer);
 
     // Run the clusterization (asynchronously).

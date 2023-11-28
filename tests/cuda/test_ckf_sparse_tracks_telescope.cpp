@@ -186,7 +186,7 @@ TEST_P(CkfSparseTrackTelescopeTests, Run) {
              vecmem::copy::type::host_to_device);
 
         // Read measurements
-        traccc::io::measurement_reader_output readOut(&host_mr);
+        traccc::io::measurement_reader_output readOut(host_mr);
         traccc::io::read_measurements(readOut, i_evt, path,
                                       traccc::data_format::csv);
         traccc::measurement_collection_types::host& measurements_per_event =

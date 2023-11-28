@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
+ * (c) 2021-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -121,7 +121,7 @@ int seq_run(const traccc::seeding_input_config& /*i_cfg*/,
          event < common_opts.events + common_opts.skip; ++event) {
 
         // Instantiate host containers/collections
-        traccc::io::spacepoint_reader_output reader_output(mr.host);
+        traccc::io::spacepoint_reader_output reader_output(*(mr.host));
         traccc::seeding_algorithm::output_type seeds;
         traccc::track_params_estimation::output_type params;
 
@@ -149,8 +149,8 @@ int seq_run(const traccc::seeding_input_config& /*i_cfg*/,
 
             const traccc::spacepoint_collection_types::host&
                 spacepoints_per_event = reader_output.spacepoints;
-            const traccc::cell_module_collection_types::host&
-                modules_per_event = reader_output.modules;
+            const traccc::edm::pixel_module_container::host& modules_per_event =
+                reader_output.modules;
 
             /*----------------------------
                  Seeding algorithm
@@ -163,7 +163,7 @@ int seq_run(const traccc::seeding_input_config& /*i_cfg*/,
                 spacepoints_per_event.size(), mr.main);
             copy(vecmem::get_data(spacepoints_per_event),
                  spacepoints_sycl_buffer);
-            traccc::cell_module_collection_types::buffer modules_buffer(
+            traccc::edm::pixel_module_container::buffer modules_buffer(
                 modules_per_event.size(), mr.main);
             copy(vecmem::get_data(modules_per_event), modules_buffer);
 

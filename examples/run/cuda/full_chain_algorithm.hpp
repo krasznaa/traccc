@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -13,7 +13,8 @@
 #include "traccc/cuda/seeding/track_params_estimation.hpp"
 #include "traccc/cuda/utils/stream.hpp"
 #include "traccc/device/container_h2d_copy_alg.hpp"
-#include "traccc/edm/cell.hpp"
+#include "traccc/edm/pixel_cell_container.hpp"
+#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/utils/algorithm.hpp"
 
 // VecMem include(s).
@@ -33,8 +34,8 @@ namespace traccc::cuda {
 ///
 class full_chain_algorithm
     : public algorithm<bound_track_parameters_collection_types::host(
-          const cell_collection_types::host&,
-          const cell_module_collection_types::host&)> {
+          const edm::pixel_cell_container::host&,
+          const edm::pixel_module_container::host&)> {
 
     public:
     /// Algorithm constructor
@@ -69,8 +70,8 @@ class full_chain_algorithm
     /// @return The track parameters reconstructed
     ///
     output_type operator()(
-        const cell_collection_types::host& cells,
-        const cell_module_collection_types::host& modules) const override;
+        const edm::pixel_cell_container::host& cells,
+        const edm::pixel_module_container::host& modules) const override;
 
     private:
     /// Host memory resource

@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
+ * (c) 2021-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -8,8 +8,9 @@
 // Project include(s).
 #include "traccc/clusterization/clusterization_algorithm.hpp"
 #include "traccc/definitions/primitives.hpp"
-#include "traccc/edm/cell.hpp"
 #include "traccc/edm/cluster.hpp"
+#include "traccc/edm/pixel_cell_container.hpp"
+#include "traccc/edm/pixel_module_container.hpp"
 
 // Test include(s).
 #include "tests/cca_test.hpp"
@@ -27,14 +28,16 @@ namespace {
 vecmem::host_memory_resource resource;
 traccc::clusterization_algorithm ca(resource);
 
-cca_function_t f = [](const traccc::cell_collection_types::host& cells,
-                      const traccc::cell_module_collection_types::host&
+cca_function_t f = [](const traccc::edm::pixel_cell_container::host& cells,
+                      const traccc::edm::pixel_module_container::host&
                           modules) {
     std::map<traccc::geometry_id, vecmem::vector<traccc::measurement>> result;
 
     auto measurements = ca(cells, modules);
     for (std::size_t i = 0; i < measurements.size(); i++) {
-        result[modules.at(measurements.at(i).module_link).surface_link.value()]
+        result[traccc::edm::pixel_module_container::surface_link::get(modules)
+                   .at(measurements.at(i).module_link)
+                   .value()]
             .push_back(measurements.at(i));
     }
 

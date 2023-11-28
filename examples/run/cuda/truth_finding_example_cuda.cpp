@@ -205,7 +205,7 @@ int seq_run(const traccc::finding_input_config& i_cfg,
                    vecmem::copy::type::host_to_device);
 
         // Read measurements
-        traccc::io::measurement_reader_output meas_reader_output(mr.host);
+        traccc::io::measurement_reader_output meas_reader_output(*(mr.host));
         traccc::io::read_measurements(meas_reader_output, event,
                                       common_opts.input_directory,
                                       common_opts.input_data_format);

@@ -205,8 +205,8 @@ int seq_run(const traccc::seeding_input_config& /*i_cfg*/,
          event < common_opts.events + common_opts.skip; ++event) {
 
         // Instantiate host containers/collections
-        traccc::io::spacepoint_reader_output sp_reader_output(mr.host);
-        traccc::io::measurement_reader_output meas_reader_output(mr.host);
+        traccc::io::spacepoint_reader_output sp_reader_output(*(mr.host));
+        traccc::io::measurement_reader_output meas_reader_output(*(mr.host));
 
         traccc::seeding_algorithm::output_type seeds;
         traccc::track_params_estimation::output_type params;
@@ -259,7 +259,7 @@ int seq_run(const traccc::seeding_input_config& /*i_cfg*/,
                 spacepoints_per_event.size(), mr.main);
             async_copy(vecmem::get_data(spacepoints_per_event),
                        spacepoints_cuda_buffer);
-            traccc::cell_module_collection_types::buffer modules_buffer(
+            traccc::edm::pixel_module_container::buffer modules_buffer(
                 modules_per_event.size(), mr.main);
             async_copy(vecmem::get_data(modules_per_event), modules_buffer);
 

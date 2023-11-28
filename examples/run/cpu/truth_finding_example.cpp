@@ -149,7 +149,7 @@ int seq_run(const traccc::finding_input_config& i_cfg,
         }
 
         // Read measurements
-        traccc::io::measurement_reader_output meas_read_out(&host_mr);
+        traccc::io::measurement_reader_output meas_read_out(host_mr);
         traccc::io::read_measurements(meas_read_out, event,
                                       common_opts.input_directory,
                                       traccc::data_format::csv);

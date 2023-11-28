@@ -143,7 +143,7 @@ int seq_run(const traccc::seeding_input_config& /*i_cfg*/,
          event < common_opts.events + common_opts.skip; ++event) {
 
         // Read the hits from the relevant event file
-        traccc::io::spacepoint_reader_output readOut(&host_mr);
+        traccc::io::spacepoint_reader_output readOut(host_mr);
         traccc::io::read_spacepoints(
             readOut, event, common_opts.input_directory, surface_transforms,
             common_opts.input_data_format);
@@ -168,7 +168,7 @@ int seq_run(const traccc::seeding_input_config& /*i_cfg*/,
         traccc::track_state_container_types::host track_states;
 
         // Read measurements
-        traccc::io::measurement_reader_output meas_read_out(&host_mr);
+        traccc::io::measurement_reader_output meas_read_out(host_mr);
         traccc::io::read_measurements(meas_read_out, event,
                                       common_opts.input_directory,
                                       traccc::data_format::csv);

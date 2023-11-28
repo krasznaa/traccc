@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
+ * (c) 2021-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -9,9 +9,10 @@
 
 // Project include(s).
 #include "traccc/definitions/primitives.hpp"
-#include "traccc/edm/cell.hpp"
 #include "traccc/edm/cluster.hpp"
 #include "traccc/edm/measurement.hpp"
+#include "traccc/edm/pixel_cell_container.hpp"
+#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/io/read_cells.hpp"
 
 // Test include(s).
@@ -19,6 +20,7 @@
 
 // VecMem include(s).
 #include <vecmem/containers/vector.hpp>
+#include <vecmem/memory/host_memory_resource.hpp>
 
 // GTest include(s).
 #include <gtest/gtest.h>
@@ -32,8 +34,8 @@
 
 using cca_function_t = std::function<
     std::map<traccc::geometry_id, vecmem::vector<traccc::measurement>>(
-        const traccc::cell_collection_types::host &,
-        const traccc::cell_module_collection_types::host &)>;
+        const traccc::edm::pixel_cell_container::host &,
+        const traccc::edm::pixel_module_container::host &)>;
 
 class ConnectedComponentAnalysisTests
     : public traccc::tests::data_test,
@@ -92,13 +94,14 @@ class ConnectedComponentAnalysisTests
         std::string file_truth =
             get_datafile("cca_test/" + file_prefix + "_truth.csv");
 
-        traccc::io::cell_reader_output data;
-        traccc::io::read_cells(data, file_hits);
-        traccc::cell_collection_types::host &cells = data.cells;
-        traccc::cell_module_collection_types::host &modules = data.modules;
+        vecmem::host_memory_resource host_mr;
+        traccc::edm::pixel_cell_container::host cells{host_mr};
+        traccc::edm::pixel_module_container::host modules{host_mr};
+        traccc::io::read_cells(cells, modules, file_hits);
 
         for (std::size_t i = 0; i < modules.size(); i++) {
-            modules.at(i).pixel = traccc::pixel_data{0, 0, 1, 1};
+            traccc::edm::pixel_module_container::pixel_data::get(modules).at(
+                i) = traccc::pixel_data{0, 0, 1, 1};
         }
 
         std::map<traccc::geometry_id, vecmem::vector<traccc::measurement>>

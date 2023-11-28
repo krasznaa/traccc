@@ -93,7 +93,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
         performance::timer t{"File reading", times};
         // Create empty inputs using the correct memory resource
         for (std::size_t i = 0; i < throughput_cfg.loaded_events; ++i) {
-            input.push_back(demonstrator_input::value_type(&uncached_host_mr));
+            input.push_back(demonstrator_input::value_type(uncached_host_mr));
         }
         // Read event data into input vector
         io::read(input, throughput_cfg.loaded_events,

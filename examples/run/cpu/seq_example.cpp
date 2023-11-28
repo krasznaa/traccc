@@ -74,28 +74,25 @@ int seq_run(const traccc::full_tracking_input_config& i_cfg,
     for (unsigned int event = common_opts.skip;
          event < common_opts.events + common_opts.skip; ++event) {
 
-        traccc::io::cell_reader_output readOut(&host_mr);
+        traccc::edm::pixel_cell_container::host cells{host_mr};
+        traccc::edm::pixel_module_container::host modules{host_mr};
 
         // Read the cells from the relevant event file
-        traccc::io::read_cells(readOut, event, common_opts.input_directory,
-                               common_opts.input_data_format,
-                               &surface_transforms, &digi_cfg);
-        traccc::cell_collection_types::host& cells_per_event = readOut.cells;
-        traccc::cell_module_collection_types::host& modules_per_event =
-            readOut.modules;
+        traccc::io::read_cells(
+            cells, modules, event, common_opts.input_directory,
+            common_opts.input_data_format, &surface_transforms, &digi_cfg);
 
         /*-------------------
             Clusterization
           -------------------*/
 
-        auto measurements_per_event = ca(cells_per_event, modules_per_event);
+        auto measurements_per_event = ca(cells, modules);
 
         /*------------------------
             Spacepoint formation
           ------------------------*/
 
-        auto spacepoints_per_event =
-            sf(measurements_per_event, modules_per_event);
+        auto spacepoints_per_event = sf(measurements_per_event, modules);
 
         /*-----------------------
           Seeding algorithm
@@ -114,8 +111,8 @@ int seq_run(const traccc::full_tracking_input_config& i_cfg,
           Statistics
           ----------------------------*/
 
-        n_modules += modules_per_event.size();
-        n_cells += cells_per_event.size();
+        n_modules += modules.size();
+        n_cells += cells.size();
         n_measurements += measurements_per_event.size();
         n_spacepoints += spacepoints_per_event.size();
         n_seeds += seeds.size();

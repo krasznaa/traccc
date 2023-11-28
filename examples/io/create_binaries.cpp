@@ -38,19 +38,19 @@ int create_binaries(const std::string& detector_file,
          event < common_opts.events + common_opts.skip; ++event) {
 
         // Read the cells from the relevant event file
-        traccc::io::cell_reader_output cells_csv(&host_mr);
-        traccc::io::read_cells(cells_csv, event, common_opts.input_directory,
-                               common_opts.input_data_format,
-                               &surface_transforms, &digi_cfg);
+        traccc::edm::pixel_cell_container::host cells{host_mr};
+        traccc::edm::pixel_module_container::host modules{host_mr};
+        traccc::io::read_cells(
+            cells, modules, event, common_opts.input_directory,
+            common_opts.input_data_format, &surface_transforms, &digi_cfg);
 
         // Write binary file
         traccc::io::write(event, common_opts.input_directory,
-                          traccc::data_format::binary,
-                          vecmem::get_data(cells_csv.cells),
-                          vecmem::get_data(cells_csv.modules));
+                          traccc::data_format::binary, vecmem::get_data(cells),
+                          vecmem::get_data(modules));
 
         // Read the hits from the relevant event file
-        traccc::io::spacepoint_reader_output spacepoints_csv(&host_mr);
+        traccc::io::spacepoint_reader_output spacepoints_csv(host_mr);
         traccc::io::read_spacepoints(
             spacepoints_csv, event, common_opts.input_directory,
             surface_transforms, common_opts.input_data_format);
@@ -62,7 +62,7 @@ int create_binaries(const std::string& detector_file,
                           vecmem::get_data(spacepoints_csv.modules));
 
         // Read the measurements from the relevant event file
-        traccc::io::measurement_reader_output measurements_csv(&host_mr);
+        traccc::io::measurement_reader_output measurements_csv(host_mr);
         traccc::io::read_measurements(measurements_csv, event,
                                       common_opts.input_directory,
                                       common_opts.input_data_format);
