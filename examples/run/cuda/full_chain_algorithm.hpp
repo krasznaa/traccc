@@ -21,6 +21,7 @@
 #include <vecmem/memory/binary_page_memory_resource.hpp>
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
+#include <vecmem/utils/copy.hpp>
 #include <vecmem/utils/cuda/async_copy.hpp>
 
 // System include(s).
@@ -82,6 +83,8 @@ class full_chain_algorithm
     vecmem::cuda::device_memory_resource m_device_mr;
     /// Device caching memory resource
     std::unique_ptr<vecmem::binary_page_memory_resource> m_cached_device_mr;
+    /// (Host) Memory copy object
+    mutable vecmem::copy m_host_copy;
     /// (Asynchronous) Memory copy object
     mutable vecmem::cuda::async_copy m_copy;
 
