@@ -2,32 +2,20 @@
    "version" : 3,
    "configurePresets": [
       {
-         "name" : "tgv",
-         "displayName" : "Configuration to use on the TGV",
+         "name" : "soa",
+         "displayName" : "SoA Development",
          "warnings": {
             "deprecated": true
          },
          "cacheVariables": {
             "CMAKE_BUILD_TYPE" : "RelWithDebInfo",
-            "FETCHCONTENT_SOURCE_DIR_ACTS" : "/home/krasznaa/ATLAS/projects/traccc/externals/acts-21.1.0",
-            "FETCHCONTENT_SOURCE_DIR_ACTSVG" : "/home/krasznaa/ATLAS/projects/traccc/externals/actsvg",
-            "FETCHCONTENT_SOURCE_DIR_ALGEBRAPLUGINS" : "/home/krasznaa/ATLAS/projects/traccc/externals/algebra-plugins-0.19.0",
-            "FETCHCONTENT_SOURCE_DIR_ALPAKA" : "/home/krasznaa/ATLAS/projects/traccc/externals/alpaka-0.9.0",
-            "FETCHCONTENT_SOURCE_DIR_COVFIE" : "/home/krasznaa/ATLAS/projects/traccc/externals/covfie-0.8.1",
-            "FETCHCONTENT_SOURCE_DIR_DETRAY" : "/home/krasznaa/ATLAS/projects/traccc/externals/detray-0.47.0",
-            "FETCHCONTENT_SOURCE_DIR_DFELIBS" : "/home/krasznaa/ATLAS/projects/traccc/externals/dfelibs-20211029",
-            "FETCHCONTENT_SOURCE_DIR_EIGEN3" : "/home/krasznaa/ATLAS/projects/traccc/externals/eigen-3.4.0",
-            "FETCHCONTENT_SOURCE_DIR_GOOGLETEST" : "/home/krasznaa/ATLAS/projects/traccc/externals/googletest-release-1.11.0",
-            "FETCHCONTENT_SOURCE_DIR_KOKKOS" : "/home/krasznaa/ATLAS/projects/traccc/externals/kokkos-3.7.00",
-            "FETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON" : "/home/krasznaa/ATLAS/projects/traccc/externals/json-3.10.5",
-            "FETCHCONTENT_SOURCE_DIR_TBB" : "/home/krasznaa/ATLAS/projects/traccc/externals/oneTBB-2021.7.0",
-            "FETCHCONTENT_SOURCE_DIR_THRUST" : "/home/krasznaa/ATLAS/projects/traccc/externals/thrust",
             "FETCHCONTENT_SOURCE_DIR_VECMEM" : "/home/krasznaa/ATLAS/projects/vecmem/vecmem",
-            "FETCHCONTENT_SOURCE_DIR_VC" : "/home/krasznaa/ATLAS/projects/traccc/externals/Vc-b84dcd0a65d8dc5de6a2bd4d367882b3748f812c",
             "TRACCC_BUILD_EXAMPLES" : "TRUE",
             "TRACCC_BUILD_TESTING" : "TRUE",
-            "TRACCC_BUILD_ALPAKA" : "TRUE",
-            "TRACCC_BUILD_KOKKOS" : "TRUE",
+            "TRACCC_BUILD_CUDA" : "TRUE",
+            "TRACCC_BUILD_SYCL" : "TRUE",
+            "TRACCC_BUILD_ALPAKA" : "FALSE",
+            "TRACCC_BUILD_KOKKOS" : "FALSE",
             "TRACCC_USE_ROOT" : "FALSE"
          }
       }
