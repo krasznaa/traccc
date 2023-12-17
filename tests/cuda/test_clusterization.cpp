@@ -31,17 +31,14 @@ TEST(clusterization, cuda) {
     vecmem::cuda::async_copy copy{stream.cudaStream()};
 
     // Create cell collection
-    traccc::edm::pixel_cell_container::host cells{mng_mr};
+    traccc::edm::cell_container::host cells{mng_mr};
     cells.resize(8);
-    traccc::edm::pixel_cell_container::channel0::get(cells) = {1u, 2u, 3u, 5u,
-                                                               6u, 6u, 6u, 7u};
-    traccc::edm::pixel_cell_container::channel1::get(cells) = {2u, 2u, 2u, 5u,
-                                                               4u, 5u, 6u, 5u};
-    traccc::edm::pixel_cell_container::activation::get(cells) = {
-        1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f};
+    cells.channel0() = {1u, 2u, 3u, 5u, 6u, 6u, 6u, 7u};
+    cells.channel1() = {2u, 2u, 2u, 5u, 4u, 5u, 6u, 5u};
+    cells.activation() = {1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f};
 
     // Create module collection
-    traccc::edm::pixel_module_container::host modules{mng_mr};
+    traccc::edm::cell_module_container::host modules{mng_mr};
     modules.resize(1);
 
     // Run Clusterization

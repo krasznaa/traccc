@@ -9,9 +9,9 @@
 
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/edm/measurement.hpp"
-#include "traccc/edm/pixel_cell_container.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/edm/spacepoint.hpp"
 
 // Vecmem include(s).
@@ -55,8 +55,8 @@ static constexpr int MAX_CELLS_PER_THREAD = 12;
 template <typename barrier_t>
 TRACCC_DEVICE inline void ccl_kernel(
     const index_t threadId, const index_t blckDim, const unsigned int blockId,
-    const edm::pixel_cell_container::const_view cells_view,
-    const edm::pixel_module_container::const_view modules_view,
+    const edm::cell_container::const_view cells_view,
+    const edm::cell_module_container::const_view modules_view,
     const index_t max_cells_per_partition,
     const index_t target_cells_per_partition, unsigned int& partition_start,
     unsigned int& partition_end, unsigned int& outi, index_t* f, index_t* gf,

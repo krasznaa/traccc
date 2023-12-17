@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -18,8 +18,8 @@ measurement_creation::measurement_creation(vecmem::memory_resource &mr)
 
 measurement_creation::output_type measurement_creation::operator()(
     const cluster_container_types::host &clusters,
-    const edm::pixel_cell_container::host &cells,
-    const edm::pixel_module_container::host &modules) const {
+    const edm::cell_container::host &cells,
+    const edm::cell_module_container::host &modules) const {
 
     // Create the result object.
     output_type result(&(m_mr.get()));

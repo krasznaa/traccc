@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
+ * (c) 2021-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -8,10 +8,10 @@
 #pragma once
 
 // Library include(s).
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/edm/cluster.hpp"
 #include "traccc/edm/measurement.hpp"
-#include "traccc/edm/pixel_cell_container.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/utils/algorithm.hpp"
 
 // VecMem include(s).
@@ -31,8 +31,8 @@ namespace traccc {
 class measurement_creation
     : public algorithm<measurement_collection_types::host(
           const cluster_container_types::host &,
-          const edm::pixel_cell_container::host &,
-          const edm::pixel_module_container::host &)> {
+          const edm::cell_container::host &,
+          const edm::cell_module_container::host &)> {
 
     public:
     /// Measurement_creation algorithm constructor
@@ -54,8 +54,8 @@ class measurement_creation
     /// slightly smaller than the input
     output_type operator()(
         const cluster_container_types::host &clusters,
-        const edm::pixel_cell_container::host &cells,
-        const edm::pixel_module_container::host &modules) const override;
+        const edm::cell_container::host &cells,
+        const edm::cell_module_container::host &modules) const override;
 
     private:
     /// The memory resource used by the algorithm

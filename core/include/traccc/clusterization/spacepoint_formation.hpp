@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
+ * (c) 2021-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -8,8 +8,8 @@
 #pragma once
 
 // Library include(s).
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/edm/measurement.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/utils/algorithm.hpp"
 
@@ -28,7 +28,7 @@ namespace traccc {
 ///
 class spacepoint_formation : public algorithm<spacepoint_collection_types::host(
                                  const measurement_collection_types::host&,
-                                 const edm::pixel_module_container::host&)> {
+                                 const edm::cell_module_container::host&)> {
 
     public:
     /// Constructor for spacepoint_formation
@@ -47,7 +47,7 @@ class spacepoint_formation : public algorithm<spacepoint_collection_types::host(
     ///
     output_type operator()(
         const measurement_collection_types::host& measurements,
-        const edm::pixel_module_container::host& modules) const override;
+        const edm::cell_module_container::host& modules) const override;
 
     private:
     std::reference_wrapper<vecmem::memory_resource> m_mr;

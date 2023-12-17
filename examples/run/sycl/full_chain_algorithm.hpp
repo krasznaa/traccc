@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -8,8 +8,8 @@
 #pragma once
 
 // Project include(s).
-#include "traccc/edm/pixel_cell_container.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/sycl/clusterization/clusterization_algorithm.hpp"
 #include "traccc/sycl/seeding/seeding_algorithm.hpp"
 #include "traccc/sycl/seeding/track_params_estimation.hpp"
@@ -37,8 +37,8 @@ struct full_chain_algorithm_data;
 ///
 class full_chain_algorithm
     : public algorithm<bound_track_parameters_collection_types::host(
-          const edm::pixel_cell_container::host&,
-          const edm::pixel_module_container::host&)> {
+          const edm::cell_container::host&,
+          const edm::cell_module_container::host&)> {
 
     public:
     /// Algorithm constructor
@@ -73,8 +73,8 @@ class full_chain_algorithm
     /// @return The track parameters reconstructed
     ///
     output_type operator()(
-        const edm::pixel_cell_container::host& cells,
-        const edm::pixel_module_container::host& modules) const override;
+        const edm::cell_container::host& cells,
+        const edm::cell_module_container::host& modules) const override;
 
     private:
     /// Private data object

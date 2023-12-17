@@ -26,7 +26,7 @@ void read_measurements(measurement_reader_output& out,
 
     // Create the result collection.
     measurement_collection_types::host& result_measurements = out.measurements;
-    edm::pixel_module_container::host& result_modules = out.modules;
+    edm::cell_module_container::host& result_modules = out.modules;
 
     std::map<geometry_id, unsigned int> m;
 
@@ -43,8 +43,7 @@ void read_measurements(measurement_reader_output& out,
             link = result_modules.size();
             m[iomeas.geometry_id] = link;
             result_modules.resize(link + 1);
-            edm::pixel_module_container::surface_link::get(
-                result_modules)[link] =
+            result_modules.surface_link()[link] =
                 detray::geometry::barcode{iomeas.geometry_id};
         }
 

@@ -15,8 +15,8 @@ namespace traccc::io {
 
 void write(std::size_t event, std::string_view directory,
            traccc::data_format format,
-           const edm::pixel_cell_container::const_view& cells,
-           const edm::pixel_module_container::const_view& /*modules*/) {
+           const edm::cell_container::const_view& cells,
+           const edm::cell_module_container::const_view& /*modules*/) {
 
     switch (format) {
         case data_format::binary:
@@ -37,7 +37,7 @@ void write(std::size_t event, std::string_view directory,
 void write(std::size_t event, std::string_view directory,
            traccc::data_format format,
            spacepoint_collection_types::const_view spacepoints,
-           const edm::pixel_module_container::const_view& /*modules*/) {
+           const edm::cell_module_container::const_view& /*modules*/) {
 
     switch (format) {
         case data_format::binary:
@@ -58,7 +58,7 @@ void write(std::size_t event, std::string_view directory,
 void write(std::size_t event, std::string_view directory,
            traccc::data_format format,
            measurement_collection_types::const_view measurements,
-           const edm::pixel_module_container::const_view& /*modules*/) {
+           const edm::cell_module_container::const_view& /*modules*/) {
 
     switch (format) {
         case data_format::binary:

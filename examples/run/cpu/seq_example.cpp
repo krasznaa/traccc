@@ -74,8 +74,8 @@ int seq_run(const traccc::full_tracking_input_config& i_cfg,
     for (unsigned int event = common_opts.skip;
          event < common_opts.events + common_opts.skip; ++event) {
 
-        traccc::edm::pixel_cell_container::host cells{host_mr};
-        traccc::edm::pixel_module_container::host modules{host_mr};
+        traccc::edm::cell_container::host cells{host_mr};
+        traccc::edm::cell_module_container::host modules{host_mr};
 
         // Read the cells from the relevant event file
         traccc::io::read_cells(

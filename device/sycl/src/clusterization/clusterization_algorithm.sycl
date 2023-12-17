@@ -59,12 +59,11 @@ clusterization_algorithm::clusterization_algorithm(
       m_copy(copy) {}
 
 clusterization_algorithm::output_type clusterization_algorithm::operator()(
-    const edm::pixel_cell_container::const_view& cells,
-    const edm::pixel_module_container::const_view& modules) const {
+    const edm::cell_container::const_view& cells,
+    const edm::cell_module_container::const_view& modules) const {
 
     // Number of cells
-    const edm::pixel_cell_container::view::size_type num_cells =
-        m_copy.get_size(cells);
+    const edm::cell_container::view::size_type num_cells = cells.capacity();
 
     if (num_cells == 0) {
         return {output_type::first_type{0, m_mr.main},

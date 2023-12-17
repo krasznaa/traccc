@@ -22,7 +22,7 @@ namespace {
 /// Helper function which finds module from csv::cell in the geometry and
 /// digitization config, and initializes the module limits with the cell's
 /// properties
-std::size_t fill_module(traccc::edm::pixel_module_container::host& modules,
+std::size_t fill_module(traccc::edm::cell_module_container::host& modules,
                         const traccc::io::csv::cell& c,
                         const traccc::geometry* geom,
                         const traccc::digitization_config* dconfig) {
@@ -33,8 +33,7 @@ std::size_t fill_module(traccc::edm::pixel_module_container::host& modules,
 
     // Set the module's surface link.
     const detray::geometry::barcode surface_link{c.geometry_id};
-    traccc::edm::pixel_module_container::surface_link::get(modules)[pos] =
-        surface_link;
+    modules.surface_link()[pos] = surface_link;
 
     // Find/set the 3D position of the detector module.
     if (geom != nullptr) {
@@ -47,8 +46,7 @@ std::size_t fill_module(traccc::edm::pixel_module_container::host& modules,
         }
 
         // Set the value on the module description.
-        traccc::edm::pixel_module_container::placement::get(modules)[pos] =
-            (*geom)[surface_link.value()];
+        modules.placement()[pos] = (*geom)[surface_link.value()];
     }
 
     // Find/set the digitization configuration of the detector module.
@@ -66,9 +64,9 @@ std::size_t fill_module(traccc::edm::pixel_module_container::host& modules,
         // Set the value on the module description.
         const auto& binning_data = geo_it->segmentation.binningData();
         assert(binning_data.size() >= 2);
-        traccc::edm::pixel_module_container::pixel_data::get(modules)[pos] = {
-            binning_data[0].min, binning_data[1].min, binning_data[0].step,
-            binning_data[1].step};
+        modules.pixel_data()[pos] = {binning_data[0].min, binning_data[1].min,
+                                     binning_data[0].step,
+                                     binning_data[1].step};
     }
 
     // Return the position of the new element.
@@ -79,8 +77,8 @@ std::size_t fill_module(traccc::edm::pixel_module_container::host& modules,
 
 namespace traccc::io::csv {
 
-void read_cells(traccc::edm::pixel_cell_container::host& cells,
-                traccc::edm::pixel_module_container::host& modules,
+void read_cells(traccc::edm::cell_container::host& cells,
+                traccc::edm::cell_module_container::host& modules,
                 std::string_view filename, const geometry* geom,
                 const digitization_config* dconfig) {
 
@@ -104,8 +102,7 @@ void read_cells(traccc::edm::pixel_cell_container::host& cells,
     while (reader.read(iocell)) {
 
         // Check whether this cell's module is already known to us.
-        const auto& surface_links =
-            traccc::edm::pixel_module_container::surface_link::get(modules);
+        const auto& surface_links = modules.surface_link();
         auto rit = std::find(surface_links.rbegin(), surface_links.rend(),
                              detray::geometry::barcode{iocell.geometry_id});
         std::size_t pos = 0;
@@ -166,16 +163,11 @@ void read_cells(traccc::edm::pixel_cell_container::host& cells,
         const std::size_t cell_pos = cell_pos_ref++;
 
         // Set the properties of the pixel cell.
-        traccc::edm::pixel_cell_container::channel0::get(cells)[cell_pos] =
-            cell.channel0;
-        traccc::edm::pixel_cell_container::channel1::get(cells)[cell_pos] =
-            cell.channel1;
-        traccc::edm::pixel_cell_container::activation::get(cells)[cell_pos] =
-            cell.value;
-        traccc::edm::pixel_cell_container::time::get(cells)[cell_pos] =
-            cell.timestamp;
-        traccc::edm::pixel_cell_container::module_index::get(cells)[cell_pos] =
-            module_pos;
+        cells.channel0()[cell_pos] = cell.channel0;
+        cells.channel1()[cell_pos] = cell.channel1;
+        cells.activation()[cell_pos] = cell.value;
+        cells.time()[cell_pos] = cell.timestamp;
+        cells.module_index()[cell_pos] = module_pos;
     }
 }
 

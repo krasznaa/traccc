@@ -98,8 +98,8 @@ int seq_run(const traccc::full_tracking_input_config& i_cfg,
          event < common_opts.events + common_opts.skip; ++event) {
 
         // Instantiate host containers/collections
-        traccc::edm::pixel_cell_container::host cells{*(mr.host)};
-        traccc::edm::pixel_module_container::host modules{*(mr.host)};
+        traccc::edm::cell_container::host cells{*(mr.host)};
+        traccc::edm::cell_module_container::host modules{*(mr.host)};
         traccc::clusterization_algorithm::output_type measurements_per_event;
         traccc::spacepoint_formation::output_type spacepoints_per_event;
         traccc::seeding_algorithm::output_type seeds;
@@ -129,10 +129,10 @@ int seq_run(const traccc::full_tracking_input_config& i_cfg,
                 Clusterization and Spacepoint Creation (cuda)
             -----------------------------*/
             // Create device copy of input collections
-            traccc::edm::pixel_cell_container::buffer cells_buffer(cells.size(),
-                                                                   mr.main);
+            traccc::edm::cell_container::buffer cells_buffer(cells.size(),
+                                                             mr.main);
             copy(vecmem::get_data(cells), cells_buffer);
-            traccc::edm::pixel_module_container::buffer modules_buffer(
+            traccc::edm::cell_module_container::buffer modules_buffer(
                 modules.size(), mr.main);
             copy(vecmem::get_data(modules), modules_buffer);
 

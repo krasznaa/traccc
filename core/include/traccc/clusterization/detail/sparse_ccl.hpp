@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
+ * (c) 2021-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -9,7 +9,7 @@
 
 // Library include(s).
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/pixel_cell_container.hpp"
+#include "traccc/edm/cell_container.hpp"
 
 // VecMem include(s).
 #include <vecmem/containers/data/vector_view.hpp>
@@ -72,18 +72,16 @@ TRACCC_HOST_DEVICE inline unsigned int make_union(
 /// @return boolan to indicate 8-cell connectivity
 ///
 TRACCC_HOST_DEVICE inline bool is_adjacent(
-    const edm::pixel_cell_container::const_device& cells, unsigned int index_a,
+    const edm::cell_container::const_device& cells, unsigned int index_a,
     unsigned int index_b) {
 
-    using acc = edm::pixel_cell_container;
-    const auto channel0_a = acc::channel0::get(cells)[index_a];
-    const auto channel0_b = acc::channel0::get(cells)[index_b];
-    const auto channel1_a = acc::channel1::get(cells)[index_a];
-    const auto channel1_b = acc::channel1::get(cells)[index_b];
+    const channel_id channel0_a = cells.channel0()[index_a];
+    const channel_id channel0_b = cells.channel0()[index_b];
+    const channel_id channel1_a = cells.channel1()[index_a];
+    const channel_id channel1_b = cells.channel1()[index_b];
     return ((((channel0_a - channel0_b) * (channel0_a - channel0_b)) <= 1) &&
             (((channel1_a - channel1_b) * (channel1_a - channel1_b)) <= 1) &&
-            (acc::module_index::get(cells)[index_a] ==
-             acc::module_index::get(cells)[index_b]));
+            (cells.module_index()[index_a] == cells.module_index()[index_b]));
 }
 
 /// Helper method to find define distance,
@@ -97,14 +95,11 @@ TRACCC_HOST_DEVICE inline bool is_adjacent(
 /// @return boolan to indicate !8-cell connectivity
 ///
 TRACCC_HOST_DEVICE inline bool is_far_enough(
-    const edm::pixel_cell_container::const_device& cells, unsigned int index_a,
+    const edm::cell_container::const_device& cells, unsigned int index_a,
     unsigned int index_b) {
 
-    using acc = edm::pixel_cell_container;
-    return (((acc::channel1::get(cells)[index_a] -
-              acc::channel1::get(cells)[index_b]) > 1) ||
-            (acc::module_index::get(cells)[index_a] !=
-             acc::module_index::get(cells)[index_b]));
+    return (((cells.channel1()[index_a] - cells.channel1()[index_b]) > 1) ||
+            (cells.module_index()[index_a] != cells.module_index()[index_b]));
 }
 
 /// Sparce CCL algorithm
@@ -115,14 +110,14 @@ TRACCC_HOST_DEVICE inline bool is_far_enough(
 /// @return number of clusters
 ///
 TRACCC_HOST_DEVICE inline unsigned int sparse_ccl(
-    const edm::pixel_cell_container::const_view& cells_view,
+    const edm::cell_container::const_view& cells_view,
     vecmem::data::vector_view<unsigned int> labels_view) {
 
     // The number of labels (clusters).
     unsigned int n_labels = 0;
 
     // Create "data objects" on top of the views.
-    const edm::pixel_cell_container::const_device cells{cells_view};
+    const edm::cell_container::const_device cells{cells_view};
     vecmem::device_vector<unsigned int> labels{labels_view};
 
     // As an aggressive optimization, get the number of cells into a local

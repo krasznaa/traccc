@@ -9,10 +9,10 @@
 
 // Project include(s).
 #include "traccc/definitions/primitives.hpp"
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/edm/cluster.hpp"
 #include "traccc/edm/measurement.hpp"
-#include "traccc/edm/pixel_cell_container.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/io/read_cells.hpp"
 
 // Test include(s).
@@ -34,8 +34,8 @@
 
 using cca_function_t = std::function<
     std::map<traccc::geometry_id, vecmem::vector<traccc::measurement>>(
-        const traccc::edm::pixel_cell_container::host &,
-        const traccc::edm::pixel_module_container::host &)>;
+        const traccc::edm::cell_container::host &,
+        const traccc::edm::cell_module_container::host &)>;
 
 class ConnectedComponentAnalysisTests
     : public traccc::tests::data_test,
@@ -95,13 +95,12 @@ class ConnectedComponentAnalysisTests
             get_datafile("cca_test/" + file_prefix + "_truth.csv");
 
         vecmem::host_memory_resource host_mr;
-        traccc::edm::pixel_cell_container::host cells{host_mr};
-        traccc::edm::pixel_module_container::host modules{host_mr};
+        traccc::edm::cell_container::host cells{host_mr};
+        traccc::edm::cell_module_container::host modules{host_mr};
         traccc::io::read_cells(cells, modules, file_hits);
 
         for (std::size_t i = 0; i < modules.size(); i++) {
-            traccc::edm::pixel_module_container::pixel_data::get(modules).at(
-                i) = traccc::pixel_data{0, 0, 1, 1};
+            modules.pixel_data().at(i) = traccc::pixel_data{0, 0, 1, 1};
         }
 
         std::map<traccc::geometry_id, vecmem::vector<traccc::measurement>>

@@ -8,9 +8,9 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/edm/measurement.hpp"
-#include "traccc/edm/pixel_cell_container.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/edm/spacepoint.hpp"
 
 // VecMem include(s).
@@ -22,8 +22,8 @@ namespace traccc::io {
 /// vector of modules. The cells hold a link to a position in the modules'
 /// vector.
 struct cell_reader_output {
-    edm::pixel_cell_container::host cells;
-    edm::pixel_module_container::host modules;
+    edm::cell_container::host cells;
+    edm::cell_module_container::host modules;
 
     cell_reader_output(vecmem::memory_resource& mr) : cells(mr), modules(mr) {}
 };
@@ -33,7 +33,7 @@ struct cell_reader_output {
 /// to a position in the modules' vector.
 struct measurement_reader_output {
     measurement_collection_types::host measurements;
-    edm::pixel_module_container::host modules;
+    edm::cell_module_container::host modules;
 
     measurement_reader_output(vecmem::memory_resource& mr)
         : measurements(&mr), modules(mr) {}
@@ -44,7 +44,7 @@ struct measurement_reader_output {
 /// modules' vector.
 struct spacepoint_reader_output {
     spacepoint_collection_types::host spacepoints;
-    edm::pixel_module_container::host modules;
+    edm::cell_module_container::host modules;
 
     spacepoint_reader_output(vecmem::memory_resource& mr)
         : spacepoints(&mr), modules(mr) {}

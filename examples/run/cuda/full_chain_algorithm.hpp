@@ -13,8 +13,8 @@
 #include "traccc/cuda/seeding/track_params_estimation.hpp"
 #include "traccc/cuda/utils/stream.hpp"
 #include "traccc/device/container_h2d_copy_alg.hpp"
-#include "traccc/edm/pixel_cell_container.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/utils/algorithm.hpp"
 
 // VecMem include(s).
@@ -35,8 +35,8 @@ namespace traccc::cuda {
 ///
 class full_chain_algorithm
     : public algorithm<bound_track_parameters_collection_types::host(
-          const edm::pixel_cell_container::host&,
-          const edm::pixel_module_container::host&)> {
+          const edm::cell_container::host&,
+          const edm::cell_module_container::host&)> {
 
     public:
     /// Algorithm constructor
@@ -71,8 +71,8 @@ class full_chain_algorithm
     /// @return The track parameters reconstructed
     ///
     output_type operator()(
-        const edm::pixel_cell_container::host& cells,
-        const edm::pixel_module_container::host& modules) const override;
+        const edm::cell_container::host& cells,
+        const edm::cell_module_container::host& modules) const override;
 
     private:
     /// Host memory resource

@@ -24,8 +24,8 @@ full_chain_algorithm::full_chain_algorithm(
       m_filter_config(filter_config) {}
 
 full_chain_algorithm::output_type full_chain_algorithm::operator()(
-    const edm::pixel_cell_container::host& cells,
-    const edm::pixel_module_container::host& modules) const {
+    const edm::cell_container::host& cells,
+    const edm::cell_module_container::host& modules) const {
 
     const spacepoint_formation::output_type spacepoints =
         m_spacepoint_formation(m_clusterization(cells, modules), modules);

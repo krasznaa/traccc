@@ -40,8 +40,8 @@ namespace kernels {
 
 /// CUDA kernel for running @c traccc::device::ccl_kernel
 __global__ void ccl_kernel(
-    const edm::pixel_cell_container::const_view cells_view,
-    const edm::pixel_module_container::const_view modules_view,
+    const edm::cell_container::const_view cells_view,
+    const edm::cell_module_container::const_view modules_view,
     const index_t max_cells_per_partition,
     const index_t target_cells_per_partition,
     measurement_collection_types::view measurements_view,
@@ -63,7 +63,7 @@ __global__ void ccl_kernel(
 
 __global__ void form_spacepoints(
     measurement_collection_types::const_view measurements_view,
-    edm::pixel_module_container::const_view modules_view,
+    edm::cell_module_container::const_view modules_view,
     const unsigned int measurement_count,
     spacepoint_collection_types::view spacepoints_view) {
 
@@ -83,15 +83,14 @@ clusterization_algorithm::clusterization_algorithm(
       m_target_cells_per_partition(target_cells_per_partition) {}
 
 clusterization_algorithm::output_type clusterization_algorithm::operator()(
-    const edm::pixel_cell_container::const_view& cells,
-    const edm::pixel_module_container::const_view& modules) const {
+    const edm::cell_container::const_view& cells,
+    const edm::cell_module_container::const_view& modules) const {
 
     // Get a convenience variable for the stream that we'll be using.
     cudaStream_t stream = details::get_stream(m_stream);
 
     // Number of cells
-    const edm::pixel_cell_container::view::size_type num_cells =
-        m_copy.get_size(cells);
+    const edm::cell_container::view::size_type num_cells = cells.capacity();
 
     if (num_cells == 0) {
         return {output_type::first_type{0, m_mr.main},

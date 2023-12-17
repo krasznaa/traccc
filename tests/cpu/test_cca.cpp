@@ -8,9 +8,9 @@
 // Project include(s).
 #include "traccc/clusterization/clusterization_algorithm.hpp"
 #include "traccc/definitions/primitives.hpp"
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/edm/cluster.hpp"
-#include "traccc/edm/pixel_cell_container.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
 
 // Test include(s).
 #include "tests/cca_test.hpp"
@@ -28,17 +28,15 @@ namespace {
 vecmem::host_memory_resource resource;
 traccc::clusterization_algorithm ca(resource);
 
-cca_function_t f = [](const traccc::edm::pixel_cell_container::host& cells,
-                      const traccc::edm::pixel_module_container::host&
-                          modules) {
+cca_function_t f = [](const traccc::edm::cell_container::host& cells,
+                      const traccc::edm::cell_module_container::host& modules) {
     std::map<traccc::geometry_id, vecmem::vector<traccc::measurement>> result;
 
     auto measurements = ca(cells, modules);
     for (std::size_t i = 0; i < measurements.size(); i++) {
-        result[traccc::edm::pixel_module_container::surface_link::get(modules)
-                   .at(measurements.at(i).module_link)
-                   .value()]
-            .push_back(measurements.at(i));
+        result
+            [modules.surface_link().at(measurements.at(i).module_link).value()]
+                .push_back(measurements.at(i));
     }
 
     return result;

@@ -123,8 +123,8 @@ TRACCC_DEVICE void fast_sv_1(index_t* f, index_t* gf,
 template <typename barrier_t>
 TRACCC_DEVICE inline void ccl_kernel(
     const index_t threadId, const index_t blckDim, const unsigned int blockId,
-    const edm::pixel_cell_container::const_view cells_view,
-    const edm::pixel_module_container::const_view modules_view,
+    const edm::cell_container::const_view cells_view,
+    const edm::cell_module_container::const_view modules_view,
     const index_t max_cells_per_partition,
     const index_t target_cells_per_partition, unsigned int& partition_start,
     unsigned int& partition_end, unsigned int& outi, index_t* f, index_t* gf,
@@ -133,9 +133,8 @@ TRACCC_DEVICE inline void ccl_kernel(
     vecmem::data::vector_view<unsigned int> cell_links) {
 
     // Get device copy of input parameters
-    const edm::pixel_cell_container::const_device cells_device(cells_view);
-    const edm::pixel_module_container::const_device modules_device(
-        modules_view);
+    const edm::cell_container::const_device cells_device(cells_view);
+    const edm::cell_module_container::const_device modules_device(modules_view);
     measurement_collection_types::device measurements_device(measurements_view);
 
     const unsigned int num_cells = cells_device.size();
@@ -161,15 +160,11 @@ TRACCC_DEVICE inline void ccl_kernel(
          * on any cells that have been claimed by the previous block (if
          * any).
          */
-        while (start != 0 &&
-               edm::pixel_cell_container::module_index::get(
-                   cells_device)[start - 1] ==
-                   edm::pixel_cell_container::module_index::get(
-                       cells_device)[start] &&
-               edm::pixel_cell_container::channel1::get(cells_device)[start] <=
-                   edm::pixel_cell_container::channel1::get(
-                       cells_device)[start - 1] +
-                       1) {
+        while ((start != 0) &&
+               (cells_device.module_index()[start - 1] ==
+                cells_device.module_index()[start]) &&
+               (cells_device.channel1()[start] <=
+                cells_device.channel1()[start - 1] + 1)) {
             ++start;
         }
 
@@ -178,15 +173,11 @@ TRACCC_DEVICE inline void ccl_kernel(
          * current block to ensure that we do not end our partition on a
          * cell that is not a possible boundary!
          */
-        while (end < num_cells &&
-               edm::pixel_cell_container::module_index::get(
-                   cells_device)[end - 1] ==
-                   edm::pixel_cell_container::module_index::get(
-                       cells_device)[end] &&
-               edm::pixel_cell_container::channel1::get(cells_device)[end] <=
-                   edm::pixel_cell_container::channel1::get(
-                       cells_device)[end - 1] +
-                       1) {
+        while ((end < num_cells) &&
+               (cells_device.module_index()[end - 1] ==
+                cells_device.module_index()[end]) &&
+               (cells_device.channel1()[end] <=
+                cells_device.channel1()[end - 1] + 1)) {
             ++end;
         }
         partition_start = start;

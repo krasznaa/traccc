@@ -11,8 +11,8 @@
 #include "traccc/io/data_format.hpp"
 
 // Project include(s).
-#include "traccc/edm/pixel_cell_container.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/geometry/geometry.hpp"
 #include "traccc/io/digitization_config.hpp"
 
@@ -35,8 +35,8 @@ namespace traccc::io {
 /// @param geom The description of the detector geometry
 /// @param dconfig The detector's digitization configuration
 ///
-void read_cells(edm::pixel_cell_container::host &cells,
-                edm::pixel_module_container::host &modules, std::size_t event,
+void read_cells(edm::cell_container::host &cells,
+                edm::cell_module_container::host &modules, std::size_t event,
                 std::string_view directory,
                 data_format format = data_format::csv,
                 const geometry *geom = nullptr,
@@ -53,8 +53,8 @@ void read_cells(edm::pixel_cell_container::host &cells,
 /// @param geom The description of the detector geometry
 /// @param dconfig The detector's digitization configuration
 ///
-void read_cells(edm::pixel_cell_container::host &cells,
-                edm::pixel_module_container::host &modules,
+void read_cells(edm::cell_container::host &cells,
+                edm::cell_module_container::host &modules,
                 std::string_view filename,
                 data_format format = data_format::csv,
                 const geometry *geom = nullptr,

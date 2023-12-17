@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -25,18 +25,17 @@ vecmem::cuda::copy copy;
 traccc::cuda::stream stream;
 traccc::cuda::experimental::clusterization_algorithm cc{mr, copy, stream, 1024};
 
-cca_function_t f = [](const traccc::edm::pixel_cell_container::host& cells,
-                      const traccc::edm::pixel_module_container::host&
-                          modules) {
+cca_function_t f = [](const traccc::edm::cell_container::host& cells,
+                      const traccc::edm::cell_module_container::host& modules) {
     std::map<traccc::geometry_id, vecmem::vector<traccc::measurement>> result;
 
-    traccc::edm::pixel_cell_container::buffer cells_buffer{
-        static_cast<traccc::edm::pixel_cell_container::buffer::size_type>(
+    traccc::edm::cell_container::buffer cells_buffer{
+        static_cast<traccc::edm::cell_container::buffer::size_type>(
             cells.size()),
         device_mr};
     copy(vecmem::get_data(cells), cells_buffer);
-    traccc::edm::pixel_module_container::buffer modules_buffer(
-        static_cast<traccc::edm::pixel_module_container::buffer::size_type>(
+    traccc::edm::cell_module_container::buffer modules_buffer(
+        static_cast<traccc::edm::cell_module_container::buffer::size_type>(
             modules.size()),
         device_mr);
     copy(vecmem::get_data(modules), modules_buffer);
@@ -46,10 +45,9 @@ cca_function_t f = [](const traccc::edm::pixel_cell_container::host& cells,
     copy(measurements_buffer, measurements);
 
     for (std::size_t i = 0; i < measurements.size(); i++) {
-        result[traccc::edm::pixel_module_container::surface_link::get(modules)
-                   .at(measurements.at(i).module_link)
-                   .value()]
-            .push_back(measurements.at(i));
+        result
+            [modules.surface_link().at(measurements.at(i).module_link).value()]
+                .push_back(measurements.at(i));
     }
 
     return result;

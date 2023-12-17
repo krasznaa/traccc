@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -45,8 +45,8 @@ TEST_P(SurfaceBinningTests, Run) {
     traccc::spacepoint_formation sf(host_mr);
 
     // Read the cells from the relevant event file
-    traccc::edm::pixel_cell_container::host cells{host_mr};
-    traccc::edm::pixel_module_container::host modules{host_mr};
+    traccc::edm::cell_container::host cells{host_mr};
+    traccc::edm::cell_module_container::host modules{host_mr};
     traccc::io::read_cells(cells, modules, event, data_dir,
                            traccc::data_format::csv, &surface_transforms,
                            &digi_cfg);
@@ -62,7 +62,7 @@ TEST_P(SurfaceBinningTests, Run) {
 
     const traccc::spacepoint_collection_types::host& spacepoints_truth =
         sp_readOut.spacepoints;
-    const traccc::edm::pixel_module_container::host& modules_2 =
+    const traccc::edm::cell_module_container::host& modules_2 =
         sp_readOut.modules;
 
     // Check the size of spacepoints
@@ -75,11 +75,8 @@ TEST_P(SurfaceBinningTests, Run) {
         const auto& sp_truth = spacepoints_truth[i];
 
         // Check that the spacepoints belong to the same module
-        EXPECT_EQ(
-            traccc::edm::pixel_module_container::surface_link::get(modules).at(
-                sp_recon.meas.module_link),
-            traccc::edm::pixel_module_container::surface_link::get(modules_2)
-                .at(sp_truth.meas.module_link));
+        EXPECT_EQ(modules.surface_link().at(sp_recon.meas.module_link),
+                  modules_2.surface_link().at(sp_truth.meas.module_link));
 
         // Make sure that the difference in spacepoint position is less than
         // 1%

@@ -9,6 +9,8 @@
 
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/edm/measurement.hpp"
 
 // System include(s).
@@ -29,8 +31,8 @@ namespace traccc::device {
 /// @param[out] out     cluster to fill
 TRACCC_HOST_DEVICE
 inline void aggregate_cluster(
-    const edm::pixel_cell_container::const_device& cells,
-    const edm::pixel_module_container::const_device& modules,
+    const edm::cell_container::const_device& cells,
+    const edm::cell_module_container::const_device& modules,
     const vecmem::data::vector_view<unsigned short> f_view,
     const unsigned int start, const unsigned int end, const unsigned short cid,
     measurement& out, vecmem::data::vector_view<unsigned int> cell_links,

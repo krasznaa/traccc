@@ -23,19 +23,19 @@ inline bool is_adjacent(channel_id ac0, channel_id ac1, channel_id bc0,
 }
 
 TRACCC_HOST_DEVICE
-inline void reduce_problem_cell(
-    const edm::pixel_cell_container::const_device& cells,
-    const unsigned short cid, const unsigned int start, const unsigned int end,
-    unsigned char& adjc, unsigned short adjv[8]) {
+inline void reduce_problem_cell(const edm::cell_container::const_device& cells,
+                                const unsigned short cid,
+                                const unsigned int start,
+                                const unsigned int end, unsigned char& adjc,
+                                unsigned short adjv[8]) {
 
     const unsigned int pos = cid + start;
 
     // Check if this code can benefit from changing to structs of arrays, as the
     // recurring accesses to cell data in global memory is slow right now.
-    const channel_id c0 = edm::pixel_cell_container::channel0::get(cells)[pos];
-    const channel_id c1 = edm::pixel_cell_container::channel1::get(cells)[pos];
-    const unsigned int mod_id =
-        edm::pixel_cell_container::module_index::get(cells)[pos];
+    const channel_id c0 = cells.channel0()[pos];
+    const channel_id c1 = cells.channel1()[pos];
+    const unsigned int mod_id = cells.module_index()[pos];
 
     /*
      * First, we traverse the cells backwards, starting from the current
@@ -49,8 +49,7 @@ inline void reduce_problem_cell(
          * impossible for that cell to ever be adjacent to this one.
          * This is a small optimisation.
          */
-        if (edm::pixel_cell_container::channel1::get(cells)[j] + 1 < c1 ||
-            edm::pixel_cell_container::module_index::get(cells)[j] != mod_id) {
+        if (cells.channel1()[j] + 1 < c1 || cells.module_index()[j] != mod_id) {
             break;
         }
 
@@ -58,9 +57,7 @@ inline void reduce_problem_cell(
          * If the cell examined is adjacent to the current cell, save it
          * in the current cell's adjacency set.
          */
-        if (is_adjacent(c0, c1,
-                        edm::pixel_cell_container::channel0::get(cells)[j],
-                        edm::pixel_cell_container::channel1::get(cells)[j])) {
+        if (is_adjacent(c0, c1, cells.channel0()[j], cells.channel1()[j])) {
             adjv[adjc++] = j - start;
         }
     }
@@ -74,14 +71,11 @@ inline void reduce_problem_cell(
          * Note that this check now looks in the opposite direction! An
          * important difference.
          */
-        if (edm::pixel_cell_container::channel1::get(cells)[j] > c1 + 1 ||
-            edm::pixel_cell_container::module_index::get(cells)[j] != mod_id) {
+        if (cells.channel1()[j] > c1 + 1 || cells.module_index()[j] != mod_id) {
             break;
         }
 
-        if (is_adjacent(c0, c1,
-                        edm::pixel_cell_container::channel0::get(cells)[j],
-                        edm::pixel_cell_container::channel1::get(cells)[j])) {
+        if (is_adjacent(c0, c1, cells.channel0()[j], cells.channel1()[j])) {
             adjv[adjc++] = j - start;
         }
     }

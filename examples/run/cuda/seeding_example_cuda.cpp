@@ -259,7 +259,7 @@ int seq_run(const traccc::seeding_input_config& /*i_cfg*/,
                 spacepoints_per_event.size(), mr.main);
             async_copy(vecmem::get_data(spacepoints_per_event),
                        spacepoints_cuda_buffer);
-            traccc::edm::pixel_module_container::buffer modules_buffer(
+            traccc::edm::cell_module_container::buffer modules_buffer(
                 modules_per_event.size(), mr.main);
             async_copy(vecmem::get_data(modules_per_event), modules_buffer);
 

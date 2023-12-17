@@ -47,7 +47,7 @@ void read_spacepoints(spacepoint_reader_output& out, std::string_view filename,
 
     // Create the result collection.
     spacepoint_collection_types::host& result_spacepoints = out.spacepoints;
-    edm::pixel_module_container::host& result_modules = out.modules;
+    edm::cell_module_container::host& result_modules = out.modules;
 
     std::map<geometry_id, unsigned int> m;
 
@@ -62,11 +62,9 @@ void read_spacepoints(spacepoint_reader_output& out, std::string_view filename,
             link = result_modules.size();
             m[iohit.geometry_id] = link;
             result_modules.resize(link + 1);
-            edm::pixel_module_container::surface_link::get(
-                result_modules)[link] =
+            result_modules.surface_link()[link] =
                 detray::geometry::barcode{iohit.geometry_id};
-            edm::pixel_module_container::placement::get(result_modules)[link] =
-                geom[iohit.geometry_id];
+            result_modules.placement()[link] = geom[iohit.geometry_id];
         }
 
         // Construct the global 3D position of the spacepoint.

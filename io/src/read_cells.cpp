@@ -14,8 +14,8 @@
 
 namespace traccc::io {
 
-void read_cells(edm::pixel_cell_container::host& cells,
-                edm::pixel_module_container::host& modules, std::size_t event,
+void read_cells(edm::cell_container::host& cells,
+                edm::cell_module_container::host& modules, std::size_t event,
                 std::string_view directory, data_format format,
                 const geometry* geom, const digitization_config* dconfig) {
 
@@ -32,8 +32,8 @@ void read_cells(edm::pixel_cell_container::host& cells,
     }
 }
 
-void read_cells(edm::pixel_cell_container::host& cells,
-                edm::pixel_module_container::host& modules,
+void read_cells(edm::cell_container::host& cells,
+                edm::cell_module_container::host& modules,
                 std::string_view filename, data_format format,
                 const geometry* geom, const digitization_config* dconfig) {
 

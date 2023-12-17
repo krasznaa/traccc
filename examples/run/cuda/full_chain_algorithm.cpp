@@ -88,21 +88,20 @@ full_chain_algorithm::~full_chain_algorithm() {
 }
 
 full_chain_algorithm::output_type full_chain_algorithm::operator()(
-    const edm::pixel_cell_container::host& cells,
-    const edm::pixel_module_container::host& modules) const {
+    const edm::cell_container::host& cells,
+    const edm::cell_module_container::host& modules) const {
 
     // Create device copy of input collections
-    edm::pixel_cell_container::buffer cells_host_buffer(cells.size(),
-                                                        m_host_mr);
+    edm::cell_container::buffer cells_host_buffer(cells.size(), m_host_mr);
     m_host_copy(vecmem::get_data(cells), cells_host_buffer);
-    edm::pixel_cell_container::buffer cells_device_buffer(cells.size(),
-                                                          *m_cached_device_mr);
+    edm::cell_container::buffer cells_device_buffer(cells.size(),
+                                                    *m_cached_device_mr);
     m_copy(cells_host_buffer, cells_device_buffer);
 
-    edm::pixel_module_container::buffer modules_host_buffer(modules.size(),
-                                                            m_host_mr);
+    edm::cell_module_container::buffer modules_host_buffer(modules.size(),
+                                                           m_host_mr);
     m_host_copy(vecmem::get_data(modules), modules_host_buffer);
-    edm::pixel_module_container::buffer modules_device_buffer(
+    edm::cell_module_container::buffer modules_device_buffer(
         modules.size(), *m_cached_device_mr);
     m_copy(modules_host_buffer, modules_device_buffer);
 

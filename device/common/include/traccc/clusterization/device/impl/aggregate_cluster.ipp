@@ -14,8 +14,8 @@ namespace traccc::device {
 
 TRACCC_HOST_DEVICE
 inline void aggregate_cluster(
-    const edm::pixel_cell_container::const_device& cells,
-    const edm::pixel_module_container::const_device& modules,
+    const edm::cell_container::const_device& cells,
+    const edm::cell_module_container::const_device& modules,
     const vecmem::data::vector_view<unsigned short> f_view,
     const unsigned int start, const unsigned int end, const unsigned short cid,
     measurement& out, vecmem::data::vector_view<unsigned int> cell_links,
@@ -32,8 +32,7 @@ inline void aggregate_cluster(
      */
     scalar totalWeight = 0.;
     point2 mean{0., 0.}, var{0., 0.};
-    const unsigned int module_index =
-        edm::pixel_cell_container::module_index::get(cells)[cid + start];
+    const unsigned int module_index = cells.module_index()[cid + start];
     const unsigned short partition_size = end - start;
 
     channel_id maxChannel1 = std::numeric_limits<channel_id>::min();
@@ -47,8 +46,7 @@ inline void aggregate_cluster(
          * Terminate the process earlier if we have reached a cell sufficiently
          * in a different module.
          */
-        if (edm::pixel_cell_container::module_index::get(cells)[pos] !=
-            module_index) {
+        if (cells.module_index()[pos] != module_index) {
             break;
         }
 
@@ -59,19 +57,16 @@ inline void aggregate_cluster(
          */
         if (f[j] == cid) {
 
-            const unsigned int channel1 =
-                edm::pixel_cell_container::channel1::get(cells)[pos];
+            const channel_id channel1 = cells.channel1()[pos];
             if (channel1 > maxChannel1) {
                 maxChannel1 = channel1;
             }
 
-            const scalar activation =
-                edm::pixel_cell_container::activation::get(cells)[pos];
+            const scalar activation = cells.activation()[pos];
             const float weight = traccc::detail::signal_cell_modelling(
                 activation, modules, module_index);
 
-            if (weight > edm::pixel_module_container::threshold::get(
-                             modules)[module_index]) {
+            if (weight > modules.threshold()[module_index]) {
                 totalWeight += activation;
                 const point2 cell_position = traccc::detail::position_from_cell(
                     cells, pos, modules, module_index);
@@ -92,8 +87,7 @@ inline void aggregate_cluster(
          * Terminate the process earlier if we have reached a cell sufficiently
          * far away from the cluster in the dominant axis.
          */
-        if (edm::pixel_cell_container::channel1::get(cells)[pos] >
-            maxChannel1 + 1) {
+        if (cells.channel1()[pos] > maxChannel1 + 1) {
             break;
         }
     }
@@ -101,9 +95,7 @@ inline void aggregate_cluster(
         for (char i = 0; i < 2; ++i) {
             var[i] /= totalWeight;
         }
-        const auto pitch =
-            edm::pixel_module_container::pixel_data::get(modules)[module_index]
-                .get_pitch();
+        const auto pitch = modules.pixel_data()[module_index].get_pitch();
         var = var + point2{pitch[0] * pitch[0] / static_cast<scalar>(12.),
                            pitch[1] * pitch[1] / static_cast<scalar>(12.)};
     }
@@ -113,8 +105,7 @@ inline void aggregate_cluster(
      */
     out.local = mean;
     out.variance = var;
-    out.surface_link =
-        edm::pixel_module_container::surface_link::get(modules)[module_index];
+    out.surface_link = modules.surface_link()[module_index];
     out.module_link = module_index;
     // The following will need to be filled properly "soon".
     out.meas_dim = 2u;

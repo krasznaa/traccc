@@ -25,40 +25,27 @@
 #include <fstream>
 
 /// Helper function comparing the contents of two pixel cell containers.
-void compareCellContainers(const traccc::edm::pixel_cell_container::host& c1,
-                           const traccc::edm::pixel_cell_container::host& c2) {
+void compareCellContainers(const traccc::edm::cell_container::host& c1,
+                           const traccc::edm::cell_container::host& c2) {
     ASSERT_EQ(c1.size(), c2.size());
     for (std::size_t i = 0; i < c1.size(); i++) {
-        EXPECT_EQ(traccc::edm::pixel_cell_container::channel0::get(c1).at(i),
-                  traccc::edm::pixel_cell_container::channel0::get(c2).at(i));
-        EXPECT_EQ(traccc::edm::pixel_cell_container::channel1::get(c1).at(i),
-                  traccc::edm::pixel_cell_container::channel1::get(c2).at(i));
-        EXPECT_FLOAT_EQ(
-            traccc::edm::pixel_cell_container::activation::get(c1).at(i),
-            traccc::edm::pixel_cell_container::activation::get(c2).at(i));
-        EXPECT_FLOAT_EQ(traccc::edm::pixel_cell_container::time::get(c1).at(i),
-                        traccc::edm::pixel_cell_container::time::get(c2).at(i));
-        EXPECT_EQ(
-            traccc::edm::pixel_cell_container::module_index::get(c1).at(i),
-            traccc::edm::pixel_cell_container::module_index::get(c2).at(i));
+        EXPECT_EQ(c1.channel0().at(i), c2.channel0().at(i));
+        EXPECT_EQ(c1.channel1().at(i), c2.channel1().at(i));
+        EXPECT_FLOAT_EQ(c1.activation().at(i), c2.activation().at(i));
+        EXPECT_FLOAT_EQ(c1.time().at(i), c2.time().at(i));
+        EXPECT_EQ(c1.module_index().at(i), c2.module_index().at(i));
     }
 }
 
 /// Helper function comapring the contents of two pixel module containers.
 void compareModuleContainers(
-    const traccc::edm::pixel_module_container::host& m1,
-    const traccc::edm::pixel_module_container::host& m2) {
+    const traccc::edm::cell_module_container::host& m1,
+    const traccc::edm::cell_module_container::host& m2) {
     ASSERT_EQ(m1.size(), m2.size());
     for (std::size_t i = 0; i < m1.size(); i++) {
-        EXPECT_EQ(
-            traccc::edm::pixel_module_container::surface_link::get(m1).at(i),
-            traccc::edm::pixel_module_container::surface_link::get(m2).at(i));
-        EXPECT_EQ(
-            traccc::edm::pixel_module_container::placement::get(m1).at(i),
-            traccc::edm::pixel_module_container::placement::get(m2).at(i));
-        EXPECT_FLOAT_EQ(
-            traccc::edm::pixel_module_container::threshold::get(m1).at(i),
-            traccc::edm::pixel_module_container::threshold::get(m2).at(i));
+        EXPECT_EQ(m1.surface_link().at(i), m2.surface_link().at(i));
+        EXPECT_EQ(m1.placement().at(i), m2.placement().at(i));
+        EXPECT_FLOAT_EQ(m1.threshold().at(i), m2.threshold().at(i));
     }
 }
 
@@ -81,8 +68,8 @@ TEST(io_binary, cell) {
         "tml_detector/default-geometric-config-generic.json");
 
     // Read csv file
-    traccc::edm::pixel_cell_container::host cells_csv{host_mr};
-    traccc::edm::pixel_module_container::host modules_csv{host_mr};
+    traccc::edm::cell_container::host cells_csv{host_mr};
+    traccc::edm::cell_module_container::host modules_csv{host_mr};
     traccc::io::read_cells(cells_csv, modules_csv, event, cells_directory,
                            traccc::data_format::csv, &surface_transforms,
                            &digi_cfg);
@@ -93,8 +80,8 @@ TEST(io_binary, cell) {
                       vecmem::get_data(modules_csv));
 
     // Read binary file
-    traccc::edm::pixel_cell_container::host cells_binary{host_mr};
-    traccc::edm::pixel_module_container::host modules_binary{host_mr};
+    traccc::edm::cell_container::host cells_binary{host_mr};
+    traccc::edm::cell_module_container::host modules_binary{host_mr};
     traccc::io::read_cells(cells_binary, modules_binary, event, cells_directory,
                            traccc::data_format::binary, &surface_transforms,
                            &digi_cfg);
@@ -147,7 +134,7 @@ TEST(io_binary, spacepoint) {
                                  surface_transforms, traccc::data_format::csv);
     const traccc::spacepoint_collection_types::host& spacepoints_csv =
         reader_csv.spacepoints;
-    const traccc::edm::pixel_module_container::host& modules_csv =
+    const traccc::edm::cell_module_container::host& modules_csv =
         reader_csv.modules;
 
     // // Write binary file
@@ -162,7 +149,7 @@ TEST(io_binary, spacepoint) {
                                  traccc::data_format::binary);
     const traccc::spacepoint_collection_types::host& spacepoints_binary =
         reader_binary.spacepoints;
-    const traccc::edm::pixel_module_container::host& modules_binary =
+    const traccc::edm::cell_module_container::host& modules_binary =
         reader_binary.modules;
 
     // Delete binary file
@@ -209,7 +196,7 @@ TEST(io_binary, measurement) {
                                   traccc::data_format::csv);
     const traccc::measurement_collection_types::host& measurements_csv =
         reader_csv.measurements;
-    const traccc::edm::pixel_module_container::host& modules_csv =
+    const traccc::edm::cell_module_container::host& modules_csv =
         reader_csv.modules;
 
     // Write binary file
@@ -223,7 +210,7 @@ TEST(io_binary, measurement) {
                                   traccc::data_format::binary);
     const traccc::measurement_collection_types::host& measurements_binary =
         reader_binary.measurements;
-    const traccc::edm::pixel_module_container::host& modules_binary =
+    const traccc::edm::cell_module_container::host& modules_binary =
         reader_binary.modules;
 
     // Delete binary file

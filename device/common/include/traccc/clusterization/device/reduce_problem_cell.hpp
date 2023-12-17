@@ -9,7 +9,7 @@
 
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/pixel_cell_container.hpp"
+#include "traccc/edm/cell_container.hpp"
 
 // System include(s).
 #include <cstddef>
@@ -28,10 +28,11 @@ namespace traccc::device {
 /// @param[out] ajv     Indices of adjacent cells
 ///
 TRACCC_HOST_DEVICE
-inline void reduce_problem_cell(
-    const edm::pixel_cell_container::const_device& cells,
-    const unsigned short cid, const unsigned int start, const unsigned int end,
-    unsigned char& adjc, unsigned short adjv[8]);
+inline void reduce_problem_cell(const edm::cell_container::const_device& cells,
+                                const unsigned short cid,
+                                const unsigned int start,
+                                const unsigned int end, unsigned char& adjc,
+                                unsigned short adjv[8]);
 
 }  // namespace traccc::device
 

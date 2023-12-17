@@ -15,7 +15,7 @@ spacepoint_formation::spacepoint_formation(vecmem::memory_resource& mr)
 
 spacepoint_formation::output_type spacepoint_formation::operator()(
     const measurement_collection_types::host& measurements,
-    const edm::pixel_module_container::host& modules) const {
+    const edm::cell_module_container::host& modules) const {
 
     // Create the result container.
     output_type result(&(m_mr.get()));
@@ -29,7 +29,7 @@ spacepoint_formation::output_type spacepoint_formation::operator()(
         // Transform measurement position to 3D
         point3 local_3d = {this_measurement.local[0], this_measurement.local[1],
                            0.};
-        point3 global = edm::pixel_module_container::placement::get(modules)
+        point3 global = modules.placement()
                             .at(this_measurement.module_link)
                             .point_to_global(local_3d);
 

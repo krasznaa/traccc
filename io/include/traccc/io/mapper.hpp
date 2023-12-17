@@ -8,10 +8,10 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/edm/measurement.hpp"
 #include "traccc/edm/particle.hpp"
-#include "traccc/edm/pixel_cell_container.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/edm/spacepoint.hpp"
 
 // System include(s).
@@ -29,10 +29,10 @@ using particle_map = std::map<particle_id, particle>;
 using hit_particle_map = std::map<spacepoint, particle>;
 using hit_map = std::map<hit_id, spacepoint>;
 using hit_cell_map = std::tuple<std::map<spacepoint, std::vector<unsigned int>>,
-                                edm::pixel_cell_container::host>;
+                                edm::cell_container::host>;
 using geoId_link_map = std::map<geometry_id, unsigned int>;
-using cell_particle_map = std::tuple<std::map<unsigned int, particle>,
-                                     edm::pixel_cell_container::host>;
+using cell_particle_map =
+    std::tuple<std::map<unsigned int, particle>, edm::cell_container::host>;
 using measurement_cell_map =
     std::map<measurement, vecmem::vector<unsigned int>>;
 using measurement_particle_map =
@@ -58,7 +58,7 @@ cell_particle_map generate_cell_particle_map(
     const std::string& hits_dir, const std::string& particle_dir,
     const geoId_link_map& link_map = geoId_link_map());
 
-std::tuple<measurement_cell_map, edm::pixel_module_container::host>
+std::tuple<measurement_cell_map, edm::cell_module_container::host>
 generate_measurement_cell_map(std::size_t event,
                               const std::string& detector_file,
                               const std::string& digi_config_file,

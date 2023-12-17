@@ -11,9 +11,9 @@
 #include "traccc/sycl/utils/queue_wrapper.hpp"
 
 // Project include(s).
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/edm/measurement.hpp"
-#include "traccc/edm/pixel_cell_container.hpp"
-#include "traccc/edm/pixel_module_container.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/memory_resource.hpp"
 
@@ -32,8 +32,8 @@ namespace traccc::sycl::experimental {
 ///
 class clusterization_algorithm
     : public algorithm<measurement_collection_types::buffer(
-          const edm::pixel_cell_container::const_view&,
-          const edm::pixel_module_container::const_view&)> {
+          const edm::cell_container::const_view&,
+          const edm::cell_module_container::const_view&)> {
 
     public:
     /// Constructor for clusterization algorithm
@@ -57,8 +57,8 @@ class clusterization_algorithm
     /// @return a spacepoint collection (buffer) and a collection (buffer)
     /// of links from cells to the spacepoints they belong to.
     output_type operator()(
-        const edm::pixel_cell_container::const_view& cells,
-        const edm::pixel_module_container::const_view& modules) const override;
+        const edm::cell_container::const_view& cells,
+        const edm::cell_module_container::const_view& modules) const override;
 
     private:
     /// The average number of cells in each partition
