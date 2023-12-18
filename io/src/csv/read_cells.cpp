@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -13,39 +13,40 @@
 // System include(s).
 #include <algorithm>
 #include <cassert>
+#include <numeric>
 #include <utility>
 #include <vector>
 
 namespace {
 
-/// Comparator used for sorting cells. This sorting is one of the assumptions
-/// made in the clusterization algorithm
-const auto comp = [](const traccc::cell& c1, const traccc::cell& c2) {
-    return c1.channel1 < c2.channel1;
-};
-
 /// Helper function which finds module from csv::cell in the geometry and
-/// digitization config, and initializes the modules limits with the cell's
+/// digitization config, and initializes the module limits with the cell's
 /// properties
-traccc::cell_module get_module(traccc::io::csv::cell c,
-                               const traccc::geometry* geom,
-                               const traccc::digitization_config* dconfig) {
+std::size_t fill_module(traccc::edm::cell_module_container::host& modules,
+                        const traccc::io::csv::cell& c,
+                        const traccc::geometry* geom,
+                        const traccc::digitization_config* dconfig) {
 
-    traccc::cell_module result;
-    result.surface_link = detray::geometry::barcode{c.geometry_id};
+    // Add a new module. Remembering its position.
+    const std::size_t pos = modules.size();
+    modules.resize(pos + 1);
+
+    // Set the module's surface link.
+    const detray::geometry::barcode surface_link{c.geometry_id};
+    modules.surface_link()[pos] = surface_link;
 
     // Find/set the 3D position of the detector module.
     if (geom != nullptr) {
 
         // Check if the module ID is known.
-        if (!geom->contains(result.surface_link.value())) {
+        if (!geom->contains(surface_link.value())) {
             throw std::runtime_error(
                 "Could not find placement for geometry ID " +
-                std::to_string(result.surface_link.value()));
+                std::to_string(surface_link.value()));
         }
 
         // Set the value on the module description.
-        result.placement = (*geom)[result.surface_link.value()];
+        modules.placement()[pos] = (*geom)[surface_link.value()];
     }
 
     // Find/set the digitization configuration of the detector module.
@@ -53,115 +54,120 @@ traccc::cell_module get_module(traccc::io::csv::cell c,
 
         // Check if the module ID is known.
         const traccc::digitization_config::Iterator geo_it =
-            dconfig->find(result.surface_link.value());
+            dconfig->find(surface_link.value());
         if (geo_it == dconfig->end()) {
             throw std::runtime_error(
                 "Could not find digitization config for geometry ID " +
-                std::to_string(result.surface_link.value()));
+                std::to_string(surface_link.value()));
         }
 
         // Set the value on the module description.
         const auto& binning_data = geo_it->segmentation.binningData();
         assert(binning_data.size() >= 2);
-        result.pixel = {binning_data[0].min, binning_data[1].min,
-                        binning_data[0].step, binning_data[1].step};
+        modules.pixel_data()[pos] = {binning_data[0].min, binning_data[1].min,
+                                     binning_data[0].step,
+                                     binning_data[1].step};
     }
 
-    return result;
+    // Return the position of the new element.
+    return pos;
 }
 
 }  // namespace
 
 namespace traccc::io::csv {
 
-void read_cells(cell_reader_output& out, std::string_view filename,
-                const geometry* geom, const digitization_config* dconfig) {
+void read_cells(traccc::edm::cell_container::host& cells,
+                traccc::edm::cell_module_container::host& modules,
+                std::string_view filename, const geometry* geom,
+                const digitization_config* dconfig) {
 
     // Construct the cell reader object.
     auto reader = make_cell_reader(filename);
 
-    // Create cell counter vector.
-    std::vector<unsigned int> cellCounts;
+    // Create a cell counter vector.
+    std::vector<std::size_t> cellCounts;
     cellCounts.reserve(5000);
 
-    cell_module_collection_types::host& result_modules = out.modules;
-    result_modules.reserve(5000);
+    // Reserve a reasonable amount of space for the modules.
+    modules.reserve(5000);
 
     // Create a cell collection, which holds on to a flat list of all the cells
     // and the position of their respective cell counter & module.
-    std::vector<std::pair<csv::cell, unsigned int>> allCells;
+    std::vector<std::pair<csv::cell, std::size_t>> allCells;
     allCells.reserve(50000);
 
     // Read all cells from input file.
     csv::cell iocell;
     while (reader.read(iocell)) {
 
-        // Look for current module in cell counter vector.
-        auto rit = std::find_if(result_modules.rbegin(), result_modules.rend(),
-                                [&iocell](const cell_module& mod) {
-                                    return mod.surface_link.value() ==
-                                           iocell.geometry_id;
-                                });
-        if (rit == result_modules.rend()) {
-            // Add new cell and new cell counter if a new module is found
-            const cell_module mod = get_module(iocell, geom, dconfig);
-            allCells.push_back({iocell, result_modules.size()});
-            result_modules.push_back(mod);
-            cellCounts.push_back(1);
+        // Check whether this cell's module is already known to us.
+        const auto& surface_links = modules.surface_link();
+        auto rit = std::find(surface_links.rbegin(), surface_links.rend(),
+                             detray::geometry::barcode{iocell.geometry_id});
+        std::size_t pos = 0;
+        if (rit == surface_links.rend()) {
+            // Add a new pixel cell module.
+            pos = fill_module(modules, iocell, geom, dconfig);
         } else {
-            // Add a new cell and update cell counter if repeat module is found
-            const unsigned int pos =
-                std::distance(result_modules.begin(), rit.base()) - 1;
-            allCells.push_back({iocell, pos});
-            ++(cellCounts[pos]);
+            // Find the existing position of this pixel cell module.
+            pos = std::distance(surface_links.begin(), rit.base()) - 1;
         }
+        allCells.push_back({iocell, pos});
+        if (cellCounts.size() <= pos) {
+            cellCounts.resize(pos + 1);
+            cellCounts[pos] = 0;
+        }
+        ++(cellCounts[pos]);
     }
 
     // Transform the cellCounts vector into a prefix sum for accessing
     // positions in the result vector.
     std::partial_sum(cellCounts.begin(), cellCounts.end(), cellCounts.begin());
 
+    // Sort the cells in each module, individually. This is needed for
+    // clusterization to work correctly.
+    for (std::size_t i = 0; i < cellCounts.size(); ++i) {
+        const std::size_t module_start = i == 0 ? 0 : cellCounts[i - 1];
+        assert(module_start <= cellCounts[i]);
+        const std::size_t module_end = cellCounts[i];
+        assert(module_end <= allCells.size());
+        assert(module_start <= module_end);
+        std::sort(allCells.begin() + module_start,
+                  allCells.begin() + module_end,
+                  [](const std::pair<csv::cell, std::size_t>& c1,
+                     const std::pair<csv::cell, std::size_t>& c2) {
+                      return c1.first.channel1 < c2.first.channel1;
+                  });
+    }
+
     // The total number cells.
     const unsigned int totalCells = allCells.size();
 
     // Construct the result collection.
-    cell_collection_types::host& result_cells = out.cells;
-    result_cells.resize(totalCells);
+    cells.resize(totalCells);
 
     // Member "-1" of the prefix sum vector
-    unsigned int nCellsZero = 0;
+    std::size_t nCellsZero = 0;
     // Fill the result object with the read csv cells
     for (unsigned int i = 0; i < totalCells; ++i) {
-        const csv::cell& c = allCells[i].first;
 
-        // The position of the cell counter this cell belongs to
-        const unsigned int& counterPos = allCells[i].second;
+        // The pixel cell to be added to the result container.
+        const csv::cell& cell = allCells[i].first;
+        // The position of the pixel cell module in the result container.
+        const std::size_t module_pos = allCells[i].second;
 
-        unsigned int& prefix_sum_previous =
-            counterPos == 0 ? nCellsZero : cellCounts[counterPos - 1];
-        result_cells[prefix_sum_previous++] = traccc::cell{
-            c.channel0, c.channel1, c.value, c.timestamp, counterPos};
-    }
+        // The pixel cell counter for this pixel module.
+        std::size_t& cell_pos_ref =
+            module_pos == 0 ? nCellsZero : cellCounts[module_pos - 1];
+        const std::size_t cell_pos = cell_pos_ref++;
 
-    if (cellCounts.size() == 0) {
-        return;
-    }
-    /* This is might look a bit overcomplicated, and could be made simpler by
-     * having a copy of the prefix sum vector before incrementing its value when
-     * filling the vector. however this seems more efficient, but requires
-     * manually setting the 1st & 2nd modules instead of just the 1st.
-     */
-
-    // Sort the cells belonging to the first module.
-    std::sort(result_cells.begin(), result_cells.begin() + nCellsZero, comp);
-    // Sort the cells belonging to the second module.
-    std::sort(result_cells.begin() + nCellsZero,
-              result_cells.begin() + cellCounts[0], comp);
-
-    // Sort cells belonging to all other modules.
-    for (unsigned int i = 1; i < cellCounts.size() - 1; ++i) {
-        std::sort(result_cells.begin() + cellCounts[i - 1],
-                  result_cells.begin() + cellCounts[i], comp);
+        // Set the properties of the pixel cell.
+        cells.channel0()[cell_pos] = cell.channel0;
+        cells.channel1()[cell_pos] = cell.channel1;
+        cells.activation()[cell_pos] = cell.value;
+        cells.time()[cell_pos] = cell.timestamp;
+        cells.module_index()[cell_pos] = module_pos;
     }
 }
 
