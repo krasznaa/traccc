@@ -10,54 +10,74 @@
 // Project include(s).
 #include "traccc/definitions/primitives.hpp"
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/cell.hpp"
+#include "traccc/edm/cell_container.hpp"
+#include "traccc/edm/cell_module_container.hpp"
 #include "traccc/edm/cluster.hpp"
 #include "traccc/edm/measurement.hpp"
+
+// VecMem include(s).
+#include "vecmem/containers/data/vector_view.hpp"
+#include "vecmem/containers/device_vector.hpp"
 
 namespace traccc::detail {
 
 /// Function used for retrieving the cell signal based on the module id
 TRACCC_HOST_DEVICE
-inline scalar signal_cell_modelling(scalar signal_in,
-                                    const cell_module& /*module*/) {
+inline scalar signal_cell_modelling(
+    scalar signal_in,
+    const edm::cell_module_container::const_device& /*modules*/,
+    unsigned int /*module_index*/) {
+
     return signal_in;
 }
 
 /// Function for pixel segmentation
 TRACCC_HOST_DEVICE
-inline vector2 position_from_cell(const cell& cell, const cell_module& module) {
-    // Retrieve the specific values based on module idx
-    return {module.pixel.min_center_x + cell.channel0 * module.pixel.pitch_x,
-            module.pixel.min_center_y + cell.channel1 * module.pixel.pitch_y};
+inline vector2 position_from_cell(
+    const edm::cell_container::const_device& cells, unsigned int cell_index,
+    const edm::cell_module_container::const_device& modules,
+    unsigned int module_index) {
+
+    const pixel_data& pixel = modules.pixel_data()[module_index];
+    const channel_id channel0 = cells.channel0()[cell_index];
+    const channel_id channel1 = cells.channel1()[cell_index];
+    return {pixel.min_center_x + channel0 * pixel.pitch_x,
+            pixel.min_center_y + channel1 * pixel.pitch_y};
 }
 
 /// Function used for calculating the properties of the cluster during
 /// measurement creation
 ///
-/// @param[in] cluster The vector of cells describing the identified cluster
-/// @param[in] module  The cell module
+/// @param[in] cluster The vector of indices to the cells describing the
+///                    identified cluster
+/// @param[in] cells   The cell container
+/// @param[in] modules The cell module container
+/// @param[in] module_index The index of the module that the cluster belongs to
 /// @param[out] mean   The mean position of the cluster/measurement
 /// @param[out] var    The variation on the mean position of the
 ///                    cluster/measurement
 /// @param[out] totalWeight The total weight of the cluster/measurement
 ///
-template <typename cell_collection_t>
 TRACCC_HOST inline void calc_cluster_properties(
-    const cell_collection_t& cluster, const cell_module& module, point2& mean,
-    point2& var, scalar& totalWeight) {
+    const vecmem::device_vector<const unsigned int>& cluster,
+    const edm::cell_container::const_device& cells,
+    const edm::cell_module_container::const_device& modules,
+    unsigned int module_index, point2& mean, point2& var, scalar& totalWeight) {
 
     // Loop over the cells of the cluster.
-    for (const cell& cell : cluster) {
+    for (unsigned int cell_index : cluster) {
 
         // Translate the cell readout value into a weight.
-        const scalar weight = signal_cell_modelling(cell.activation, module);
+        const scalar weight = signal_cell_modelling(
+            cells.activation()[cell_index], modules, module_index);
 
         // Only consider cells over a minimum threshold.
-        if (weight > module.threshold) {
+        if (weight > modules.threshold()[module_index]) {
 
             // Update all output properties with this cell.
-            totalWeight += cell.activation;
-            const point2 cell_position = position_from_cell(cell, module);
+            totalWeight += weight;
+            const point2 cell_position =
+                position_from_cell(cells, cell_index, modules, module_index);
             const point2 prev = mean;
             const point2 diff = cell_position - prev;
 
@@ -75,14 +95,15 @@ TRACCC_HOST inline void calc_cluster_properties(
 ///
 /// @param[out] measurements is the measurement collection where the measurement
 /// object will be filled
-/// @param[in] cluster is the input cell vector
-/// @param[in] module is the cell module where the cluster belongs to
-/// @param[in] module_link is the module index
+/// @param[in] cluster The indices to the input cells
+/// @param[in] cells   The cell container
+/// @param[in] modules The cell module container
 ///
 TRACCC_HOST inline void fill_measurement(
     measurement_collection_types::host& measurements,
-    const cell_collection_types::host& cluster, const cell_module& module,
-    const unsigned int module_link) {
+    cluster_container_types::host::item_vector::const_reference cluster,
+    const edm::cell_container::host& cells,
+    const edm::cell_module_container::host& modules) {
 
     // To calculate the mean and variance with high numerical stability
     // we use a weighted variant of Welford's algorithm. This is a
@@ -94,22 +115,35 @@ TRACCC_HOST inline void fill_measurement(
     // [2] The Art of Computer Programming, Donald E. Knuth, second
     //     edition, chapter 4.2.2.
 
+    // A security check.
+    assert(cluster.empty() == false);
+
+    // Get the module index.
+    const unsigned int module_index = cells.module_index()[cluster.front()];
+
     // Calculate the cluster properties
     scalar totalWeight = 0.;
     point2 mean{0., 0.}, var{0., 0.};
-    detail::calc_cluster_properties(cluster, module, mean, var, totalWeight);
+    const vecmem::device_vector<const unsigned int> cluster_device{
+        vecmem::get_data(cluster)};
+    const edm::cell_container::const_device cells_device{
+        vecmem::get_data(cells)};
+    const edm::cell_module_container::const_device modules_device{
+        vecmem::get_data(modules)};
+    calc_cluster_properties(cluster_device, cells_device, modules_device,
+                            module_index, mean, var, totalWeight);
 
     if (totalWeight > 0.) {
         measurement m;
-        m.module_link = module_link;
-        m.surface_link = module.surface_link;
+        m.module_link = module_index;
+        m.surface_link = modules.surface_link()[module_index];
         // normalize the cell position
         m.local = mean;
         // normalize the variance
         m.variance[0] = var[0] / totalWeight;
         m.variance[1] = var[1] / totalWeight;
         // plus pitch^2 / 12
-        const auto pitch = module.pixel.get_pitch();
+        const auto pitch = modules.pixel_data()[module_index].get_pitch();
         m.variance =
             m.variance + point2{pitch[0] * pitch[0] / static_cast<scalar>(12.),
                                 pitch[1] * pitch[1] / static_cast<scalar>(12.)};

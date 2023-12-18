@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2023 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -17,20 +17,20 @@
 namespace traccc {
 
 component_connection::output_type component_connection::operator()(
-    const cell_collection_types::host& cells) const {
+    const edm::cell_container::host& cells) const {
 
-    unsigned int num_clusters = 0;
     std::vector<unsigned int> CCL_indices(cells.size());
 
     // Run SparseCCL to fill CCL indices
-    num_clusters = detail::sparse_ccl(cells, CCL_indices);
+    const unsigned int num_clusters = detail::sparse_ccl(
+        vecmem::get_data(cells), vecmem::get_data(CCL_indices));
 
     // Create the result container.
     output_type result(num_clusters, &(m_mr.get()));
 
     // Add cells to their clusters
     for (std::size_t i = 0; i < CCL_indices.size(); ++i) {
-        result.get_items()[CCL_indices[i]].push_back(cells[i]);
+        result.get_items()[CCL_indices[i]].push_back(i);
     }
 
     return result;
