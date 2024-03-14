@@ -42,8 +42,8 @@ int par_run(const std::string &detector_file,
     // Read the surface transforms. We can't use structured bindings for
     // the return value of read_geometry(...), because the old Intel compiler
     // used in the CI, when using OpenMP, crashes on such code. :-(
-    auto geom_pair = traccc::io::read_geometry(detector_file);
-    auto &surface_transforms = geom_pair.first;
+    auto geom_tuple = traccc::io::read_geometry(detector_file);
+    auto &surface_transforms = std::get<0>(geom_tuple);
 
     // Read the digitization configuration file
     auto digi_cfg = traccc::io::read_digitization_config(digi_config_file);

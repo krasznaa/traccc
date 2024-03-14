@@ -25,7 +25,7 @@ int create_binaries(const std::string& detector_file,
                     const traccc::common_options& common_opts) {
 
     // Read the surface transforms
-    auto [surface_transforms, _] = traccc::io::read_geometry(detector_file);
+    auto [surface_transforms, _, __] = traccc::io::read_geometry(detector_file);
 
     // Read the digitization configuration file
     auto digi_cfg = traccc::io::read_digitization_config(digi_config_file);

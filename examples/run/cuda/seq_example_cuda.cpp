@@ -46,7 +46,7 @@ int seq_run(const traccc::full_tracking_input_options& i_cfg,
             const traccc::detector_input_options& det_opts, bool run_cpu) {
 
     // Read in the geometry.
-    auto [surface_transforms, barcode_map] = traccc::io::read_geometry(
+    auto [surface_transforms, barcode_map, _] = traccc::io::read_geometry(
         det_opts.detector_file,
         (det_opts.use_detray_detector ? traccc::data_format::json
                                       : traccc::data_format::csv));
@@ -136,6 +136,35 @@ int seq_run(const traccc::full_tracking_input_options& i_cfg,
                 read_out_per_event.cells;
             const traccc::cell_module_collection_types::host&
                 modules_per_event = read_out_per_event.modules;
+
+            // Check whether the modules are "in order".
+            auto are_modules_ordered = [](const auto& modules) {
+                for (std::size_t i = 0; i < modules.size() - 1; ++i) {
+                    if (modules[i].surface_link.value() >
+                        modules[i + 1].surface_link.value()) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+            std::cout << "Modules are ordered: "
+                      << (are_modules_ordered(modules_per_event) ? "yes" : "no")
+                      << std::endl;
+
+            // Check whether the cells are "in order".
+            auto are_cells_ordered = [](const auto& cells) {
+                for (std::size_t i = 0; i < cells.size() - 1; ++i) {
+                    if ((cells[i].module_link > cells[i + 1].module_link) ||
+                        ((cells[i].module_link == cells[i + 1].module_link) &&
+                         (cells[i].channel1 > cells[i + 1].channel1))) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+            std::cout << "Cells are ordered: "
+                      << (are_cells_ordered(cells_per_event) ? "yes" : "no")
+                      << std::endl;
 
             /*-----------------------------
                 Clusterization and Spacepoint Creation (cuda)

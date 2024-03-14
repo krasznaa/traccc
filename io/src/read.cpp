@@ -26,8 +26,8 @@ void read(demonstrator_input& out, std::size_t events,
     // Read in the detector configuration. We can't use structured bindings for
     // the return value of read_geometry(...), because the old Intel compiler
     // used in the CI, when using OpenMP, crashes on such code. :-(
-    const auto geom_pair = io::read_geometry(detector_file);
-    const auto& geom = geom_pair.first;
+    const auto geom_tuple = io::read_geometry(detector_file);
+    const auto& geom = std::get<0>(geom_tuple);
     const digitization_config digi_cfg =
         io::read_digitization_config(digi_config_file);
 

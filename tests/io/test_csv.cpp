@@ -103,7 +103,7 @@ TEST_F(io, csv_read_tml_single_muon) {
     vecmem::host_memory_resource resource;
 
     // Read the surface transforms
-    auto [surface_transforms, _] =
+    auto [surface_transforms, _, __] =
         traccc::io::read_geometry("tml_detector/trackml-detector.csv");
 
     // Read the hits from the relevant event file

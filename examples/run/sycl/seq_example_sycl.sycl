@@ -70,7 +70,7 @@ int seq_run(const traccc::full_tracking_input_options& i_cfg,
             const traccc::detector_input_options& det_opts, bool run_cpu) {
 
     // Read in the geometry.
-    auto [surface_transforms, barcode_map] = traccc::io::read_geometry(
+    auto [surface_transforms, barcode_map, _] = traccc::io::read_geometry(
         det_opts.detector_file,
         (det_opts.use_detray_detector ? traccc::data_format::json
                                       : traccc::data_format::csv));

@@ -35,7 +35,7 @@ TEST(io_binary, cell) {
     vecmem::host_memory_resource host_mr;
 
     // Read the surface transforms
-    auto [surface_transforms, _] =
+    auto [surface_transforms, _, __] =
         traccc::io::read_geometry("tml_detector/trackml-detector.csv");
 
     // Read the digitization configuration file
@@ -109,7 +109,7 @@ TEST(io_binary, spacepoint) {
     vecmem::host_memory_resource host_mr;
 
     // Read the surface transforms
-    auto [surface_transforms, _] =
+    auto [surface_transforms, _, __] =
         traccc::io::read_geometry("tml_detector/trackml-detector.csv");
 
     // Read csv file
