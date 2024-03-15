@@ -1,6 +1,6 @@
 # TRACCC library, part of the ACTS project (R&D line)
 #
-# (c) 2021-2023 CERN for the benefit of the ACTS project
+# (c) 2021-2024 CERN for the benefit of the ACTS project
 #
 # Mozilla Public License Version 2.0
 
@@ -30,6 +30,7 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/edm/track_state.hpp"
   "include/traccc/edm/cell.hpp"
   # Geometry description.
+  "include/traccc/geometry/detector.hpp"
   "include/traccc/geometry/module_map.hpp"
   "include/traccc/geometry/geometry.hpp"
   "include/traccc/geometry/pixel_data.hpp"
@@ -92,7 +93,7 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/ambiguity_resolution/greedy_ambiguity_resolution_algorithm.hpp"
   "src/ambiguity_resolution/greedy_ambiguity_resolution_algorithm.cpp" )
 target_link_libraries( traccc_core
-  PUBLIC Eigen3::Eigen vecmem::core detray::core traccc::Thrust
+  PUBLIC Eigen3::Eigen vecmem::core detray::core detray::utils traccc::Thrust
          traccc::algebra )
 
 # Prevent Eigen from getting confused when building code for a
