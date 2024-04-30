@@ -52,6 +52,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -276,6 +277,13 @@ int seq_run(const traccc::opts::input_data& input_opts,
             n_found_tracks += track_candidates.size();
             n_fitted_tracks += track_states.size();
             n_ambiguity_free_tracks += resolved_track_states.size();
+
+            // Write out the 3D positions of the spacepoints.
+            std::ofstream sp_obj_file("spacepoints.obj");
+            for (const traccc::spacepoint& sp : spacepoints_per_event) {
+                sp_obj_file << "v " << sp.x() << " " << sp.y() << " " << sp.z()
+                            << std::endl;
+            }
 
         }  // Stop measuring Wall time.
 
