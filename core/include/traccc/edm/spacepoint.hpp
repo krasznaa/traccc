@@ -13,7 +13,6 @@
 #include "traccc/definitions/primitives.hpp"
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/edm/container.hpp"
-#include "traccc/edm/measurement.hpp"
 
 // System include(s).
 #include <cmath>
@@ -29,8 +28,8 @@ struct spacepoint {
 
     /// The global position of the spacepoint in 3D space
     point3 global{0.f, 0.f, 0.f};
-    /// The local measurement of the spacepoint on the detector surface
-    measurement meas;
+    /// Index of the local measurement of the spacepoint on the detector surface
+    unsigned int measurement_index = 0u;
 
     TRACCC_HOST_DEVICE
     const scalar& x() const { return global[0]; }
@@ -64,7 +63,7 @@ inline bool operator==(const spacepoint& lhs, const spacepoint& rhs) {
     return ((math::fabs(lhs.x() - rhs.x()) < float_epsilon) &&
             (math::fabs(lhs.y() - rhs.y()) < float_epsilon) &&
             (math::fabs(lhs.z() - rhs.z()) < float_epsilon) &&
-            (lhs.meas == rhs.meas));
+            (lhs.measurement_index == rhs.measurement_index));
 }
 
 /// Declare all spacepoint collection types

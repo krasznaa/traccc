@@ -16,6 +16,7 @@ namespace traccc::device {
 TRACCC_HOST_DEVICE
 inline void estimate_track_params(
     const std::size_t globalIndex,
+    const edm::measurement_collection::const_view& measurements_view,
     const spacepoint_collection_types::const_view& spacepoints_view,
     const seed_collection_types::const_view& seeds_view, const vector3& bfield,
     const std::array<traccc::scalar, traccc::e_bound_size>& stddev,
@@ -27,6 +28,8 @@ inline void estimate_track_params(
         return;
     }
 
+    const edm::measurement_collection::const_device measurements_device(
+        measurements_view);
     const spacepoint_collection_types::const_device spacepoints_device(
         spacepoints_view);
 
@@ -35,10 +38,10 @@ inline void estimate_track_params(
     const seed& this_seed =
         seeds_device.at(static_cast<unsigned int>(globalIndex));
 
-    // Get bound track parameter
-    bound_track_parameters track_params;
-    track_params.set_vector(
-        seed_to_bound_vector(spacepoints_device, this_seed, bfield));
+    // Get the output bound track parameter in global memory.
+    bound_track_parameters& track_params = params_device[globalIndex];
+    track_params.set_vector(details::seed_to_bound_vector(
+        measurements_device, spacepoints_device, this_seed, bfield));
 
     // Set Covariance
     for (std::size_t i = 0; i < e_bound_size; i++) {
@@ -49,10 +52,8 @@ inline void estimate_track_params(
     // Get geometry ID for bottom spacepoint
     const auto& spB =
         spacepoints_device.at(static_cast<unsigned int>(this_seed.spB_link));
-    track_params.set_surface_link(spB.meas.surface_link);
-
-    // Save the object into global memory.
-    params_device[static_cast<unsigned int>(globalIndex)] = track_params;
+    track_params.set_surface_link(
+        measurements_device.at(spB.measurement_index).geometry_id());
 }
 
 }  // namespace traccc::device

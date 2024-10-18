@@ -32,8 +32,9 @@ measurement_creation_algorithm::operator()(
     const silicon_detector_description::const_device det_descr{dd_view};
 
     // Create the result object.
-    output_type result(clusters.size(), &(m_mr.get()));
-    measurement_collection_types::device measurements{vecmem::get_data(result)};
+    edm::measurement_collection::host result(m_mr.get());
+    result.resize(clusters.size());
+    edm::measurement_collection::device measurements{vecmem::get_data(result)};
 
     // Process the clusters one-by-one.
     for (decltype(clusters)::size_type i = 0; i < clusters.size(); ++i) {

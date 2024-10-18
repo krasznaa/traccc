@@ -17,17 +17,27 @@ track_params_estimation::track_params_estimation(vecmem::memory_resource& mr)
     : m_mr(mr) {}
 
 track_params_estimation::output_type track_params_estimation::operator()(
-    const spacepoint_collection_types::host& spacepoints,
-    const seed_collection_types::host& seeds, const vector3& bfield,
+    const edm::measurement_collection::const_view& measurements_view,
+    const spacepoint_collection_types::const_view& spacepoints_view,
+    const seed_collection_types::const_view& seeds_view, const vector3& bfield,
     const std::array<traccc::scalar, traccc::e_bound_size>& stddev) const {
 
-    const seed_collection_types::host::size_type num_seeds = seeds.size();
+    // Create device containers for the inputs.
+    const edm::measurement_collection::const_device measurements{
+        measurements_view};
+    const spacepoint_collection_types::const_device spacepoints{
+        spacepoints_view};
+    const seed_collection_types::const_device seeds{seeds_view};
+
+    const seed_collection_types::const_device::size_type num_seeds =
+        seeds.size();
     output_type result(num_seeds, &m_mr.get());
 
-    for (seed_collection_types::host::size_type i = 0; i < num_seeds; ++i) {
-        bound_track_parameters track_params;
-        track_params.set_vector(
-            seed_to_bound_vector(spacepoints, seeds[i], bfield));
+    for (seed_collection_types::const_device::size_type i = 0; i < num_seeds;
+         ++i) {
+        bound_track_parameters& track_params = result[i];
+        track_params.set_vector(details::seed_to_bound_vector(
+            measurements, spacepoints, seeds[i], bfield));
 
         // Set Covariance
         for (std::size_t j = 0; j < e_bound_size; ++j) {
@@ -37,9 +47,8 @@ track_params_estimation::output_type track_params_estimation::operator()(
 
         // Get geometry ID for bottom spacepoint
         const auto& spB = spacepoints.at(seeds[i].spB_link);
-        track_params.set_surface_link(spB.meas.surface_link);
-
-        result[i] = track_params;
+        track_params.set_surface_link(
+            measurements.at(spB.measurement_index).geometry_id());
     }
 
     return result;

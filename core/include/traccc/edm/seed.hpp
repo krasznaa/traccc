@@ -8,7 +8,6 @@
 #pragma once
 
 #include "traccc/edm/container.hpp"
-#include "traccc/edm/measurement.hpp"
 #include "traccc/edm/spacepoint.hpp"
 
 namespace traccc {
@@ -24,16 +23,6 @@ struct seed {
 
     scalar weight;
     scalar z_vertex;
-
-    TRACCC_HOST_DEVICE
-    std::array<measurement, 3> get_measurements(
-        const spacepoint_collection_types::const_view& spacepoints_view) const {
-        const spacepoint_collection_types::const_device spacepoints(
-            spacepoints_view);
-        return {spacepoints.at(static_cast<unsigned int>(spB_link)).meas,
-                spacepoints.at(static_cast<unsigned int>(spM_link)).meas,
-                spacepoints.at(static_cast<unsigned int>(spT_link)).meas};
-    }
 
     TRACCC_HOST_DEVICE
     std::array<spacepoint, 3> get_spacepoints(

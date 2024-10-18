@@ -8,6 +8,7 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/seed.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/edm/track_parameters.hpp"
@@ -17,6 +18,7 @@ namespace traccc::device {
 /// Function used for calculating the bound track parameters for each seed
 ///
 /// @param[in] globalIndex      The index of the current thread
+/// @param[in] measurements_view Collection storing the measurements
 /// @param[in] spacepoints_view Collection storing the spacepoints
 /// @param[in] seeds_view       Collection storing the seeds
 /// @param[in] bfield           B field
@@ -26,6 +28,7 @@ namespace traccc::device {
 TRACCC_HOST_DEVICE
 inline void estimate_track_params(
     const std::size_t globalIndex,
+    const edm::measurement_collection::const_view& measurements_view,
     const spacepoint_collection_types::const_view& spacepoints_view,
     const seed_collection_types::const_view& seeds_view, const vector3& bfield,
     const std::array<traccc::scalar, traccc::e_bound_size>& stddev,

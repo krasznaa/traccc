@@ -11,7 +11,7 @@
 #include "traccc/cuda/utils/stream.hpp"
 
 // Project include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/memory_resource.hpp"
@@ -33,7 +33,7 @@ template <typename detector_t>
 class spacepoint_formation_algorithm
     : public algorithm<spacepoint_collection_types::buffer(
           const typename detector_t::view_type&,
-          const measurement_collection_types::const_view&)> {
+          const edm::measurement_collection::const_view&)> {
 
     public:
     /// Constructor for spacepoint_formation
@@ -53,7 +53,7 @@ class spacepoint_formation_algorithm
     ///
     spacepoint_collection_types::buffer operator()(
         const typename detector_t::view_type& det_view,
-        const measurement_collection_types::const_view& measurements_view)
+        const edm::measurement_collection::const_view& measurements)
         const override;
 
     private:

@@ -10,7 +10,7 @@
 // Project include(s).
 #include "traccc/definitions/hints.hpp"
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/silicon_cell_collection.hpp"
 #include "traccc/geometry/silicon_detector_description.hpp"
 
@@ -29,14 +29,15 @@ namespace traccc::device {
 /// @param[in] start     partition start point this cell belongs to
 /// @param[in] end       partition end point this cell belongs to
 /// @param[in] cid       current cell id
-/// @param[out] out      cluster to fill
+/// @param[out] out      measurement to fill
 ///
-TRACCC_HOST_DEVICE
-inline void aggregate_cluster(
+template <typename measurement_base_t>
+TRACCC_HOST_DEVICE inline void aggregate_cluster(
     const edm::silicon_cell_collection::const_device& cells,
     const silicon_detector_description::const_device& det_descr,
     const vecmem::device_vector<details::index_t>& f, unsigned int start,
-    unsigned int end, unsigned short cid, measurement& out,
+    unsigned int end, unsigned short cid,
+    edm::measurement<measurement_base_t>& out,
     vecmem::data::vector_view<unsigned int> cell_links, unsigned int link);
 
 }  // namespace traccc::device

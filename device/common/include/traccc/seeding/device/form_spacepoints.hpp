@@ -9,7 +9,7 @@
 
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/geometry/silicon_detector_description.hpp"
 
@@ -29,7 +29,7 @@ namespace traccc::device {
 template <typename detector_t>
 TRACCC_HOST_DEVICE inline void form_spacepoints(
     std::size_t globalIndex, typename detector_t::view_type det_view,
-    const measurement_collection_types::const_view& measurements_view,
+    const edm::measurement_collection::const_view& measurements_view,
     unsigned int measurement_count,
     spacepoint_collection_types::view spacepoints_view);
 

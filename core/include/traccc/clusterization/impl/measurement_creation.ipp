@@ -85,8 +85,8 @@ TRACCC_HOST_DEVICE inline void calc_cluster_properties(
 
 template <typename T>
 TRACCC_HOST_DEVICE inline void fill_measurement(
-    measurement_collection_types::device& measurements,
-    measurement_collection_types::device::size_type index,
+    edm::measurement_collection::device& measurements,
+    edm::measurement_collection::device::size_type index,
     const edm::silicon_cluster<T>& cluster,
     const edm::silicon_cell_collection::const_device& cells,
     const silicon_detector_description::const_device& det_descr) {
@@ -122,7 +122,7 @@ TRACCC_HOST_DEVICE inline void fill_measurement(
     assert(totalWeight > 0.f);
 
     // Access the measurement in question.
-    measurement& m = measurements[index];
+    auto m = measurements[index];
 
     // The index of the module the cluster is on.
     const unsigned int module_idx =
@@ -131,21 +131,21 @@ TRACCC_HOST_DEVICE inline void fill_measurement(
     const auto module_dd = det_descr.at(module_idx);
 
     // Fill the measurement object.
-    m.surface_link = module_dd.geometry_id();
+    m.geometry_id() = module_dd.geometry_id();
     // normalize the cell position
-    m.local = mean;
+    m.local() = mean;
 
     // plus pitch^2 / 12
     const scalar pitch_x = module_dd.pitch_x();
     const scalar pitch_y = module_dd.pitch_y();
-    m.variance = var + point2{pitch_x * pitch_x / static_cast<scalar>(12.),
-                              pitch_y * pitch_y / static_cast<scalar>(12.)};
+    m.variance() = var + point2{pitch_x * pitch_x / static_cast<scalar>(12.),
+                                pitch_y * pitch_y / static_cast<scalar>(12.)};
 
     // For the ambiguity resolution algorithm, give a unique measurement ID
-    m.measurement_id = index;
+    m.measurement_id() = index;
 
     // Set the measurement dimensionality.
-    m.meas_dim = module_dd.dimensions();
+    m.dimensions() = module_dd.dimensions();
 }
 
 }  // namespace traccc::details

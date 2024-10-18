@@ -9,33 +9,32 @@
 
 // Project include(s).
 #include "traccc/definitions/primitives.hpp"
+#include "traccc/edm/spacepoint.hpp"
 
 // Detray include(s).
 #include "detray/geometry/tracking_surface.hpp"
 
 namespace traccc::details {
 
-TRACCC_HOST_DEVICE inline bool is_valid_measurement(const measurement& meas) {
+template <typename detector_t, typename measurement_base_t,
+          typename spacepoint_collection_t>
+TRACCC_HOST_DEVICE bool add_spacepoint(
+    const detector_t& det,
+    const edm::measurement<measurement_base_t>& measurement,
+    unsigned int measurement_index, spacepoint_collection_t& spacepoints) {
+
     // We use 2D (pixel) measurements only for spacepoint creation
-    if (meas.meas_dim == 2u) {
-        return true;
+    if (measurement.dimensions() != 2u) {
+        return false;
     }
-    return false;
-}
 
-template <typename detector_t>
-TRACCC_HOST_DEVICE inline spacepoint create_spacepoint(
-    const detector_t& det, const measurement& meas) {
+    // Helper object for doing the local-to-global transformation with.
+    const detray::tracking_surface sf{det, measurement.geometry_id()};
 
-    const detray::tracking_surface sf{det, meas.surface_link};
-
-    // This local to global transformation only works for 2D planar
-    // measurement
-    // (e.g. barrel pixel and endcap pixel detector)
-    const auto global = sf.bound_to_global({}, meas.local, {});
-
-    // Return the spacepoint with this spacepoint
-    return spacepoint{global, meas};
+    // Create the spacepoint.
+    spacepoints.push_back(spacepoint{
+        sf.bound_to_global({}, measurement.local(), {}), measurement_index});
+    return true;
 }
 
 }  // namespace traccc::details

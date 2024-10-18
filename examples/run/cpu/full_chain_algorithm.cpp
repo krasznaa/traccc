@@ -51,13 +51,15 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
     if (m_detector != nullptr) {
 
         // Run the seed-finding.
-        const measurement_collection_types::const_view measurements_view =
+        const edm::measurement_collection::const_view measurements_view =
             vecmem::get_data(measurements);
         const spacepoint_formation_algorithm::output_type spacepoints =
             m_spacepoint_formation(*m_detector, measurements_view);
+        const seeding_algorithm::output_type seeds = m_seeding(spacepoints);
         const track_params_estimation::output_type track_params =
-            m_track_parameter_estimation(spacepoints, m_seeding(spacepoints),
-                                         m_field_vec);
+            m_track_parameter_estimation(measurements_view,
+                                         vecmem::get_data(spacepoints),
+                                         vecmem::get_Data(seeds), m_field_vec);
         const bound_track_parameters_collection_types::const_view
             track_params_view = vecmem::get_data(track_params);
 
