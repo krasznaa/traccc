@@ -14,7 +14,7 @@
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/device/concepts/barrier.hpp"
 #include "traccc/device/concepts/thread_id.hpp"
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/silicon_cell_collection.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/geometry/silicon_detector_description.hpp"
@@ -68,7 +68,7 @@ TRACCC_DEVICE inline void ccl_kernel(
     vecmem::data::vector_view<unsigned char> adjc_backup_view,
     vecmem::data::vector_view<details::index_t> adjv_backup_view,
     vecmem::device_atomic_ref<uint32_t> backup_mutex, barrier_t& barrier,
-    measurement_collection_types::view measurements_view,
+    edm::measurement_collection::view measurements_view,
     vecmem::data::vector_view<unsigned int> cell_links);
 
 }  // namespace traccc::device

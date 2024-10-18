@@ -8,7 +8,7 @@
 #pragma once
 
 // Library include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/silicon_cell_collection.hpp"
 #include "traccc/edm/silicon_cluster_collection.hpp"
 #include "traccc/geometry/silicon_detector_description.hpp"
@@ -29,7 +29,7 @@ namespace traccc::host {
 /// module.
 ///
 class measurement_creation_algorithm
-    : public algorithm<measurement_collection_types::host(
+    : public algorithm<edm::measurement_collection::host(
           const edm::silicon_cell_collection::const_view &,
           const edm::silicon_cluster_collection::const_view &,
           const silicon_detector_description::const_view &)> {

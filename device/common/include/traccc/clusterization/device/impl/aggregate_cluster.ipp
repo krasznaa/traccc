@@ -12,12 +12,13 @@
 
 namespace traccc::device {
 
-TRACCC_HOST_DEVICE
-inline void aggregate_cluster(
+template <typename measurement_base_t>
+TRACCC_HOST_DEVICE inline void aggregate_cluster(
     const edm::silicon_cell_collection::const_device& cells,
     const silicon_detector_description::const_device& det_descr,
     const vecmem::device_vector<details::index_t>& f, const unsigned int start,
-    const unsigned int end, const unsigned short cid, measurement& out,
+    const unsigned int end, const unsigned short cid,
+    edm::measurement<measurement_base_t>& out,
     vecmem::data::vector_view<unsigned int> cell_links,
     const unsigned int link) {
     vecmem::device_vector<unsigned int> cell_links_device(cell_links);
@@ -133,13 +134,13 @@ inline void aggregate_cluster(
     /*
      * Fill output vector with calculated cluster properties
      */
-    out.local = mean + offset;
-    out.variance = var;
-    out.surface_link = module_descr.geometry_id();
+    out.local() = mean + offset;
+    out.variance() = var;
+    out.geometry_id() = module_descr.geometry_id();
     // Set a unique identifier for the measurement.
-    out.measurement_id = link;
+    out.measurement_id() = link;
     // Set the dimensionality of the measurement.
-    out.meas_dim = module_descr.dimensions();
+    out.dimensions() = module_descr.dimensions();
 }
 
 }  // namespace traccc::device

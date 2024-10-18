@@ -10,7 +10,7 @@
 // Project include(s).
 #include "traccc/definitions/primitives.hpp"
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/silicon_cell_collection.hpp"
 #include "traccc/edm/silicon_cluster_collection.hpp"
 #include "traccc/geometry/silicon_detector_description.hpp"
@@ -63,8 +63,8 @@ TRACCC_HOST_DEVICE inline void calc_cluster_properties(
 ///
 template <typename T>
 TRACCC_HOST_DEVICE inline void fill_measurement(
-    measurement_collection_types::device& measurements,
-    measurement_collection_types::device::size_type index,
+    edm::measurement_collection::device& measurements,
+    edm::measurement_collection::device::size_type index,
     const edm::silicon_cluster<T>& cluster,
     const edm::silicon_cell_collection::const_device& cells,
     const silicon_detector_description::const_device& det_descr);

@@ -20,7 +20,7 @@ namespace kernels {
 template <typename detector_t>
 __global__ void form_spacepoints(
     typename detector_t::view_type det_view,
-    measurement_collection_types::const_view measurements_view,
+    const edm::measurement_collection::const_view measurements_view,
     const unsigned int measurement_count,
     spacepoint_collection_types::view spacepoints_view) {
 
@@ -40,10 +40,10 @@ template <typename detector_t>
 spacepoint_collection_types::buffer
 spacepoint_formation_algorithm<detector_t>::operator()(
     const typename detector_t::view_type& det_view,
-    const measurement_collection_types::const_view& measurements_view) const {
+    const edm::measurement_collection::const_view& measurements_view) const {
 
     // Get the number of measurements.
-    const measurement_collection_types::const_view::size_type num_measurements =
+    const edm::measurement_collection::const_view::size_type num_measurements =
         m_copy.get().get_size(measurements_view);
 
     // Create the result buffer.

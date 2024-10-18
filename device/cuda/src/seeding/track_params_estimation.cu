@@ -21,13 +21,14 @@ namespace traccc::cuda {
 namespace kernels {
 /// CUDA kernel for running @c traccc::device::estimate_track_params
 __global__ void estimate_track_params(
-    spacepoint_collection_types::const_view spacepoints_view,
-    seed_collection_types::const_view seed_view, const vector3 bfield,
+    const edm::measurement_collection::const_view measurements_view,
+    const spacepoint_collection_types::const_view spacepoints_view,
+    const seed_collection_types::const_view seed_view, const vector3 bfield,
     const std::array<traccc::scalar, traccc::e_bound_size> stddev,
     bound_track_parameters_collection_types::view params_view) {
 
     device::estimate_track_params(threadIdx.x + blockIdx.x * blockDim.x,
-                                  spacepoints_view, seed_view, bfield, stddev,
+                                  measurements_view, spacepoints_view, seed_view, bfield, stddev,
                                   params_view);
 }
 }  // namespace kernels
@@ -40,6 +41,7 @@ track_params_estimation::track_params_estimation(
       m_warp_size(details::get_warp_size(str.device())) {}
 
 track_params_estimation::output_type track_params_estimation::operator()(
+    const edm::measurement_collection::const_view& measurements_view,
     const spacepoint_collection_types::const_view& spacepoints_view,
     const seed_collection_types::const_view& seeds_view, const vector3& bfield,
     const std::array<traccc::scalar, traccc::e_bound_size>& stddev) const {
@@ -71,7 +73,7 @@ track_params_estimation::output_type track_params_estimation::operator()(
 
     // run the kernel
     kernels::estimate_track_params<<<num_blocks, num_threads, 0, stream>>>(
-        spacepoints_view, seeds_view, bfield, stddev, params_buffer);
+        measurements_view, spacepoints_view, seeds_view, bfield, stddev, params_buffer);
     TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 
     return params_buffer;

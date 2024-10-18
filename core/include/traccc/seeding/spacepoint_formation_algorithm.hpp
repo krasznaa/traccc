@@ -8,7 +8,7 @@
 #pragma once
 
 // Library include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/utils/algorithm.hpp"
 
@@ -28,9 +28,12 @@ namespace traccc::host {
 template <typename detector_t>
 class spacepoint_formation_algorithm
     : public algorithm<spacepoint_collection_types::host(
-          const detector_t&, const measurement_collection_types::const_view&)> {
+          const detector_t&, const edm::measurement_collection::const_view&)> {
 
     public:
+    /// The output type of the algorithm
+    using output_type = spacepoint_collection_types::host;
+
     /// Constructor for spacepoint_formation
     ///
     /// @param mr is the memory resource
@@ -45,9 +48,9 @@ class spacepoint_formation_algorithm
     /// @return A spacepoint container, with one spacepoint for every
     ///         measurement
     ///
-    spacepoint_collection_types::host operator()(
+    output_type operator()(
         const detector_t& det,
-        const measurement_collection_types::const_view&) const override;
+        const edm::measurement_collection::const_view&) const override;
 
     private:
     std::reference_wrapper<vecmem::memory_resource> m_mr;

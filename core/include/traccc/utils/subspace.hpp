@@ -39,6 +39,9 @@ struct subspace {
     static const size_type size = kSize;
     static const size_type fullSize = kFullSize;
 
+    /// Default constructor.
+    subspace() = default;
+
     /// Construct from a container of axis indices.
     ///
     /// @param indices Unique, ordered indices

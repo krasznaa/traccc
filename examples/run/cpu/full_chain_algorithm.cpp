@@ -54,9 +54,11 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
         const host::spacepoint_formation_algorithm<
             const detector_type>::output_type spacepoints =
             m_spacepoint_formation(*m_detector, vecmem::get_data(measurements));
+        const seeding_algorithm::output_type seeds = m_seeding(spacepoints);
         const track_params_estimation::output_type track_params =
-            m_track_parameter_estimation(spacepoints, m_seeding(spacepoints),
-                                         m_field_vec);
+            m_track_parameter_estimation(vecmem::get_data(measurements),
+                                         vecmem::get_data(spacepoints),
+                                         vecmem::get_data(seeds), m_field_vec);
 
         // Return the final container, after track finding and fitting.
         return m_fitting(

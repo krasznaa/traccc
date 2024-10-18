@@ -9,24 +9,25 @@
 
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/measurement.hpp"
-#include "traccc/edm/spacepoint.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 
 namespace traccc::details {
 
-/// Function helping with checking a measurement obejct for spacepoint creation
-///
-/// @param[in]  measurement The input measurement
-TRACCC_HOST_DEVICE inline bool is_valid_measurement(const measurement& meas);
-
-/// Function helping with filling/setting up a spacepoint object
+/// (Possibly) Add a spacepoint to a collection
 ///
 /// @param[in]  det         The tracking geometry
-/// @param[in]  measurement The measurement to create the spacepoint out of
+/// @param[in]  measurement The measurement to (possibly) create a spacepoints
+///                         out of
+/// @param[in]  meas_index  The index of the measurement in its collection
+/// @param[out] spacepoints The collection to (possibly) add the spacepoint to
+/// @return @c true if a spacepoint was added, @c false otherwise
 ///
-template <typename detector_t>
-TRACCC_HOST_DEVICE inline spacepoint create_spacepoint(const detector_t& det,
-                                                       const measurement& meas);
+template <typename detector_t, typename measurement_base_t,
+          typename spacepoint_collection_t>
+TRACCC_HOST_DEVICE bool add_spacepoint(
+    const detector_t& det,
+    const edm::measurement<measurement_base_t>& measurement,
+    unsigned int meas_index, spacepoint_collection_t& spacepoints);
 
 }  // namespace traccc::details
 

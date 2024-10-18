@@ -8,6 +8,7 @@
 #pragma once
 
 // Library include(s).
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/seed.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/edm/track_parameters.hpp"
@@ -27,8 +28,9 @@ namespace traccc {
 ///
 class track_params_estimation
     : public algorithm<bound_track_parameters_collection_types::host(
-          const spacepoint_collection_types::host&,
-          const seed_collection_types::host&, const vector3&,
+          const edm::measurement_collection::const_view&,
+          const spacepoint_collection_types::const_view&,
+          const seed_collection_types::const_view&, const vector3&,
           const std::array<traccc::scalar, traccc::e_bound_size>&)> {
 
     public:
@@ -47,8 +49,9 @@ class track_params_estimation
     /// @return A vector of bound track parameters
     ///
     output_type operator()(
-        const spacepoint_collection_types::host& spacepoints,
-        const seed_collection_types::host& seeds, const vector3& bfield,
+        const edm::measurement_collection::const_view& measurements,
+        const spacepoint_collection_types::const_view& spacepoints,
+        const seed_collection_types::const_view& seeds, const vector3& bfield,
         const std::array<traccc::scalar, traccc::e_bound_size>& stddev = {
             0.02f * detray::unit<traccc::scalar>::mm,
             0.03f * detray::unit<traccc::scalar>::mm,

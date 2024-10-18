@@ -9,6 +9,7 @@
 
 // Project include(s)
 #include "traccc/cuda/utils/stream.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/seed.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/edm/track_parameters.hpp"
@@ -27,6 +28,7 @@ namespace traccc::cuda {
 ///
 struct track_params_estimation
     : public algorithm<bound_track_parameters_collection_types::buffer(
+          const edm::measurement_collection::const_view&,
           const spacepoint_collection_types::const_view&,
           const seed_collection_types::const_view&, const vector3&,
           const std::array<traccc::scalar, traccc::e_bound_size>&)> {
@@ -43,18 +45,20 @@ struct track_params_estimation
 
     /// Callable operator for track_params_estimation
     ///
+    /// @param measurements All measurements of the event
     /// @param spacepoints All spacepoints of the event
     /// @param seeds The reconstructed track seeds of the event
     /// @param bfield (Temporary) Magnetic field vector
     /// @param stddev standard deviation for setting the covariance (Default
-    /// value from arXiv:2112.09470v1)
-    /// @return A vector of bound track parameters
+    ///               value from arXiv:2112.09470v1)
+    /// @return A buffer of bound track parameters
     ///
     output_type operator()(
-        const spacepoint_collection_types::const_view& spacepoints_view,
-        const seed_collection_types::const_view& seeds_view,
+        const edm::measurement_collection::const_view& measurements,
+        const spacepoint_collection_types::const_view& spacepoints,
+        const seed_collection_types::const_view& seeds,
         const vector3& bfield,
-        const std::array<traccc::scalar, traccc::e_bound_size>& = {
+        const std::array<traccc::scalar, traccc::e_bound_size>& stddev = {
             0.02f * detray::unit<traccc::scalar>::mm,
             0.03f * detray::unit<traccc::scalar>::mm,
             1.f * detray::unit<traccc::scalar>::degree,
