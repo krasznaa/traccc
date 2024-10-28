@@ -8,7 +8,7 @@
 #pragma once
 
 // Library include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/utils/algorithm.hpp"
@@ -29,10 +29,10 @@ namespace traccc::host {
 class silicon_pixel_spacepoint_formation_algorithm
     : public algorithm<spacepoint_collection_types::host(
           const default_detector::host&,
-          const measurement_collection_types::const_view&)>,
+          const edm::measurement_collection::const_view&)>,
       public algorithm<spacepoint_collection_types::host(
           const telescope_detector::host&,
-          const measurement_collection_types::const_view&)> {
+          const edm::measurement_collection::const_view&)> {
 
     public:
     /// Output type
@@ -51,9 +51,9 @@ class silicon_pixel_spacepoint_formation_algorithm
     /// @return A spacepoint container, with one spacepoint for every
     ///         silicon pixel measurement
     ///
-    output_type operator()(
-        const default_detector::host& det,
-        const measurement_collection_types::const_view&) const override;
+    output_type operator()(const default_detector::host& det,
+                           const edm::measurement_collection::const_view&
+                               measurements) const override;
 
     /// Construct spacepoints from 2D silicon pixel measurements
     ///
@@ -62,9 +62,9 @@ class silicon_pixel_spacepoint_formation_algorithm
     /// @return A spacepoint container, with one spacepoint for every
     ///         silicon pixel measurement
     ///
-    output_type operator()(
-        const telescope_detector::host& det,
-        const measurement_collection_types::const_view&) const override;
+    output_type operator()(const telescope_detector::host& det,
+                           const edm::measurement_collection::const_view&
+                               measurements) const override;
 
     private:
     /// Memory resource to use for the output container

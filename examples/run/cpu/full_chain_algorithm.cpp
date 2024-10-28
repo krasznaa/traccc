@@ -59,7 +59,7 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
         const track_params_estimation::output_type track_params =
             m_track_parameter_estimation(measurements_view,
                                          vecmem::get_data(spacepoints),
-                                         vecmem::get_Data(seeds), m_field_vec);
+                                         vecmem::get_data(seeds), m_field_vec);
         const bound_track_parameters_collection_types::const_view
             track_params_view = vecmem::get_data(track_params);
 

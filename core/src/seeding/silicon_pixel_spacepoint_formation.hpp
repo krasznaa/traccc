@@ -30,11 +30,11 @@ namespace traccc::host::details {
 template <typename detector_t>
 spacepoint_collection_types::host silicon_pixel_spacepoint_formation(
     const detector_t& det,
-    const measurement_collection_types::const_view& measurements_view,
+    const edm::measurement_collection::const_view& measurements_view,
     vecmem::memory_resource& mr) {
 
     // Create a device container for the input.
-    const measurement_collection_types::const_device measurements{
+    const edm::measurement_collection::const_device measurements{
         measurements_view};
 
     // Create the result container.
@@ -42,9 +42,12 @@ spacepoint_collection_types::host silicon_pixel_spacepoint_formation(
     result.reserve(measurements.size());
 
     // Set up each spacepoint in the result container.
-    for (const auto& meas : measurements) {
+    for (edm::measurement_collection::const_device::size_type i = 0;
+         i < measurements.size(); ++i) {
+        const auto meas = measurements[i];
         if (traccc::details::is_valid_measurement(meas)) {
-            result.push_back(traccc::details::create_spacepoint(det, meas));
+            result.push_back(
+                traccc::details::create_spacepoint(det, measurements, i));
         }
     }
 

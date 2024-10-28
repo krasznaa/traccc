@@ -14,7 +14,7 @@ namespace traccc::host {
 silicon_pixel_spacepoint_formation_algorithm::output_type
 silicon_pixel_spacepoint_formation_algorithm::operator()(
     const default_detector::host& det,
-    const measurement_collection_types::const_view& meas) const {
+    const edm::measurement_collection::const_view& meas) const {
 
     return details::silicon_pixel_spacepoint_formation(det, meas, m_mr);
 }

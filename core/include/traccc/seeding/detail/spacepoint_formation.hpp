@@ -10,24 +10,37 @@
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/edm/measurement_collection.hpp"
+#include "traccc/edm/spacepoint.hpp"
 
 namespace traccc::details {
 
-/// (Possibly) Add a spacepoint to a collection
+/// Function helping with checking a measurement obejct for spacepoint creation
 ///
-/// @param[in]  det         The tracking geometry
-/// @param[in]  measurement The measurement to (possibly) create a spacepoints
-///                         out of
-/// @param[in]  meas_index  The index of the measurement in its collection
-/// @param[out] spacepoints The collection to (possibly) add the spacepoint to
-/// @return @c true if a spacepoint was added, @c false otherwise
+/// @tparam measurement_base_t Base type of the measurement proxy object
 ///
-template <typename detector_t, typename measurement_base_t,
-          typename spacepoint_collection_t>
-TRACCC_HOST_DEVICE bool add_spacepoint(
-    const detector_t& det,
-    const edm::measurement<measurement_base_t>& measurement,
-    unsigned int meas_index, spacepoint_collection_t& spacepoints);
+/// @param[in]  measurement The input measurement
+///
+/// @return @c true if the measurement is valid for spacepoint creation
+///
+template <typename measurement_base_t>
+TRACCC_HOST_DEVICE bool is_valid_measurement(
+    const edm::measurement<measurement_base_t>& meas);
+
+/// Function helping with filling/setting up a spacepoint object
+///
+/// @tparam detector_t Type of the detector object
+///
+/// @param[in]  det          The tracking geometry
+/// @param[in]  measurements All measurements in the event
+/// @param[in]  index        Index of the measurement to convert
+///
+/// @return The created spacepoint object
+///
+template <typename detector_t>
+TRACCC_HOST_DEVICE spacepoint
+create_spacepoint(const detector_t& det,
+                  const edm::measurement_collection::const_device& measurements,
+                  edm::measurement_collection::const_device::size_type index);
 
 }  // namespace traccc::details
 

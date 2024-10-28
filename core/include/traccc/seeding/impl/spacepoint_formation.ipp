@@ -9,32 +9,40 @@
 
 // Project include(s).
 #include "traccc/definitions/primitives.hpp"
-#include "traccc/edm/spacepoint.hpp"
 
 // Detray include(s).
 #include "detray/geometry/tracking_surface.hpp"
 
+// System include(s).
+#include <cassert>
+
 namespace traccc::details {
 
-template <typename detector_t, typename measurement_base_t,
-          typename spacepoint_collection_t>
-TRACCC_HOST_DEVICE bool add_spacepoint(
-    const detector_t& det,
-    const edm::measurement<measurement_base_t>& measurement,
-    unsigned int measurement_index, spacepoint_collection_t& spacepoints) {
-
+template <typename measurement_base_t>
+TRACCC_HOST_DEVICE bool is_valid_measurement(
+    const edm::measurement<measurement_base_t>& meas) {
     // We use 2D (pixel) measurements only for spacepoint creation
-    if (measurement.dimensions() != 2u) {
-        return false;
-    }
+    return (meas.dimensions() == 2u);
+}
 
-    // Helper object for doing the local-to-global transformation with.
-    const detray::tracking_surface sf{det, measurement.geometry_id()};
+template <typename detector_t>
+TRACCC_HOST_DEVICE spacepoint
+create_spacepoint(const detector_t& det,
+                  const edm::measurement_collection::const_device& measurements,
+                  edm::measurement_collection::const_device::size_type index) {
 
-    // Create the spacepoint.
-    spacepoints.push_back(spacepoint{
-        sf.bound_to_global({}, measurement.local(), {}), measurement_index});
-    return true;
+    // Get the measurement in question.
+    const auto meas = measurements.at(index);
+    assert(meas.dimensions() == 2u);
+
+    // Make the tracking surface that the measurement sits on.
+    const detray::tracking_surface sf{det, meas.geometry_id()};
+
+    // Calculate the global 3D position of the measurement.
+    const point3 global = sf.bound_to_global({}, meas.local(), {});
+
+    // Return the spacepoint with this spacepoint
+    return spacepoint{global, index};
 }
 
 }  // namespace traccc::details
