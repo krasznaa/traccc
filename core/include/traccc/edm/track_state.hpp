@@ -10,7 +10,7 @@
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/edm/container.hpp"
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_candidate.hpp"
 
 // detray include(s).
@@ -56,49 +56,58 @@ struct track_state {
 
     /// Construction with track candidate
     TRACCC_HOST_DEVICE
-    track_state(const track_candidate& trk_cand)
-        : m_surface_link(trk_cand.surface_link), m_measurement(trk_cand) {
+    track_state(const detray::geometry::barcode& surface_link,
+                unsigned int measurement_index)
+        : m_surface_link(surface_link), m_measurement_index(measurement_index) {
         m_predicted.set_surface_link(m_surface_link);
         m_filtered.set_surface_link(m_surface_link);
         m_smoothed.set_surface_link(m_surface_link);
     }
 
     /// @return the surface link
-    TRACCC_HOST_DEVICE
-    inline detray::geometry::barcode surface_link() const {
+    TRACCC_HOST_DEVICE inline detray::geometry::barcode surface_link() const {
         return m_surface_link;
     }
 
     /// @return the measurement
     TRACCC_HOST_DEVICE
-    inline const measurement& get_measurement() const { return m_measurement; }
+    inline unsigned int get_measurement_index() const {
+        return m_measurement_index;
+    }
 
     /// @return the local position of measurement with 2 X 1 matrix
     // FIXME: The conversion from vector to matrix is inefficient
     template <size_type D>
-    TRACCC_HOST_DEVICE inline matrix_type<D, 1> measurement_local() const {
+    TRACCC_HOST_DEVICE inline matrix_type<D, 1> measurement_local(
+        const edm::measurement_collection::const_device& measurements) const {
+
         static_assert(((D == 1u) || (D == 2u)),
                       "The measurement dimension should be 1 or 2");
 
         matrix_type<D, 1> ret;
-        if (m_measurement.subs.get_indices()[0] == e_bound_loc0) {
-            matrix_operator().element(ret, 0, 0) = m_measurement.local[0];
-            if constexpr (D == 2u) {
-                matrix_operator().element(ret, 1, 0) = m_measurement.local[1];
-            }
-        } else if (m_measurement.subs.get_indices()[0] == e_bound_loc1) {
-            matrix_operator().element(ret, 0, 0) = m_measurement.local[1];
-            if constexpr (D == 2u) {
-                matrix_operator().element(ret, 1, 0) = m_measurement.local[0];
-            }
-        } else {
-            assert(
-                "The measurement index out of e_bound_loc0 and e_bound_loc1 "
-                "should not happen.");
-            matrix_operator().element(ret, 0, 0) = m_measurement.local[0];
-            if constexpr (D == 2u) {
-                matrix_operator().element(ret, 1, 0) = m_measurement.local[1];
-            }
+        switch (measurements.subs().at(m_measurement_index).get_indices()[0]) {
+
+            default:
+                assert(
+                    "The measurement index out of e_bound_loc0 and "
+                    "e_bound_loc1 should not happen.");
+                [[fallthrough]];
+            case e_bound_loc0:
+                matrix_operator().element(ret, 0, 0) =
+                    measurements.local().at(m_measurement_index)[0];
+                if constexpr (D == 2u) {
+                    matrix_operator().element(ret, 1, 0) =
+                        measurements.local().at(m_measurement_index)[1];
+                }
+                break;
+            case e_bound_loc1:
+                matrix_operator().element(ret, 0, 0) =
+                    measurements.local().at(m_measurement_index)[1];
+                if constexpr (D == 2u) {
+                    matrix_operator().element(ret, 1, 0) =
+                        measurements.local().at(m_measurement_index)[0];
+                }
+                break;
         }
 
         return ret;
@@ -106,42 +115,42 @@ struct track_state {
 
     /// @return the covariance of local position of measurement
     template <size_type D>
-    TRACCC_HOST_DEVICE inline matrix_type<D, D> measurement_covariance() const {
+    TRACCC_HOST_DEVICE inline matrix_type<D, D> measurement_covariance(
+        const edm::measurement_collection::const_device& measurements) const {
+
         static_assert(((D == 1u) || (D == 2u)),
                       "The measurement dimension should be 1 or 2");
 
         matrix_type<D, D> ret;
-        if (m_measurement.subs.get_indices()[0] == e_bound_loc0) {
+        switch (measurements.subs().at(m_measurement_index).get_indices()[0]) {
 
-            matrix_operator().element(ret, 0, 0) = m_measurement.variance[0];
-            if constexpr (D == 2u) {
-                matrix_operator().element(ret, 0, 1) = 0.f;
-                matrix_operator().element(ret, 1, 0) = 0.f;
-                matrix_operator().element(ret, 1, 1) =
-                    m_measurement.variance[1];
-            }
-
-        } else if (m_measurement.subs.get_indices()[0] == e_bound_loc1) {
-
-            matrix_operator().element(ret, 0, 0) = m_measurement.variance[1];
-            if constexpr (D == 2u) {
-                matrix_operator().element(ret, 0, 1) = 0.f;
-                matrix_operator().element(ret, 1, 0) = 0.f;
-                matrix_operator().element(ret, 1, 1) =
-                    m_measurement.variance[0];
-            }
-        } else {
-            assert(
-                "The measurement index out of e_bound_loc0 and e_bound_loc1 "
-                "should not happen.");
-            matrix_operator().element(ret, 0, 0) = m_measurement.variance[0];
-            if constexpr (D == 2u) {
-                matrix_operator().element(ret, 0, 1) = 0.f;
-                matrix_operator().element(ret, 1, 0) = 0.f;
-                matrix_operator().element(ret, 1, 1) =
-                    m_measurement.variance[1];
-            }
+            default:
+                assert(
+                    "The measurement index out of e_bound_loc0 and "
+                    "e_bound_loc1 should not happen.");
+                [[fallthrough]];
+            case e_bound_loc0:
+                matrix_operator().element(ret, 0, 0) =
+                    measurements.variance().at(m_measurement_index)[0];
+                if constexpr (D == 2u) {
+                    matrix_operator().element(ret, 0, 1) = 0.f;
+                    matrix_operator().element(ret, 1, 0) = 0.f;
+                    matrix_operator().element(ret, 1, 1) =
+                        measurements.variance().at(m_measurement_index)[1];
+                }
+                break;
+            case e_bound_loc0:
+                matrix_operator().element(ret, 0, 0) =
+                    measurements.variance().at(m_measurement_index)[1];
+                if constexpr (D == 2u) {
+                    matrix_operator().element(ret, 0, 1) = 0.f;
+                    matrix_operator().element(ret, 1, 0) = 0.f;
+                    matrix_operator().element(ret, 1, 1) =
+                        measurements.variance().at(m_measurement_index)[0];
+                }
+                break;
         }
+
         return ret;
     }
 
@@ -204,7 +213,7 @@ struct track_state {
 
     private:
     detray::geometry::barcode m_surface_link;
-    measurement m_measurement;
+    unsigned int m_measurement_index = 0u;
     bound_matrix m_jacobian =
         matrix_operator().template zero<e_bound_size, e_bound_size>();
     bound_track_parameters_type m_predicted;

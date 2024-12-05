@@ -21,7 +21,7 @@ combinatorial_kalman_filter_algorithm::output_type
 combinatorial_kalman_filter_algorithm::operator()(
     const telescope_detector::host& det,
     const detray::bfield::const_field_t::view_t& field,
-    const measurement_collection_types::const_view& measurements,
+    const edm::measurement_collection::const_view& measurements,
     const bound_track_parameters_collection_types::const_view& seeds) const {
 
     // Perform the track finding using the templated implementation.
@@ -30,7 +30,7 @@ combinatorial_kalman_filter_algorithm::operator()(
                            telescope_detector::host::algebra_type,
                            detray::constrained_step<>>,
         detray::navigator<const telescope_detector::host>>(
-        det, field, measurements, seeds, m_config);
+        det, field, measurements, seeds, m_config, m_mr.get());
 }
 
 }  // namespace traccc::host

@@ -10,6 +10,7 @@
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/definitions/track_parametrization.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_state.hpp"
 
 namespace traccc {
@@ -39,30 +40,34 @@ struct gain_matrix_updater {
     TRACCC_HOST_DEVICE inline bool operator()(
         const mask_group_t& /*mask_group*/, const index_t& /*index*/,
         track_state<algebra_t>& trk_state,
-        const bound_track_parameters& bound_params) const {
+        const bound_track_parameters& bound_params,
+        const edm::measurement_collection::device& measurements) const {
 
         using shape_type = typename mask_group_t::value_type::shape;
 
-        const auto D = trk_state.get_measurement().meas_dim;
+        const auto D =
+            measurements.dimensions().at(trk_state.get_measurement_index());
         assert(D == 1u || D == 2u);
-        if (D == 1u) {
-            return update<1u, shape_type>(trk_state, bound_params);
-        } else if (D == 2u) {
-            return update<2u, shape_type>(trk_state, bound_params);
+        switch (D) {
+            case 1u:
+                return update<1u, shape_type>(trk_state, bound_params,
+                                              measurements);
+            case 2u:
+                return update<2u, shape_type>(trk_state, bound_params,
+                                              measurements);
+            default:
+                return false;
         }
-
-        return false;
     }
 
     template <size_type D, typename shape_t>
     TRACCC_HOST_DEVICE inline bool update(
         track_state<algebra_t>& trk_state,
-        const bound_track_parameters& bound_params) const {
+        const bound_track_parameters& bound_params,
+        const edm::measurement_collection::device& measurements) const {
 
         static_assert(((D == 1u) || (D == 2u)),
                       "The measurement dimension should be 1 or 2");
-
-        const auto meas = trk_state.get_measurement();
 
         // Some identity matrices
         // @Note: Make constexpr work
@@ -72,11 +77,14 @@ struct gain_matrix_updater {
         const matrix_type<D, D> I_m =
             matrix_operator().template identity<D, D>();
 
-        matrix_type<D, e_bound_size> H = meas.subs.template projector<D>();
+        matrix_type<D, e_bound_size> H =
+            measurements.subs()
+                .at(trk_state.get_measurement_index())
+                .template projector<D>();
 
         // Measurement data on surface
         const matrix_type<D, 1>& meas_local =
-            trk_state.template measurement_local<D>();
+            trk_state.template measurement_local<D>(measurements);
 
         // Predicted vector of bound track parameters
         const matrix_type<e_bound_size, 1>& predicted_vec =
@@ -100,7 +108,7 @@ struct gain_matrix_updater {
 
         // Spatial resolution (Measurement covariance)
         const matrix_type<D, D> V =
-            trk_state.template measurement_covariance<D>();
+            trk_state.template measurement_covariance<D>(measurements);
 
         const matrix_type<D, D> M =
             H * predicted_cov * matrix_operator().transpose(H) + V;

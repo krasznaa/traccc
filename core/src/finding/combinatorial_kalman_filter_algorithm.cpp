@@ -14,8 +14,8 @@
 namespace traccc::host {
 
 combinatorial_kalman_filter_algorithm::combinatorial_kalman_filter_algorithm(
-    const config_type& config)
-    : m_config{config} {
+    const config_type& config, vecmem::memory_resource& mr)
+    : m_config{config}, m_mr{mr} {
 
     // Check the configuration.
     if (m_config.min_track_candidates_per_track == 0) {

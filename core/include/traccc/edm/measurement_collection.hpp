@@ -81,15 +81,14 @@ class measurement : public BASE {
 
     /// Unique measurement ID (non-const)
     ///
-    /// @return A (non-const) (vector) of @c traccc::measurement::id_type
-    /// value(s)
+    /// @return A (non-const) (vector) of @c uint32_t value(s)
     ///
     TRACCC_HOST_DEVICE auto& measurement_id() {
         return BASE::template get<3>();
     }
     /// Unique measurement ID (const)
     ///
-    /// @return A (const) (vector) of @c traccc::measurement::id_type value(s)
+    /// @return A (const) (vector) of @c uint32_t value(s)
     ///
     TRACCC_HOST_DEVICE const auto& measurement_id() const {
         return BASE::template get<3>();
@@ -97,14 +96,12 @@ class measurement : public BASE {
 
     /// Link to the cluster that the measurement was made from (non-const)
     ///
-    /// @return A (non-const) (vector) of
-    ///         @c traccc::measurement::cluster_link_type value(s)
+    /// @return A (non-const) (vector) of @c uint32_t value(s)
     ///
     TRACCC_HOST_DEVICE auto& cluster_link() { return BASE::template get<4>(); }
     /// Link to the cluster that the measurement was made from (const)
     ///
-    /// @return A (const) (vector) of
-    ///         @c traccc::measurement::cluster_link_type value(s)
+    /// @return A (const) (vector) of @c uint32_t value(s)
     ///
     TRACCC_HOST_DEVICE const auto& cluster_link() const {
         return BASE::template get<4>();
@@ -112,14 +109,12 @@ class measurement : public BASE {
 
     /// Measurement dimensions (non-const)
     ///
-    /// @return A (non-const) (vector) of
-    ///         @c traccc::measurement::dimensions_type value(s)
+    /// @return A (non-const) (vector) of @c uint8_t value(s)
     ///
     TRACCC_HOST_DEVICE auto& dimensions() { return BASE::template get<5>(); }
     /// Measurement dimensions (const)
     ///
-    /// @return A (const) (vector) of
-    ///         @c traccc::measurement::dimensions_type value(s)
+    /// @return A (const) (vector) of @c uint8_t value(s)
     ///
     TRACCC_HOST_DEVICE const auto& dimensions() const {
         return BASE::template get<5>();
@@ -128,13 +123,13 @@ class measurement : public BASE {
     /// Measurement subspace (non-const)
     ///
     /// @return A (non-const) (vector) of
-    ///         @c traccc::measurement::subspace_type value(s)
+    ///         @c traccc::subspace<default_algebra,e_bound_size,2u> value(s)
     ///
     TRACCC_HOST_DEVICE auto& subs() { return BASE::template get<6>(); }
     /// Measurement subspace (const)
     ///
     /// @return A (const) (vector) of
-    ///         @c traccc::measurement::subspace_type value(s)
+    ///         @c traccc::subspace<default_algebra,e_bound_size,2u> value(s)
     ///
     TRACCC_HOST_DEVICE const auto& subs() const {
         return BASE::template get<6>();

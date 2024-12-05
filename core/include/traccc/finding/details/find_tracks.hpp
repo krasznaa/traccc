@@ -7,7 +7,7 @@
 #pragma once
 
 // Project include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_candidate.hpp"
 #include "traccc/edm/track_state.hpp"
 #include "traccc/finding/actors/ckf_aborter.hpp"
@@ -26,6 +26,9 @@
 #include <detray/propagator/actors/parameter_transporter.hpp>
 #include <detray/propagator/actors/pointwise_material_interactor.hpp>
 #include <detray/propagator/propagator.hpp>
+
+// VecMem include(s).
+#include <vecmem/memory/memory_resource.hpp>
 
 // System include(s).
 #include <algorithm>
@@ -49,16 +52,17 @@ namespace traccc::host::details {
 /// @param seeds_view        All seeds in an event to start the track finding
 ///                          with
 /// @param config            The track finding configuration
+/// @param mr                The memory resource to use for the track finding
 ///
 /// @return A container of the found track candidates
 ///
 template <typename stepper_t, typename navigator_t>
-track_candidate_container_types::host find_tracks(
+edm::track_candidate_collection::host find_tracks(
     const typename navigator_t::detector_type& det,
     const typename stepper_t::magnetic_field_type& field,
-    const measurement_collection_types::const_view& measurements_view,
+    const edm::measurement_collection::const_view& measurements_view,
     const bound_track_parameters_collection_types::const_view& seeds_view,
-    const finding_config& config) {
+    const finding_config& config, vecmem::memory_resource& mr) {
 
     /*****************************************************************
      * Types used by the track finding
@@ -83,32 +87,32 @@ track_candidate_container_types::host find_tracks(
      *****************************************************************/
 
     // Create the measurement container.
-    measurement_collection_types::const_device measurements{measurements_view};
+    edm::measurement_collection::const_device measurements{measurements_view};
 
     // Check contiguity of the measurements
     assert(is_contiguous_on(measurement_module_projection(), measurements));
 
     // Get copy of barcode uniques
-    std::vector<measurement> uniques;
+    std::vector<detray::geometry::barcode> uniques;
     uniques.resize(measurements.size());
 
-    std::vector<measurement>::iterator uniques_end =
-        std::unique_copy(measurements.begin(), measurements.end(),
-                         uniques.begin(), measurement_equal_comp());
-    const auto n_modules =
+    auto uniques_end =
+        std::unique_copy(measurements.geometry_id().begin(),
+                         measurements.geometry_id().end(), uniques.begin());
+    const unsigned int n_modules =
         static_cast<unsigned int>(uniques_end - uniques.begin());
 
     // Get upper bounds of unique elements
     std::vector<unsigned int> upper_bounds;
     upper_bounds.reserve(n_modules);
     for (unsigned int i = 0; i < n_modules; i++) {
-        measurement_collection_types::const_device::iterator up =
-            std::upper_bound(measurements.begin(), measurements.end(),
-                             uniques[i], measurement_sort_comp());
-        upper_bounds.push_back(
-            static_cast<unsigned int>(std::distance(measurements.begin(), up)));
+        auto up =
+            std::upper_bound(measurements.geometry_id().begin(),
+                             measurements.geometry_id().end(), uniques.at(i));
+        upper_bounds.push_back(static_cast<unsigned int>(
+            std::distance(measurements.geometry_id().begin(), up)));
     }
-    const measurement_collection_types::const_device::size_type n_meas =
+    const edm::measurement_collection::const_device::size_type n_meas =
         measurements.size();
 
     // Get the number of measurements of each module
@@ -234,14 +238,15 @@ track_candidate_container_types::host find_tracks(
                     break;
                 }
 
-                const auto& meas = measurements[item_id];
+                const auto meas = measurements.at(item_id);
 
-                track_state<algebra_type> trk_state(meas);
+                track_state<algebra_type> trk_state{meas.geometry_id(),
+                                                    item_id};
 
                 // Run the Kalman update on a copy of the track parameters
                 const bool res =
                     sf.template visit_mask<gain_matrix_updater<algebra_type>>(
-                        trk_state, in_param);
+                        trk_state, in_param, measurements);
 
                 // The chi2 from Kalman update should be less than chi2_max
                 if (res && trk_state.filtered_chi2() < config.chi2_max) {
@@ -350,7 +355,7 @@ track_candidate_container_types::host find_tracks(
      **********************/
 
     // Number of found tracks = number of tips
-    track_candidate_container_types::host output_candidates;
+    edm::track_candidate_collection::host output_candidates{mr};
     output_candidates.reserve(tips.size());
 
     for (const auto& tip : tips) {
@@ -385,12 +390,14 @@ track_candidate_container_types::host find_tracks(
         // Retrieve tip
         L = links[tip.first][tip.second];
 
-        vecmem::vector<track_candidate> cands_per_track;
-        cands_per_track.resize(n_cands);
+        // Create a new track candidate in the output container.
+        output_candidates.resize(output_candidates.size() + 1);
+        auto candidate = output_candidates.at(output_candidates.size() - 1);
+        candidate.measurements().resize(n_cands);
 
         // Reversely iterate to fill the track candidates
-        for (auto it = cands_per_track.rbegin(); it != cands_per_track.rend();
-             it++) {
+        for (auto it = candidate.measurements().rbegin();
+             it != candidate.measurements().rend(); it++) {
 
             while (L.meas_idx > n_meas) {
                 const auto link_pos =
@@ -404,17 +411,13 @@ track_candidate_container_types::host find_tracks(
                 break;
             }
 
-            auto& cand = *it;
-            cand = measurements.at(L.meas_idx);
+            *it = L.meas_idx;
 
             // Break the loop if the iterator is at the first candidate and
-            // fill the seed
-            if (it == cands_per_track.rend() - 1) {
+            // set the track parameters of the track candidate.
+            if (it == candidate.measurements().rend() - 1) {
 
-                auto cand_seed = seeds.at(L.previous.second);
-
-                // Add seed and track candidates to the output container
-                output_candidates.push_back(cand_seed, cands_per_track);
+                candidate.parameters() = seeds.at(L.previous.second);
                 break;
             }
 
