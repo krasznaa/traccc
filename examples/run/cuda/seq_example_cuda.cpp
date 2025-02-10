@@ -25,10 +25,12 @@
 #include "traccc/io/read_detector.hpp"
 #include "traccc/io/read_detector_description.hpp"
 #include "traccc/io/utils.hpp"
+#include "traccc/io/write.hpp"
 #include "traccc/options/accelerator.hpp"
 #include "traccc/options/clusterization.hpp"
 #include "traccc/options/detector.hpp"
 #include "traccc/options/input_data.hpp"
+#include "traccc/options/output_data.hpp"
 #include "traccc/options/performance.hpp"
 #include "traccc/options/program_options.hpp"
 #include "traccc/options/track_finding.hpp"
@@ -57,12 +59,14 @@
 
 // System include(s).
 #include <exception>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 
 int seq_run(const traccc::opts::detector& detector_opts,
             const traccc::opts::input_data& input_opts,
+            const traccc::opts::output_data& output_opts,
             const traccc::opts::clusterization& clusterization_opts,
             const traccc::opts::track_seeding& seeding_opts,
             const traccc::opts::track_finding& finding_opts,
@@ -438,6 +442,26 @@ int seq_run(const traccc::opts::detector& detector_opts,
                 vecmem::get_data(track_states.get_headers()),
                 vecmem::get_data(track_states_cuda.get_headers()));
         }
+
+        // Reconstruction output writing.
+        if (output_opts.directory != "") {
+            const std::filesystem::path seeds_cuda_dir =
+                std::filesystem::path(output_opts.directory) /
+                std::filesystem::path("seeds_cuda");
+            std::filesystem::create_directory(seeds_cuda_dir);
+            traccc::io::write(event, seeds_cuda_dir.native(),
+                              output_opts.format,
+                              vecmem::get_data(params_cuda));
+            if (accelerator_opts.compare_with_cpu) {
+                const std::filesystem::path seeds_host_dir =
+                    std::filesystem::path(output_opts.directory) /
+                    std::filesystem::path("seeds_host");
+                std::filesystem::create_directory(seeds_host_dir);
+                traccc::io::write(event, seeds_host_dir.native(),
+                                  output_opts.format, vecmem::get_data(params));
+            }
+        }
+
         /// Statistics
         n_measurements += measurements_per_event.size();
         n_spacepoints += spacepoints_per_event.size();
@@ -494,6 +518,7 @@ int main(int argc, char* argv[]) {
     // Program options.
     traccc::opts::detector detector_opts;
     traccc::opts::input_data input_opts;
+    traccc::opts::output_data output_opts{traccc::data_format::csv, ""};
     traccc::opts::clusterization clusterization_opts;
     traccc::opts::track_seeding seeding_opts;
     traccc::opts::track_finding finding_opts;
@@ -503,14 +528,14 @@ int main(int argc, char* argv[]) {
     traccc::opts::accelerator accelerator_opts;
     traccc::opts::program_options program_opts{
         "Full Tracking Chain Using CUDA",
-        {detector_opts, input_opts, clusterization_opts, seeding_opts,
-         finding_opts, propagation_opts, performance_opts, fitting_opts,
-         accelerator_opts},
+        {detector_opts, input_opts, output_opts, clusterization_opts,
+         seeding_opts, finding_opts, propagation_opts, performance_opts,
+         fitting_opts, accelerator_opts},
         argc,
         argv};
 
     // Run the application.
-    return seq_run(detector_opts, input_opts, clusterization_opts, seeding_opts,
-                   finding_opts, propagation_opts, fitting_opts,
+    return seq_run(detector_opts, input_opts, output_opts, clusterization_opts,
+                   seeding_opts, finding_opts, propagation_opts, fitting_opts,
                    performance_opts, accelerator_opts);
 }
