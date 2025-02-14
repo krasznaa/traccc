@@ -127,10 +127,10 @@ int seq_run(const traccc::opts::input_data& input_opts,
     traccc::host::sparse_ccl_algorithm cc(host_mr);
     traccc::host::measurement_creation_algorithm mc(host_mr);
     spacepoint_formation_algorithm sf(host_mr);
-    traccc::seeding_algorithm sa(seeding_opts.seedfinder,
-                                 {seeding_opts.seedfinder},
-                                 seeding_opts.seedfilter, host_mr);
-    traccc::track_params_estimation tp(host_mr);
+    traccc::host::seeding_algorithm sa(seeding_opts.seedfinder,
+                                       {seeding_opts.seedfinder},
+                                       seeding_opts.seedfilter, host_mr);
+    traccc::host::track_params_estimation tp(host_mr);
     finding_algorithm finding_alg(finding_cfg);
     fitting_algorithm fitting_alg(fitting_cfg, host_mr);
     traccc::greedy_ambiguity_resolution_algorithm resolution_alg;
@@ -160,9 +160,9 @@ int seq_run(const traccc::opts::input_data& input_opts,
         traccc::host::measurement_creation_algorithm::output_type
             measurements_per_event{&host_mr};
         spacepoint_formation_algorithm::output_type spacepoints_per_event{
-            &host_mr};
-        traccc::seeding_algorithm::output_type seeds{&host_mr};
-        traccc::track_params_estimation::output_type params{&host_mr};
+            host_mr};
+        traccc::host::seeding_algorithm::output_type seeds{host_mr};
+        traccc::host::track_params_estimation::output_type params{&host_mr};
         finding_algorithm::output_type track_candidates{&host_mr};
         fitting_algorithm::output_type track_states{&host_mr};
         traccc::greedy_ambiguity_resolution_algorithm::output_type
@@ -212,7 +212,8 @@ int seq_run(const traccc::opts::input_data& input_opts,
                 if (output_opts.directory != "") {
                     traccc::io::write(event, output_opts.directory,
                                       output_opts.format,
-                                      vecmem::get_data(spacepoints_per_event));
+                                      vecmem::get_data(spacepoints_per_event),
+                                      vecmem::get_data(measurements_per_event));
                 }
 
                 /*-----------------------
@@ -221,7 +222,7 @@ int seq_run(const traccc::opts::input_data& input_opts,
 
                 {
                     traccc::performance::timer timer{"Seeding", elapsedTimes};
-                    seeds = sa(spacepoints_per_event);
+                    seeds = sa(vecmem::get_data(spacepoints_per_event));
                 }
                 if (output_opts.directory != "") {
                     traccc::io::write(event, output_opts.directory,
@@ -237,7 +238,9 @@ int seq_run(const traccc::opts::input_data& input_opts,
                 {
                     traccc::performance::timer timer{"Track params estimation",
                                                      elapsedTimes};
-                    params = tp(spacepoints_per_event, seeds, field_vec);
+                    params = tp(vecmem::get_data(measurements_per_event),
+                                vecmem::get_data(spacepoints_per_event),
+                                vecmem::get_data(seeds), field_vec);
                 }
 
                 {
@@ -294,9 +297,10 @@ int seq_run(const traccc::opts::input_data& input_opts,
             evt_data.fill_cca_result(cells_per_event, clusters_per_event,
                                      measurements_per_event, det_descr);
 
-            sd_performance_writer.write(vecmem::get_data(seeds),
-                                        vecmem::get_data(spacepoints_per_event),
-                                        evt_data);
+            sd_performance_writer.write(
+                vecmem::get_data(seeds),
+                vecmem::get_data(spacepoints_per_event),
+                vecmem::get_data(measurements_per_event), evt_data);
             find_performance_writer.write(traccc::get_data(track_candidates),
                                           evt_data);
 
