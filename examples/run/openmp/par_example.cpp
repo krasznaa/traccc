@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2024 CERN for the benefit of the ACTS project
+ * (c) 2021-2025 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -9,7 +9,6 @@
 #include "traccc/clusterization/clusterization_algorithm.hpp"
 #include "traccc/edm/measurement.hpp"
 #include "traccc/edm/silicon_cell_collection.hpp"
-#include "traccc/edm/spacepoint.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/pixel_data.hpp"
 #include "traccc/io/read_cells.hpp"
