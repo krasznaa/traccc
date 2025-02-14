@@ -1,6 +1,6 @@
 # TRACCC library, part of the ACTS project (R&D line)
 #
-# (c) 2022-2024 CERN for the benefit of the ACTS project
+# (c) 2022-2025 CERN for the benefit of the ACTS project
 #
 # Mozilla Public License Version 2.0
 
@@ -52,7 +52,6 @@ traccc_add_library( traccc_performance performance TYPE SHARED
    "include/traccc/performance/details/comparator_factory.hpp"
    "include/traccc/performance/impl/comparator_factory.ipp"
    "include/traccc/performance/impl/seed_comparator_factory.ipp"
-   "src/performance/details/comparator_factory.cpp"
    # Collection/container comparison code.
    "include/traccc/performance/collection_comparator.hpp"
    "include/traccc/performance/impl/collection_comparator.ipp"
