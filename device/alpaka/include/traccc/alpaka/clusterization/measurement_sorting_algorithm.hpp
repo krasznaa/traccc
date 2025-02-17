@@ -36,7 +36,7 @@ class measurement_sorting_algorithm
     ///
     /// @param copy The copy object to use in the algorithm
     ///
-    measurement_sorting_algorithm(vecmem::copy& copy);
+    measurement_sorting_algorithm(::vecmem::copy& copy);
 
     /// Callable operator performing the sorting on a container
     ///
@@ -47,7 +47,7 @@ class measurement_sorting_algorithm
 
     private:
     /// Copy object to use in the algorithm
-    std::reference_wrapper<vecmem::copy> m_copy;
+    std::reference_wrapper<::vecmem::copy> m_copy;
 
 };  // class measurement_sorting_algorithm
 

@@ -58,4 +58,4 @@ class spacepoint_binning {
 
 };  // class spacepoint_binning
 
-}  // namespace traccc::cuda
+}  // namespace traccc::cuda::details
