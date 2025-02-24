@@ -85,28 +85,34 @@ lin_circle TRACCC_HOST_DEVICE doublet_finding_helper::transform_coordinates(
     static_assert(otherSpType == details::spacepoint_type::bottom ||
                   otherSpType == details::spacepoint_type::top);
 
-    const scalar& xM = sp1.x();
-    const scalar& yM = sp1.y();
-    const scalar& zM = sp1.z();
-    const scalar& rM = sp1.radius();
-    const scalar& varianceZM = sp1.z_variance();
-    const scalar& varianceRM = sp1.radius_variance();
-    scalar cosPhiM = xM / rM;
-    scalar sinPhiM = yM / rM;
+    const scalar x1 = sp1.x();
+    const scalar y1 = sp1.y();
+    const scalar z1 = sp1.z();
+    const scalar r1 = sp1.radius();
+    const scalar varianceZ1 = sp1.z_variance();
+    const scalar varianceR1 = sp1.radius_variance();
+    const scalar x2 = sp2.x();
+    const scalar y2 = sp2.y();
+    const scalar z2 = sp2.z();
+    const scalar varianceZ2 = sp2.z_variance();
+    const scalar varianceR2 = sp2.radius_variance();
 
-    scalar deltaX = sp2.x() - xM;
-    scalar deltaY = sp2.y() - yM;
-    scalar deltaZ = sp2.z() - zM;
+    const scalar cosPhiM = x1 / r1;
+    const scalar sinPhiM = y1 / r1;
+
+    const scalar deltaX = x2 - x1;
+    const scalar deltaY = y2 - y1;
+    const scalar deltaZ = z2 - z1;
     // calculate projection fraction of spM->sp vector pointing in same
     // direction as
     // vector origin->spM (x) and projection fraction of spM->sp vector pointing
     // orthogonal to origin->spM (y)
-    scalar x = deltaX * cosPhiM + deltaY * sinPhiM;
-    scalar y = deltaY * cosPhiM - deltaX * sinPhiM;
+    const scalar x = deltaX * cosPhiM + deltaY * sinPhiM;
+    const scalar y = deltaY * cosPhiM - deltaX * sinPhiM;
     // 1/(length of M -> SP)
-    scalar iDeltaR2 =
+    const scalar iDeltaR2 =
         static_cast<scalar>(1.) / (deltaX * deltaX + deltaY * deltaY);
-    scalar iDeltaR = std::sqrt(iDeltaR2);
+    const scalar iDeltaR = std::sqrt(iDeltaR2);
     // cot_theta = (deltaZ/deltaR)
     scalar cot_theta = deltaZ * iDeltaR;
     if constexpr (otherSpType == details::spacepoint_type::bottom) {
@@ -116,7 +122,7 @@ lin_circle TRACCC_HOST_DEVICE doublet_finding_helper::transform_coordinates(
     lin_circle l;
     l.m_cotTheta = cot_theta;
     // location on z-axis of this SP-duplet
-    l.m_Zo = zM - rM * cot_theta;
+    l.m_Zo = z1 - r1 * cot_theta;
     l.m_iDeltaR = iDeltaR;
     // transformation of circle equation (x,y) into linear equation (u,v)
     // x^2 + y^2 - 2x_0*x - 2y_0*y = 0
@@ -127,8 +133,8 @@ lin_circle TRACCC_HOST_DEVICE doublet_finding_helper::transform_coordinates(
     l.m_U = x * iDeltaR2;
     l.m_V = y * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
-    l.m_Er = ((varianceZM + sp2.z_variance()) +
-              (cot_theta * cot_theta) * (varianceRM + sp2.radius_variance())) *
+    l.m_Er = ((varianceZ1 + varianceZ2) +
+              (cot_theta * cot_theta) * (varianceR1 + varianceR2)) *
              iDeltaR2;
 
     return l;
