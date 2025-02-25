@@ -9,7 +9,7 @@
 
 // Project include(s).
 #include "traccc/edm/track_candidate.hpp"
-#include "traccc/edm/track_state.hpp"
+#include "traccc/edm/track_state_container.hpp"
 #include "traccc/fitting/status_codes.hpp"
 
 // VecMem include(s).
@@ -36,13 +36,13 @@ namespace traccc::host::details {
 /// @return A container of the fitted track states
 ///
 template <typename fitter_t>
-track_state_container_types::host fit_tracks(
+edm::track_state_container<default_algebra>::host fit_tracks(
     fitter_t& fitter,
     const track_candidate_container_types::const_view& track_candidates_view,
     vecmem::memory_resource& mr) {
 
     // Create the output container.
-    track_state_container_types::host result{&mr};
+    edm::track_state_container<default_algebra>::host result{mr};
 
     // Iterate over the tracks,
     const track_candidate_container_types::const_device track_candidates{

@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022-2024 CERN for the benefit of the ACTS project
+ * (c) 2022-2025 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -9,7 +9,7 @@
 
 // Project include(s).
 #include "traccc/edm/track_candidate.hpp"
-#include "traccc/edm/track_state.hpp"
+#include "traccc/edm/track_state_container.hpp"
 #include "traccc/fitting/fitting_config.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/utils/algorithm.hpp"
@@ -27,12 +27,12 @@ namespace traccc::host {
 
 /// Kalman filter based track fitting algorithm
 class kalman_fitting_algorithm
-    : public algorithm<track_state_container_types::host(
+    : public algorithm<edm::track_state_container<default_algebra>::host(
           const default_detector::host&,
           const detray::bfield::const_field_t<
               default_detector::host::scalar_type>::view_t&,
           const track_candidate_container_types::const_view&)>,
-      public algorithm<track_state_container_types::host(
+      public algorithm<edm::track_state_container<default_algebra>::host(
           const telescope_detector::host&,
           const detray::bfield::const_field_t<
               telescope_detector::host::scalar_type>::view_t&,
@@ -42,7 +42,7 @@ class kalman_fitting_algorithm
     /// Configuration type
     using config_type = fitting_config;
     /// Output type
-    using output_type = track_state_container_types::host;
+    using output_type = edm::track_state_container<default_algebra>::host;
 
     /// Constructor with the algorithm's configuration
     ///
