@@ -16,7 +16,7 @@
 
 // Project include(s).
 #include "traccc/edm/measurement.hpp"
-#include "traccc/edm/track_candidate.hpp"
+#include "traccc/edm/track_candidate_collection.hpp"
 #include "traccc/finding/actors/ckf_aborter.hpp"
 #include "traccc/finding/actors/interaction_register.hpp"
 #include "traccc/finding/candidate_link.hpp"
@@ -89,7 +89,7 @@ struct prune_tracks {};
 /// @return A buffer of the found track candidates
 ///
 template <typename stepper_t, typename navigator_t, typename kernel_t>
-track_candidate_container_types::buffer find_tracks(
+edm::track_candidate_collection<default_algebra>::buffer find_tracks(
     const typename navigator_t::detector_type::view_type& det,
     const typename stepper_t::magnetic_field_type& field,
     const measurement_collection_types::const_view& measurements,
@@ -418,15 +418,12 @@ track_candidate_container_types::buffer find_tracks(
     auto n_tips_total = copy.get_size(tips_buffer);
 
     // Create track candidate buffer
-    track_candidate_container_types::buffer track_candidates_buffer{
-        {n_tips_total, mr.main},
-        {std::vector<std::size_t>(n_tips_total,
-                                  config.max_track_candidates_per_track),
-         mr.main, mr.host, vecmem::data::buffer_type::resizable}};
-    copy.setup(track_candidates_buffer.headers)->wait();
-    copy.setup(track_candidates_buffer.items)->wait();
-    track_candidate_container_types::view track_candidates =
-        track_candidates_buffer;
+    edm::track_candidate_collection<default_algebra>::buffer
+        track_candidates_buffer{
+            std::vector<std::size_t>(n_tips_total,
+                                     config.max_track_candidates_per_track),
+            mr.main, mr.host, vecmem::data::buffer_type::resizable};
+    copy.setup(track_candidates_buffer)->wait();
 
     // Create buffer for valid indices
     vecmem::data::vector_buffer<unsigned int> valid_indices_buffer(n_tips_total,
@@ -447,7 +444,9 @@ track_candidate_container_types::buffer find_tracks(
                     calculate1DimNdRange(n_tips_total, 64),
                     [config, measurements, seeds,
                      links = vecmem::get_data(links_buffer),
-                     tips = vecmem::get_data(tips_buffer), track_candidates,
+                     tips = vecmem::get_data(tips_buffer),
+                     track_candidates =
+                         vecmem::get_data(track_candidates_buffer),
                      valid_indices = vecmem::get_data(valid_indices_buffer),
                      n_valid_tracks =
                          n_valid_tracks_device.get()](::sycl::nd_item<1> item) {
@@ -466,15 +465,12 @@ track_candidate_container_types::buffer find_tracks(
     }
 
     // Create pruned candidate buffer
-    track_candidate_container_types::buffer prune_candidates_buffer{
-        {n_valid_tracks, mr.main},
-        {std::vector<std::size_t>(n_valid_tracks,
-                                  config.max_track_candidates_per_track),
-         mr.main, mr.host, vecmem::data::buffer_type::resizable}};
-    copy.setup(prune_candidates_buffer.headers)->wait();
-    copy.setup(prune_candidates_buffer.items)->wait();
-    track_candidate_container_types::view prune_candidates =
-        prune_candidates_buffer;
+    edm::track_candidate_collection<default_algebra>::buffer
+        prune_candidates_buffer{
+            std::vector<std::size_t>(n_valid_tracks,
+                                     config.max_track_candidates_per_track),
+            mr.main, mr.host, vecmem::data::buffer_type::resizable};
+    copy.setup(prune_candidates_buffer)->wait();
 
     if (n_valid_tracks > 0) {
 
@@ -482,9 +478,11 @@ track_candidate_container_types::buffer find_tracks(
             .submit([&](::sycl::handler& h) {
                 h.parallel_for<kernels::prune_tracks>(
                     calculate1DimNdRange(n_valid_tracks, 64),
-                    [track_candidates,
+                    [track_candidates =
+                         vecmem::get_data(track_candidates_buffer),
                      valid_indices = vecmem::get_data(valid_indices_buffer),
-                     prune_candidates](::sycl::nd_item<1> item) {
+                     prune_candidates = vecmem::get_data(
+                         prune_candidates_buffer)](::sycl::nd_item<1> item) {
                         device::prune_tracks(details::global_index(item),
                                              {track_candidates, valid_indices,
                                               prune_candidates});

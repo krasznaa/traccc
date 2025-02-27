@@ -58,12 +58,13 @@ finding_algorithm<stepper_t, navigator_t>::finding_algorithm(
     : messaging(std::move(logger)), m_cfg(cfg), m_mr(mr), m_copy(copy) {}
 
 template <typename stepper_t, typename navigator_t>
-track_candidate_container_types::buffer
+edm::track_candidate_collection<default_algebra>::buffer
 finding_algorithm<stepper_t, navigator_t>::operator()(
     const typename detector_type::view_type& det_view,
     const bfield_type& field_view,
-    const typename measurement_collection_types::view& measurements,
-    const bound_track_parameters_collection_types::buffer& seeds_buffer) const {
+    const measurement_collection_types::const_view& measurements,
+    const bound_track_parameters_collection_types::const_view& seeds_buffer)
+    const {
 
     assert(m_cfg.min_step_length_for_next_surface >
                math::fabs(m_cfg.propagation.navigation.overstep_tolerance) &&
@@ -75,9 +76,6 @@ finding_algorithm<stepper_t, navigator_t>::operator()(
     auto devAcc = ::alpaka::getDevByIdx(::alpaka::Platform<Acc>{}, 0u);
     auto queue = Queue{devAcc};
     Idx threadsPerBlock = getWarpSize<Acc>() * 2;
-
-    // Copy setup
-    m_copy.setup(seeds_buffer)->ignore();
 
 #if defined(ALPAKA_ACC_GPU_CUDA_ENABLED) || defined(ALPAKA_ACC_GPU_HIP_ENABLED)
     auto thrustExecPolicy = thrust::device;
@@ -150,8 +148,7 @@ finding_algorithm<stepper_t, navigator_t>::operator()(
     bound_track_parameters_collection_types::buffer in_params_buffer(n_seeds,
                                                                      m_mr.main);
     m_copy.setup(in_params_buffer)->ignore();
-    m_copy(vecmem::get_data(seeds_buffer), vecmem::get_data(in_params_buffer))
-        ->ignore();
+    m_copy(seeds_buffer, in_params_buffer)->ignore();
     vecmem::data::vector_buffer<unsigned int> param_liveness_buffer(n_seeds,
                                                                     m_mr.main);
     m_copy.setup(param_liveness_buffer)->ignore();
@@ -403,14 +400,13 @@ finding_algorithm<stepper_t, navigator_t>::operator()(
     auto n_tips_total = m_copy.get_size(tips_buffer);
 
     // Create track candidate buffer
-    track_candidate_container_types::buffer track_candidates_buffer{
-        {n_tips_total, m_mr.main},
-        {std::vector<std::size_t>(n_tips_total,
-                                  m_cfg.max_track_candidates_per_track),
-         m_mr.main, m_mr.host, vecmem::data::buffer_type::resizable}};
+    edm::track_candidate_collection<default_algebra>::buffer
+        track_candidates_buffer{
+            std::vector<std::size_t>(n_tips_total,
+                                     m_cfg.max_track_candidates_per_track),
+            m_mr.main, m_mr.host, vecmem::data::buffer_type::resizable};
 
-    m_copy.setup(track_candidates_buffer.headers)->ignore();
-    m_copy.setup(track_candidates_buffer.items)->ignore();
+    m_copy.setup(track_candidates_buffer)->ignore();
 
     // Create buffer for valid indices
     vecmem::data::vector_buffer<unsigned int> valid_indices_buffer(n_tips_total,
@@ -435,15 +431,15 @@ finding_algorithm<stepper_t, navigator_t>::operator()(
             (n_tips_total + threadsPerBlock - 1) / threadsPerBlock;
         auto workDiv = makeWorkDiv<Acc>(blocksPerGrid, threadsPerBlock);
 
-        track_candidate_container_types::view track_candidates_view(
-            track_candidates_buffer);
+        edm::track_candidate_collection<default_algebra>::view
+            track_candidates_view(track_candidates_buffer);
 
         ::alpaka::exec<Acc>(
             queue, workDiv, BuildTracksKernel{}, m_cfg,
             device::build_tracks_payload{
-                measurements, vecmem::get_data(seeds_buffer),
-                vecmem::get_data(links_buffer), vecmem::get_data(tips_buffer),
-                track_candidates_view, vecmem::get_data(valid_indices_buffer),
+                measurements, seeds_buffer, vecmem::get_data(links_buffer),
+                vecmem::get_data(tips_buffer), track_candidates_view,
+                vecmem::get_data(valid_indices_buffer),
                 ::alpaka::getPtrNative(n_valid_tracks_device)});
         ::alpaka::wait(queue);
 
@@ -453,25 +449,24 @@ finding_algorithm<stepper_t, navigator_t>::operator()(
     }
 
     // Create pruned candidate buffer
-    track_candidate_container_types::buffer prune_candidates_buffer{
-        {*n_valid_tracks, m_mr.main},
-        {std::vector<std::size_t>(*n_valid_tracks,
-                                  m_cfg.max_track_candidates_per_track),
-         m_mr.main, m_mr.host, vecmem::data::buffer_type::resizable}};
+    edm::track_candidate_collection<default_algebra>::buffer
+        prune_candidates_buffer{
+            std::vector<std::size_t>(*n_valid_tracks,
+                                     m_cfg.max_track_candidates_per_track),
+            m_mr.main, m_mr.host, vecmem::data::buffer_type::resizable};
 
-    m_copy.setup(prune_candidates_buffer.headers)->ignore();
-    m_copy.setup(prune_candidates_buffer.items)->ignore();
+    m_copy.setup(prune_candidates_buffer)->ignore();
 
     if (*n_valid_tracks > 0) {
         Idx blocksPerGrid =
             (*n_valid_tracks + threadsPerBlock - 1) / threadsPerBlock;
         auto workDiv = makeWorkDiv<Acc>(blocksPerGrid, threadsPerBlock);
 
-        track_candidate_container_types::const_view track_candidates_view(
-            track_candidates_buffer);
+        edm::track_candidate_collection<default_algebra>::const_view
+            track_candidates_view(track_candidates_buffer);
 
-        track_candidate_container_types::view prune_candidates_view(
-            prune_candidates_buffer);
+        edm::track_candidate_collection<default_algebra>::view
+            prune_candidates_view(prune_candidates_buffer);
 
         ::alpaka::exec<Acc>(
             queue, workDiv, PruneTracksKernel{},
