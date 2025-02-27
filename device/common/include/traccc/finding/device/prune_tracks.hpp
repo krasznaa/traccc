@@ -12,7 +12,7 @@
 
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/track_candidate.hpp"
+#include "traccc/edm/track_candidate_collection.hpp"
 
 // VecMem include(s).
 #include <vecmem/containers/data/vector_view.hpp>
@@ -24,7 +24,8 @@ struct prune_tracks_payload {
     /**
      * @brief View object to the vector of track candidates
      */
-    track_candidate_container_types::const_view track_candidates_view;
+    edm::track_candidate_collection<default_algebra>::const_view
+        track_candidates_view;
 
     /**
      * @brief View object to the vector containing the indices of valid tracks
@@ -34,7 +35,8 @@ struct prune_tracks_payload {
     /**
      * @brief View object to the vector of pruned track candidates
      */
-    track_candidate_container_types::view prune_candidates_view;
+    edm::track_candidate_collection<default_algebra>::view
+        prune_candidates_view;
 };
 
 /// Return a new track_candidates based on the criteria in configuration

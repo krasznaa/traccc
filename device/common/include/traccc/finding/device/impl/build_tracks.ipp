@@ -25,7 +25,7 @@ TRACCC_DEVICE inline void build_tracks(const global_index_t globalIndex,
     const vecmem::device_vector<const typename candidate_link::link_index_type>
         tips(payload.tips_view);
 
-    track_candidate_container_types::device track_candidates(
+    edm::track_candidate_collection<default_algebra>::device track_candidates(
         payload.track_candidates_view);
 
     vecmem::device_vector<unsigned int> valid_indices(
@@ -36,9 +36,8 @@ TRACCC_DEVICE inline void build_tracks(const global_index_t globalIndex,
     }
 
     const auto tip = tips.at(globalIndex);
-    auto& seed = track_candidates[globalIndex].header.seed_params;
-    auto& trk_quality = track_candidates[globalIndex].header.trk_quality;
-    auto cands_per_track = track_candidates[globalIndex].items;
+    edm::track_candidate_collection<default_algebra>::device::proxy_type track =
+        track_candidates.at(globalIndex);
 
     // Get the link corresponding to tip
     auto L = links[tip.first][tip.second];
@@ -64,7 +63,7 @@ TRACCC_DEVICE inline void build_tracks(const global_index_t globalIndex,
     const unsigned int n_cands = tip.first + 1 - n_skipped;
 
     // Resize the candidates with the exact size
-    cands_per_track.resize(n_cands);
+    track.measurement_indices().resize(n_cands);
 
     bool success = true;
 
@@ -73,8 +72,8 @@ TRACCC_DEVICE inline void build_tracks(const global_index_t globalIndex,
     scalar chi2_sum = 0.f;
 
     // Reversely iterate to fill the track candidates
-    for (auto it = cands_per_track.rbegin(); it != cands_per_track.rend();
-         it++) {
+    for (auto it = track.measurement_indices().rbegin();
+         it != track.measurement_indices().rend(); it++) {
 
         while (L.meas_idx >= n_meas &&
                L.previous.first !=
@@ -90,22 +89,22 @@ TRACCC_DEVICE inline void build_tracks(const global_index_t globalIndex,
             break;
         }
 
-        *it = {measurements.at(L.meas_idx)};
+        *it = L.meas_idx;
 
         // Sanity check on chi2
         assert(L.chi2 < std::numeric_limits<traccc::scalar>::max());
         assert(L.chi2 >= 0.f);
 
-        ndf_sum += static_cast<scalar>(it->meas_dim);
+        ndf_sum += static_cast<scalar>(measurements.at(*it).meas_dim);
         chi2_sum += L.chi2;
 
         // Break the loop if the iterator is at the first candidate and fill the
         // seed and track quality
-        if (it == cands_per_track.rend() - 1) {
-            seed = seeds.at(L.previous.second);
-            trk_quality.ndf = ndf_sum - 5.f;
-            trk_quality.chi2 = chi2_sum;
-            trk_quality.n_holes = L.n_skipped;
+        if (it == track.measurement_indices().rend() - 1) {
+            track.params() = seeds.at(L.previous.second);
+            track.ndf() = ndf_sum - 5.f;
+            track.chi2() = chi2_sum;
+            track.nholes() = L.n_skipped;
         } else {
             L = links[L.previous.first][L.previous.second];
         }

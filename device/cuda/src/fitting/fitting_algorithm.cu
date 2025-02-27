@@ -31,7 +31,8 @@ namespace traccc::cuda {
 namespace kernels {
 
 __global__ void fill_sort_keys(
-    track_candidate_container_types::const_view track_candidates_view,
+    edm::track_candidate_collection<default_algebra>::const_view
+        track_candidates_view,
     vecmem::data::vector_view<device::sort_key> keys_view,
     vecmem::data::vector_view<unsigned int> ids_view) {
 
@@ -43,13 +44,15 @@ template <typename fitter_t, typename detector_view_t>
 __global__ void fit(
     detector_view_t det_data, const typename fitter_t::bfield_type field_data,
     const typename fitter_t::config_type cfg,
-    track_candidate_container_types::const_view track_candidates_view,
+    edm::track_candidate_collection<default_algebra>::const_view
+        track_candidates_view,
+    measurement_collection_types::const_view measurements_view,
     vecmem::data::vector_view<const unsigned int> param_ids_view,
     track_state_container_types::view track_states_view) {
 
     device::fit<fitter_t>(details::global_index1(), det_data, field_data, cfg,
-                          track_candidates_view, param_ids_view,
-                          track_states_view);
+                          track_candidates_view, measurements_view,
+                          param_ids_view, track_states_view);
 }
 
 }  // namespace kernels
@@ -69,20 +72,24 @@ template <typename fitter_t>
 track_state_container_types::buffer fitting_algorithm<fitter_t>::operator()(
     const typename fitter_t::detector_type::view_type& det_view,
     const typename fitter_t::bfield_type& field_view,
-    const typename track_candidate_container_types::const_view&
-        track_candidates_view) const {
+    const edm::track_candidate_collection<default_algebra>::const_view&
+        track_candidates_view,
+    const measurement_collection_types::const_view& measurements_view) const {
 
     // Get a convenience variable for the stream that we'll be using.
     cudaStream_t stream = details::get_stream(m_stream);
 
     // Number of tracks
-    const track_candidate_container_types::const_device::header_vector::
-        size_type n_tracks = m_copy.get_size(track_candidates_view.headers);
+    const edm::track_candidate_collection<
+        default_algebra>::const_device::size_type n_tracks =
+        m_copy.get_size(track_candidates_view);
 
-    // Get the sizes of the track candidates in each track
-    const std::vector<track_candidate_container_types::const_device::
-                          item_vector::value_type::size_type>
-        candidate_sizes = m_copy.get_sizes(track_candidates_view.items);
+    // Get the sizes of the track candidates in each track. In a super
+    // sketchy way. Since index "4" is just harcoded to be the
+    // "measurement_indices" variable. As the current version of VecMem
+    // doesn't provide a better / more redable way for doing this.
+    const std::vector<unsigned int> candidate_sizes =
+        m_copy.get_sizes(track_candidates_view.get<4>());
 
     track_state_container_types::buffer track_states_buffer{
         {n_tracks, m_mr.main},
@@ -121,7 +128,7 @@ track_state_container_types::buffer fitting_algorithm<fitter_t>::operator()(
         // Run the track fitting
         kernels::fit<fitter_t><<<nBlocks, nThreads, 0, stream>>>(
             det_view, field_view, m_cfg, track_candidates_view,
-            param_ids_buffer, track_states_buffer);
+            measurements_view, param_ids_buffer, track_states_buffer);
         TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
     }
 

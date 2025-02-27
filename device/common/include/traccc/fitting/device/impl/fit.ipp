@@ -17,14 +17,18 @@ TRACCC_HOST_DEVICE inline void fit(
     typename fitter_t::detector_type::view_type det_data,
     const typename fitter_t::bfield_type field_data,
     const typename fitter_t::config_type cfg,
-    track_candidate_container_types::const_view track_candidates_view,
+    const edm::track_candidate_collection<default_algebra>::const_view
+        track_candidates_view,
+    const measurement_collection_types::const_view& measurements_view,
     const vecmem::data::vector_view<const unsigned int>& param_ids_view,
     track_state_container_types::view track_states_view) {
 
     typename fitter_t::detector_type det(det_data);
 
-    track_candidate_container_types::const_device track_candidates(
-        track_candidates_view);
+    const edm::track_candidate_collection<default_algebra>::const_device
+        track_candidates(track_candidates_view);
+    const measurement_collection_types::const_device measurements{
+        measurements_view};
 
     vecmem::device_vector<const unsigned int> param_ids(param_ids_view);
 
@@ -37,25 +41,21 @@ TRACCC_HOST_DEVICE inline void fit(
     }
 
     const unsigned int param_id = param_ids.at(globalIndex);
-
-    // Track candidates per track
-    const auto& track_candidates_per_track =
-        track_candidates.at(param_id).items;
-
-    // Seed parameter
-    const auto& seed_param = track_candidates.at(param_id).header.seed_params;
+    const edm::track_candidate_collection<
+        default_algebra>::const_device::const_proxy_type track =
+        track_candidates.at(param_id);
 
     // Track states per track
     auto track_states_per_track = track_states.at(param_id).items;
 
-    for (auto& cand : track_candidates_per_track) {
-        track_states_per_track.emplace_back(cand);
+    for (unsigned int midx : track.measurement_indices()) {
+        track_states_per_track.emplace_back(measurements.at(midx));
     }
 
     typename fitter_t::state fitter_state(track_states_per_track);
 
     // Run fitting
-    kalman_fitter_status fit_status = fitter.fit(seed_param, fitter_state);
+    kalman_fitter_status fit_status = fitter.fit(track.params(), fitter_state);
 
     // TODO: Process fit failures more elegantly
     assert(fit_status == kalman_fitter_status::SUCCESS);
