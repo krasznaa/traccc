@@ -306,10 +306,10 @@ void event_data::fill_cca_result(
     }
 }
 
-track_candidate_container_types::host event_data::generate_truth_candidates(
+void event_data::generate_truth_candidates(
+    edm::track_candidate_collection<default_algebra>::host& truth_candidates,
+    measurement_collection_types::host& truth_measurements,
     seed_generator<detector_type>& sg, vecmem::memory_resource& resource) {
-
-    traccc::track_candidate_container_types::host track_candidates(&resource);
 
     for (auto const& [ptc, measurements] : m_ptc_to_meas_map) {
 
@@ -321,21 +321,20 @@ track_candidate_container_types::host event_data::generate_truth_candidates(
             sg(measurements[0].surface_link, free_param,
                detail::particle_from_pdg_number<scalar>(ptc.particle_type));
 
-        // Candidate objects
-        vecmem::vector<track_candidate> candidates;
-        candidates.reserve(measurements.size());
-
+        // Record the measurements, and remember their indices.
+        vecmem::vector<unsigned int> meas_indices{&resource};
+        truth_measurements.reserve(truth_measurements.size() +
+                                   measurements.size());
+        meas_indices.reserve(measurements.size());
         for (const auto& meas : measurements) {
-            candidates.push_back(meas);
+            meas_indices.push_back(
+                static_cast<unsigned int>(truth_measurements.size()));
+            truth_measurements.push_back(meas);
         }
 
-        // Track quality set empty
-        track_candidates.push_back(
-            finding_result{seed_params, track_quality{0.f, 0.f, 0u}},
-            std::move(candidates));
+        // Record the truth track candidate.
+        truth_candidates.push_back({seed_params, 0.f, 0.f, 0u, meas_indices});
     }
-
-    return track_candidates;
 }
 
 }  // namespace traccc
