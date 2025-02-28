@@ -20,7 +20,9 @@ kalman_fitting_algorithm::output_type kalman_fitting_algorithm::operator()(
     const telescope_detector::host& det,
     const detray::bfield::const_field_t<
         traccc::telescope_detector::host::scalar_type>::view_t& field,
-    const track_candidate_container_types::const_view& track_candidates) const {
+    const measurement_collection_types::const_view& measurements,
+    const edm::track_candidate_collection<default_algebra>::const_view&
+        track_candidates) const {
 
     using scalar_type = traccc::telescope_detector::host::scalar_type;
 
@@ -33,7 +35,8 @@ kalman_fitting_algorithm::output_type kalman_fitting_algorithm::operator()(
         fitter{det, field, m_config};
 
     // Perform the track fitting using a common, templated function.
-    return details::fit_tracks(fitter, track_candidates, m_mr.get());
+    return details::fit_tracks<default_algebra>(fitter, measurements,
+                                                track_candidates, m_mr.get());
 }
 
 }  // namespace traccc::host
