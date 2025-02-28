@@ -124,7 +124,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
     cfg.propagation = propagation_config;
 
     traccc::host::combinatorial_kalman_filter_algorithm host_finding(
-        cfg, logger().clone("FindingAlg"));
+        cfg, host_mr, logger().clone("FindingAlg"));
 
     // Fitting algorithm object
     traccc::fitting_config fit_cfg(fitting_opts);
@@ -170,7 +170,8 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
                {0.f, 0.f, seeding_opts.seedfinder.bFieldInZ});
 
         // Run CKF and KF if we are using a detray geometry
-        traccc::track_candidate_container_types::host track_candidates;
+        traccc::edm::track_candidate_collection<traccc::default_algebra>::host
+            track_candidates{host_mr};
         traccc::track_state_container_types::host track_states;
         traccc::track_state_container_types::host track_states_ar;
 
@@ -187,8 +188,9 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
            Track Fitting with KF
           ------------------------*/
 
-        track_states =
-            host_fitting(detector, field, traccc::get_data(track_candidates));
+        track_states = host_fitting(detector, field,
+                                    vecmem::get_data(measurements_per_event),
+                                    vecmem::get_data(track_candidates));
         n_fitted_tracks += track_states.size();
 
         /*-----------------------------------------
@@ -222,8 +224,9 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
                 vecmem::get_data(spacepoints_per_event),
                 vecmem::get_data(measurements_per_event), evt_data);
 
-            find_performance_writer.write(traccc::get_data(track_candidates),
-                                          evt_data);
+            find_performance_writer.write(
+                vecmem::get_data(track_candidates),
+                vecmem::get_data(measurements_per_event), evt_data);
 
             if (resolution_opts.run) {
                 ar_performance_writer.write(traccc::get_data(track_states_ar),
