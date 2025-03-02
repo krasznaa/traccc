@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2023-2024 CERN for the benefit of the ACTS project
+ * (c) 2023-2025 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -134,7 +134,8 @@ TEST_P(CkfSparseTrackTelescopeTests, Run) {
     cfg.propagation.stepping.rk_error_tol = 1e-8f * unit<float>::mm;
 
     // Finding algorithm object
-    traccc::host::combinatorial_kalman_filter_algorithm host_finding(cfg);
+    traccc::host::combinatorial_kalman_filter_algorithm host_finding(cfg,
+                                                                     host_mr);
 
     // Fitting algorithm object
     traccc::fitting_config fit_cfg;
@@ -151,16 +152,19 @@ TEST_P(CkfSparseTrackTelescopeTests, Run) {
 
         // Truth Track Candidates
         traccc::event_data evt_data(path, i_evt, host_mr);
-        traccc::track_candidate_container_types::host truth_track_candidates =
-            evt_data.generate_truth_candidates(sg, host_mr);
+
+        traccc::edm::track_candidate_collection<traccc::default_algebra>::host
+            truth_track_candidates{host_mr};
+        traccc::measurement_collection_types::host truth_measurements{&host_mr};
+        evt_data.generate_truth_candidates(truth_track_candidates,
+                                           truth_measurements, sg, host_mr);
 
         ASSERT_EQ(truth_track_candidates.size(), n_truth_tracks);
 
         // Prepare truth seeds
         traccc::bound_track_parameters_collection_types::host seeds(&host_mr);
         for (unsigned int i_trk = 0; i_trk < n_truth_tracks; i_trk++) {
-            seeds.push_back(
-                truth_track_candidates.at(i_trk).header.seed_params);
+            seeds.push_back(truth_track_candidates.at(i_trk).params());
         }
         ASSERT_EQ(seeds.size(), n_truth_tracks);
 
@@ -177,18 +181,16 @@ TEST_P(CkfSparseTrackTelescopeTests, Run) {
         ASSERT_EQ(track_candidates.size(), n_truth_tracks);
 
         for (unsigned int i_trk = 0; i_trk < n_truth_tracks; i_trk++) {
-            const auto& track_candidates_per_track =
-                track_candidates[i_trk].items;
-            const auto& find_res = track_candidates[i_trk].header;
 
-            consistency_tests(track_candidates_per_track);
+            consistency_tests(track_candidates.at(i_trk));
 
-            ndf_tests(find_res, track_candidates_per_track);
+            ndf_tests(track_candidates.at(i_trk), truth_measurements);
         }
 
         // Run fitting
         auto track_states =
-            host_fitting(host_det, field, traccc::get_data(track_candidates));
+            host_fitting(host_det, field, vecmem::get_data(truth_measurements),
+                         vecmem::get_data(track_candidates));
         const std::size_t n_fitted_tracks = count_fitted_tracks(track_states);
 
         ASSERT_EQ(track_states.size(), n_truth_tracks);
