@@ -257,6 +257,25 @@ track_candidate_container_types::buffer find_tracks(
             links_buffer = std::move(new_links_buffer);
         }
 
+        // Create the input parameters of the track finding kernel.
+        using ft_payload_type = device::find_tracks_payload<
+            std::decay_t<typename navigator_t::detector_type>>;
+        const ft_payload_type ft_payload_host(
+            det, measurements, in_params_buffer, param_liveness_buffer,
+            n_in_params, barcodes_buffer, upper_bounds_buffer, links_buffer,
+            (step == 0 ? 0 : step_to_link_idx_map[step - 1]),
+            step_to_link_idx_map[step], step, updated_params_buffer,
+            updated_liveness_buffer);
+        vecmem::unique_alloc_ptr<ft_payload_type> ft_payload_device{
+            static_cast<ft_payload_type*>(
+                mr.main.allocate(sizeof(ft_payload_type))),
+            vecmem::details::unique_alloc_deleter<ft_payload_type>{
+                mr.main, sizeof(ft_payload_type)}};
+        queue
+            .memcpy(ft_payload_device.get(), &ft_payload_host,
+                    sizeof(ft_payload_type))
+            .wait_and_throw();
+
         // The number of threads to use per block in the track finding.
         static const unsigned int nFindTracksThreads = 64;
 
@@ -275,18 +294,7 @@ track_candidate_container_types::buffer find_tracks(
                 // Launch the kernel.
                 h.parallel_for<kernels::find_tracks<kernel_t>>(
                     calculate1DimNdRange(n_in_params, nFindTracksThreads),
-                    [config, det, measurements,
-                     in_params = vecmem::get_data(in_params_buffer),
-                     param_liveness = vecmem::get_data(param_liveness_buffer),
-                     n_in_params, barcodes = vecmem::get_data(barcodes_buffer),
-                     upper_bounds = vecmem::get_data(upper_bounds_buffer),
-                     links_view = vecmem::get_data(links_buffer),
-                     prev_links_idx =
-                         step == 0 ? 0 : step_to_link_idx_map[step - 1],
-                     curr_links_idx = step_to_link_idx_map[step], step,
-                     updated_params = vecmem::get_data(updated_params_buffer),
-                     updated_liveness =
-                         vecmem::get_data(updated_liveness_buffer),
+                    [config, ft_payload = ft_payload_device.get(),
                      shared_candidates_size, shared_num_candidates,
                      shared_candidates](::sycl::nd_item<1> item) {
                         // SYCL wrappers used in the algorithm.
@@ -296,11 +304,7 @@ track_candidate_container_types::buffer find_tracks(
                         // Call the device function to find tracks.
                         device::find_tracks<
                             std::decay_t<typename navigator_t::detector_type>>(
-                            thread_id, barrier, config,
-                            {det, measurements, in_params, param_liveness,
-                             n_in_params, barcodes, upper_bounds, links_view,
-                             prev_links_idx, curr_links_idx, step,
-                             updated_params, updated_liveness},
+                            thread_id, barrier, config, *ft_payload,
                             {&(shared_num_candidates[0]),
                              &(shared_candidates[0]),
                              shared_candidates_size[0]});
