@@ -8,8 +8,10 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/edm/measurement.hpp"
 #include "traccc/edm/track_candidate_container.hpp"
-#include "traccc/edm/track_state.hpp"
+#include "traccc/edm/track_fit_collection.hpp"
+#include "traccc/edm/track_state_collection.hpp"
 #include "traccc/fitting/fitting_config.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/utils/algorithm.hpp"
@@ -24,17 +26,22 @@
 
 // System include(s).
 #include <functional>
+#include <tuple>
 
 namespace traccc::host {
 
 /// Kalman filter based track fitting algorithm
 class kalman_fitting_algorithm
-    : public algorithm<track_state_container_types::host(
+    : public algorithm<std::tuple<
+          edm::track_fit_collection<default_algebra>::host,
+          edm::track_state_collection<default_algebra>::host>(
           const default_detector::host&,
           const covfie::field<const_bfield_backend_t<
               default_detector::host::scalar_type>>::view_t&,
           const edm::track_candidate_container<default_algebra>::const_view&)>,
-      public algorithm<track_state_container_types::host(
+      public algorithm<std::tuple<
+          edm::track_fit_collection<default_algebra>::host,
+          edm::track_state_collection<default_algebra>::host>(
           const telescope_detector::host&,
           const covfie::field<const_bfield_backend_t<
               telescope_detector::host::scalar_type>>::view_t&,
@@ -45,7 +52,9 @@ class kalman_fitting_algorithm
     /// Configuration type
     using config_type = fitting_config;
     /// Output type
-    using output_type = track_state_container_types::host;
+    using output_type =
+        std::tuple<edm::track_fit_collection<default_algebra>::host,
+                   edm::track_state_collection<default_algebra>::host>;
 
     /// Constructor with the algorithm's configuration
     ///

@@ -9,7 +9,6 @@
 // Project include(s).
 #include "traccc/edm/measurement.hpp"
 #include "traccc/edm/track_candidate_collection.hpp"
-#include "traccc/edm/track_state.hpp"
 #include "traccc/finding/actors/ckf_aborter.hpp"
 #include "traccc/finding/actors/interaction_register.hpp"
 #include "traccc/finding/candidate_link.hpp"
@@ -257,21 +256,32 @@ find_tracks(
              * Find tracks (CKF)
              *****************************************************************/
 
-            std::vector<std::tuple<candidate_link, track_state<algebra_type>>>
+            // Construct a single track state for the Kalman update.
+            typename edm::track_state_collection<algebra_type>::host trk_states{
+                mr};
+            trk_states.resize(1u);
+            auto trk_states_view = vecmem::get_data(trk_states);
+            typename edm::track_state_collection<algebra_type>::device
+                trk_states_device{trk_states_view};
+            auto trk_state = trk_states_device.at(0u);
+
+            std::vector<std::tuple<candidate_link,
+                                   bound_track_parameters<algebra_type>>>
                 best_links;
 
             // Iterate over the measurements
             for (unsigned int item_id = range.first; item_id < range.second;
                  item_id++) {
 
-                const auto& meas = measurements[item_id];
-
-                track_state<algebra_type> trk_state(meas);
+                // Reset the track state object.
+                trk_state = typename edm::track_state_collection<
+                    algebra_type>::device::object_type(0u, 0.f, 0.f, 0.f, {},
+                                                       {}, item_id);
 
                 // Run the Kalman update on a copy of the track parameters
                 const kalman_fitter_status res =
                     sf.template visit_mask<gain_matrix_updater<algebra_type>>(
-                        trk_state, in_param);
+                        trk_state, measurements, in_param);
 
                 const traccc::scalar chi2 = trk_state.filtered_chi2();
 
@@ -286,7 +296,7 @@ find_tracks(
                           .seed_idx = orig_param_id,
                           .n_skipped = skip_counter,
                           .chi2 = chi2},
-                         trk_state});
+                         trk_state.filtered_params()});
                 }
             }
 
@@ -303,13 +313,13 @@ find_tracks(
                                     << step << " and input parameter "
                                     << in_param_id);
             for (unsigned int i = 0; i < n_branches; ++i) {
-                const auto& [link, trk_state] = best_links[i];
+                const auto& [link, filtered_params] = best_links[i];
 
                 // Add the link to the links container
                 links[step].push_back(link);
 
                 // Add the updated parameter to the updated parameters
-                updated_params.push_back(trk_state.filtered());
+                updated_params.push_back(filtered_params);
                 TRACCC_VERBOSE("updated_params["
                                << updated_params.size() - 1
                                << "] = " << updated_params.back());
