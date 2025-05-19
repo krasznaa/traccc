@@ -241,16 +241,20 @@ find_tracks(
                     break;
                 }
 
-                const auto& meas = measurements[item_id];
-
-                track_state<algebra_type> trk_state(meas);
+                typename edm::track_state_collection<algebra_type>::host
+                    trk_states{mr};
+                trk_states.push_back({0u, 0.f, 0.f, 0.f, {}, {}, item_id});
+                auto trk_states_view = vecmem::get_data(trk_states);
+                typename edm::track_state_collection<algebra_type>::device
+                    trk_states_device{trk_states_view};
+                auto trk_state = trk_states_device.at(0u);
 
                 // Run the Kalman update on a copy of the track parameters
                 const kalman_fitter_status res =
                     sf.template visit_mask<gain_matrix_updater<algebra_type>>(
-                        trk_state, in_param);
+                        trk_state, measurements, in_param);
 
-                const traccc::scalar chi2 = trk_state.filtered_chi2();
+                const traccc::scalar chi2 = trk_states.filtered_chi2()[0];
 
                 // The chi2 from Kalman update should be less than chi2_max
                 if (res == kalman_fitter_status::SUCCESS &&
@@ -264,7 +268,7 @@ find_tracks(
                          .seed_idx = orig_param_id,
                          .n_skipped = skip_counter,
                          .chi2 = chi2});
-                    updated_params.push_back(trk_state.filtered());
+                    updated_params.push_back(trk_states.filtered_params()[0]);
                 }
             }
 
