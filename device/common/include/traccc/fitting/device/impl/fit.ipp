@@ -19,9 +19,9 @@ TRACCC_HOST_DEVICE inline void fit(const global_index_t globalIndex,
     typename fitter_t::detector_type det(payload.det_data);
 
     const edm::track_candidate_collection<default_algebra>::const_device
-        track_candidates(payload.track_candidates_view);
+        track_candidates(payload.track_candidates_view.tracks);
     const measurement_collection_types::const_device measurements{
-        payload.measurements_view};
+        payload.track_candidates_view.measurements};
 
     vecmem::device_vector<const unsigned int> param_ids(payload.param_ids_view);
 

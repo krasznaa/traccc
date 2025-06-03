@@ -12,8 +12,7 @@
 
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/measurement.hpp"
-#include "traccc/edm/track_candidate_collection.hpp"
+#include "traccc/edm/track_candidate_container.hpp"
 #include "traccc/edm/track_state.hpp"
 
 // VecMem include(s).
@@ -38,13 +37,8 @@ struct fit_payload {
     /**
      * @brief View object to the input track candidates
      */
-    edm::track_candidate_collection<default_algebra>::const_view
+    edm::track_candidate_container<default_algebra>::const_view
         track_candidates_view;
-
-    /**
-     * @brief View of all measurements in the event
-     */
-    measurement_collection_types::const_view measurements_view;
 
     /**
      * @brief View object to the input track parameters
@@ -65,12 +59,8 @@ struct fit_payload {
 /// Function used for fitting a track for a given track candidates
 ///
 /// @param[in] globalIndex   The index of the current thread
-/// @param[in] det_data      Detector view object
-/// @param[in] track_candidates_view The input track candidates
-/// @param[in] measurements_view All measurements in the event
-/// @param[in] param_ids_view The input parameter ids
-/// @param[out] track_states_view The output of fitted track states
-/// @param[out] barcodes_view The barcode sequence for backward filter
+/// @param[in] cfg           The configuration object for the fitter
+/// @param[inout] payload    The function call payload
 ///
 template <typename fitter_t>
 TRACCC_HOST_DEVICE inline void fit(global_index_t globalIndex,
