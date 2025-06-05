@@ -27,4 +27,45 @@ void stat_plot_tool::fill(stat_plot_cache& cache,
 #endif  // TRACCC_HAVE_ROOT
 }
 
+template <typename T>
+void stat_plot_tool::fill(stat_plot_cache& cache,
+                          const edm::track_fit<T>& fit_res) const {
+
+    // Avoid unused variable warnings when building the code without ROOT.
+    (void)cache;
+    (void)fit_res;
+
+#ifdef TRACCC_HAVE_ROOT
+    const auto& ndf = fit_res.ndf();
+    const auto& chi2 = fit_res.chi2();
+    cache.ndf_hist->Fill(ndf);
+    cache.chi2_hist->Fill(chi2);
+    cache.reduced_chi2_hist->Fill(chi2 / ndf);
+    cache.pval_hist->Fill(fit_res.trk_quality.pval);
+#endif  // TRACCC_HAVE_ROOT
+}
+
+template <typename T>
+void stat_plot_tool::fill(
+    stat_plot_cache& cache, const edm::track_state<T>& trk_state,
+    const measurement_collection_types::const_device& measurements) const {
+
+    // Avoid unused variable warnings when building the code without ROOT.
+    (void)cache;
+    (void)trk_state;
+
+#ifdef TRACCC_HAVE_ROOT
+    const unsigned int D =
+        measurements.at(trk_state.measurement_index()).meas_dim;
+    const auto filtered_chi2 = trk_state.filtered_chi2();
+    const auto smoothed_chi2 = trk_state.smoothed_chi2();
+    cache.chi2_filtered_hist[D]->Fill(filtered_chi2);
+    cache.chi2_smoothed_hist[D]->Fill(smoothed_chi2);
+    cache.pval_filtered_hist[D]->Fill(
+        prob(filtered_chi2, static_cast<traccc::scalar>(D)));
+    cache.pval_smoothed_hist[D]->Fill(
+        prob(smoothed_chi2, static_cast<traccc::scalar>(D)));
+#endif  // TRACCC_HAVE_ROOT
+}
+
 }  // namespace traccc
