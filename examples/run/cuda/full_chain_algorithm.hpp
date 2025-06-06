@@ -36,6 +36,7 @@
 
 // System include(s).
 #include <memory>
+#include <type_traits>
 
 namespace traccc::cuda {
 
@@ -120,6 +121,82 @@ class full_chain_algorithm
     ///
     output_type operator()(
         const edm::silicon_cell_collection::host& cells) const override;
+
+    /// @name Functions used by the algorithm sequence executable(s)
+    /// @{
+
+    /// Get the copy object used by the algorithm
+    ///
+    /// @return The copy object used by the algorithm
+    ///
+    vecmem::copy& copy() const;
+
+    /// Run clusterization
+    ///
+    /// @param cells The cells for every detector module in the event
+    ///
+    /// @return The measurements reconstructed
+    ///
+    measurement_collection_types::buffer run_clusterization(
+        const edm::silicon_cell_collection::host& cells) const;
+
+    /// Run spacepoint formation
+    ///
+    /// @param measurements The reconstructed measurements
+    ///
+    /// @return The spacepoints reconstructed
+    ///
+    edm::spacepoint_collection::buffer run_spacepoint_formation(
+        const measurement_collection_types::const_view& measurements) const;
+
+    /// Run seed finding
+    ///
+    /// @param spacepoints The reconstructed spacepoints
+    ///
+    /// @return The seeds reconstructed
+    ///
+    edm::seed_collection::buffer run_seeding(
+        const edm::spacepoint_collection::const_view& spacepoints) const;
+
+    /// Run track parameter estimation
+    ///
+    /// @param measurements The reconstructed measurements
+    /// @param spacepoints The reconstructed spacepoints
+    /// @param seeds The reconstructed seeds
+    ///
+    /// @return The track parameters reconstructed
+    ///
+    traccc::bound_track_parameters_collection_types::buffer
+    run_track_parameter_estimation(
+        const measurement_collection_types::const_view& measurements,
+        const edm::spacepoint_collection::const_view& spacepoints,
+        const edm::seed_collection::const_view& seeds) const;
+
+    /// Run track finding
+    ///
+    /// @param measurements The reconstructed measurements
+    /// @param params The initial track parameters
+    ///
+    /// @return The track candidates found
+    ///
+    edm::track_candidate_collection<traccc::default_algebra>::buffer
+    run_track_finding(
+        const measurement_collection_types::const_view& measurements,
+        const bound_track_parameters_collection_types::const_view& params)
+        const;
+
+    /// Ambiguity resolution doesn't exist for CUDA at the moment
+    using ambi_res_available = std::false_type;
+
+    /// Run track fitting
+    ///
+    /// @param tracks The track candidates to fit
+    ///
+    /// @return The fitted track states
+    ///
+    track_state_container_types::buffer run_track_fitting(
+        const edm::track_candidate_container<
+            traccc::default_algebra>::const_view& tracks) const;
 
     private:
     /// Host memory resource

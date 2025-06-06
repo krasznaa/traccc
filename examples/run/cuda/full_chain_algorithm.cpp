@@ -203,4 +203,123 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
     }
 }
 
+vecmem::copy& full_chain_algorithm::copy() const {
+
+    return m_copy;
+}
+
+measurement_collection_types::buffer full_chain_algorithm::run_clusterization(
+    const edm::silicon_cell_collection::host& cells) const {
+
+    // Create device copy of input collections
+    edm::silicon_cell_collection::buffer cells_buffer(
+        static_cast<unsigned int>(cells.size()), *m_cached_device_mr);
+    m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
+
+    // Run the clusterization / measurment creation.
+    clusterization_algorithm::output_type measurements =
+        m_clusterization(cells_buffer, m_device_det_descr);
+
+    // Run the measurement sorting.
+    m_measurement_sorting(measurements);
+
+    // Wait for the measurement sorting to finish.
+    m_stream.synchronize();
+
+    // Return the sorted measurements.
+    return measurements;
+}
+
+edm::spacepoint_collection::buffer
+full_chain_algorithm::run_spacepoint_formation(
+    const measurement_collection_types::const_view& measurements) const {
+
+    // Check that a detector is available.
+    assert(m_detector != nullptr);
+
+    // Run the spacepoint formation.
+    spacepoint_formation_algorithm::output_type spacepoints =
+        m_spacepoint_formation(m_device_detector_view, measurements);
+
+    // Wait for the spacepoint formation to finish.
+    m_stream.synchronize();
+
+    // Return the spacepoints.
+    return spacepoints;
+}
+
+edm::seed_collection::buffer full_chain_algorithm::run_seeding(
+    const edm::spacepoint_collection::const_view& spacepoints) const {
+
+    // Check that a detector is available.
+    assert(m_detector != nullptr);
+
+    // Run the seeding algorithm.
+    edm::seed_collection::buffer seeds = m_seeding(spacepoints);
+
+    // Wait for the seeding to finish.
+    m_stream.synchronize();
+
+    // Return the seeds.
+    return seeds;
+}
+
+traccc::bound_track_parameters_collection_types::buffer
+full_chain_algorithm::run_track_parameter_estimation(
+    const measurement_collection_types::const_view& measurements,
+    const edm::spacepoint_collection::const_view& spacepoints,
+    const edm::seed_collection::const_view& seeds) const {
+
+    // Check that a detector is available.
+    assert(m_detector != nullptr);
+
+    // Run the track parameter estimation.
+    track_params_estimation::output_type track_params =
+        m_track_parameter_estimation(measurements, spacepoints, seeds,
+                                     m_field_vec);
+
+    // Wait for the track parameter estimation to finish.
+    m_stream.synchronize();
+
+    // Return the track parameters.
+    return track_params;
+}
+
+edm::track_candidate_collection<traccc::default_algebra>::buffer
+full_chain_algorithm::run_track_finding(
+    const measurement_collection_types::const_view& measurements,
+    const bound_track_parameters_collection_types::const_view& params) const {
+
+    // Check that a detector is available.
+    assert(m_detector != nullptr);
+
+    // Run the track finding algorithm.
+    finding_algorithm::output_type track_candidates =
+        m_finding(m_device_detector_view, m_field, measurements, params);
+
+    // Wait for the track finding to finish.
+    m_stream.synchronize();
+
+    // Return the track candidates.
+    return track_candidates;
+}
+
+track_state_container_types::buffer full_chain_algorithm::run_track_fitting(
+    const edm::track_candidate_container<traccc::default_algebra>::const_view&
+        tracks) const {
+
+    // Check that a detector is available.
+    assert(m_detector != nullptr);
+
+    // Run the track fitting algorithm.
+    fitting_algorithm::output_type track_states =
+        m_fitting(m_device_detector_view, m_field, tracks);
+
+    // Wait for the track fitting to finish.
+    m_stream.synchronize();
+
+    // Copy the track states back to the host.
+    return track_states;
+}
+
 }  // namespace traccc::cuda
