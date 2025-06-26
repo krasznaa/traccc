@@ -8,6 +8,7 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/clusterization/clustering_config.hpp"
 #include "traccc/clusterization/clusterization_algorithm.hpp"
 #include "traccc/edm/silicon_cell_collection.hpp"
 #include "traccc/edm/track_state.hpp"
@@ -68,8 +69,7 @@ class full_chain_algorithm : public algorithm<track_state_container_types::host(
     /// @param dummy This is not used anywhere. Allows templating CPU/Device
     /// algorithm.
     ///
-    full_chain_algorithm(vecmem::memory_resource& mr,
-                         const clustering_algorithm::config_type& dummy,
+    full_chain_algorithm(vecmem::memory_resource& mr, const clustering_config&,
                          const seedfinder_config& finder_config,
                          const spacepoint_grid_config& grid_config,
                          const seedfilter_config& filter_config,

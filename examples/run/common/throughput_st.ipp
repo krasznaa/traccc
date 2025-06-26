@@ -125,15 +125,12 @@ int throughput_st(std::string_view description, int argc, char* argv[],
     // Algorithm configuration(s).
     detray::propagation::config propagation_config(propagation_opts);
 
-    typename FULL_CHAIN_ALG::clustering_algorithm::config_type clustering_cfg(
-        clusterization_opts);
+    traccc::clustering_config clustering_cfg(clusterization_opts);
 
-    typename FULL_CHAIN_ALG::finding_algorithm::config_type finding_cfg(
-        finding_opts);
+    traccc::finding_config finding_cfg(finding_opts);
     finding_cfg.propagation = propagation_config;
 
-    typename FULL_CHAIN_ALG::fitting_algorithm::config_type fitting_cfg(
-        fitting_opts);
+    traccc::fitting_config fitting_cfg(fitting_opts);
     fitting_cfg.propagation = propagation_config;
 
     // Set up the full-chain algorithm.

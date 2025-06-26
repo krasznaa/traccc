@@ -150,17 +150,14 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
         }
     }
 
-    typename FULL_CHAIN_ALG::clustering_algorithm::config_type clustering_cfg(
-        clusterization_opts);
+    traccc::clustering_config clustering_cfg(clusterization_opts);
 
     // Algorithm configuration(s).
     detray::propagation::config propagation_config(propagation_opts);
-    typename FULL_CHAIN_ALG::finding_algorithm::config_type finding_cfg(
-        finding_opts);
+    traccc::finding_config finding_cfg(finding_opts);
     finding_cfg.propagation = propagation_config;
 
-    typename FULL_CHAIN_ALG::fitting_algorithm::config_type fitting_cfg(
-        fitting_opts);
+    traccc::fitting_config fitting_cfg(fitting_opts);
     fitting_cfg.propagation = propagation_config;
 
     // Set up the full-chain algorithm(s). One for each thread.
@@ -173,18 +170,12 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
                 ? static_cast<vecmem::memory_resource&>(
                       *(cached_host_mrs.at(i)))
                 : static_cast<vecmem::memory_resource&>(uncached_host_mr);
-        algs.push_back(
-            {alg_host_mr,
-             clustering_cfg,
-             seeding_opts.seedfinder,
-             {seeding_opts.seedfinder},
-             seeding_opts.seedfilter,
-             finding_cfg,
-             fitting_cfg,
-             det_descr,
-             field,
-             (detector_opts.use_detray_detector ? &detector : nullptr),
-             logger().clone()});
+        algs.push_back(FULL_CHAIN_ALG(
+            alg_host_mr, clustering_cfg, seeding_opts.seedfinder,
+            {seeding_opts.seedfinder}, seeding_opts.seedfilter, finding_cfg,
+            fitting_cfg, det_descr, field,
+            (detector_opts.use_detray_detector ? &detector : nullptr),
+            logger().clone()));
     }
 
     // Set up the TBB arena and thread group. From here on out TBB is only
