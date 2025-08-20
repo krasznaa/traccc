@@ -9,7 +9,7 @@
 
 // Local include(s).
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_fit_collection.hpp"
 #include "traccc/edm/track_state_collection.hpp"
 
@@ -28,7 +28,7 @@ struct track_fit_container {
         /// The track states used for the fit
         track_state_collection<ALGEBRA>::view states;
         /// The measurements used for the fit
-        measurement_collection_types::const_view measurements;
+        measurement_collection<ALGEBRA>::const_view measurements;
     };
 
     struct const_view {
@@ -37,7 +37,7 @@ struct track_fit_container {
         /// The track states used for the fit
         track_state_collection<ALGEBRA>::const_view states;
         /// The measurements used for the fit
-        measurement_collection_types::const_view measurements;
+        measurement_collection<ALGEBRA>::const_view measurements;
     };
 
     struct host {
@@ -83,7 +83,7 @@ struct track_fit_container {
         /// The track states used for the fit
         track_state_collection<ALGEBRA>::device states;
         /// The measurements used for the fit
-        measurement_collection_types::const_device measurements;
+        measurement_collection<ALGEBRA>::const_device measurements;
     };
 
     struct const_device {
@@ -98,7 +98,7 @@ struct track_fit_container {
         /// The track states used for the fit
         track_state_collection<ALGEBRA>::const_device states;
         /// The measurements used for the fit
-        measurement_collection_types::const_device measurements;
+        measurement_collection<ALGEBRA>::const_device measurements;
     };
 
 };  // struct track_fit_container

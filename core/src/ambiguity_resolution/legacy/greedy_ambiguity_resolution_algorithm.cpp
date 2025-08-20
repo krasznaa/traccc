@@ -79,7 +79,7 @@ void greedy_ambiguity_resolution_algorithm::compute_initial_state(
 
         for (unsigned int meas_idx : track.measurement_indices()) {
             std::size_t mid =
-                track_states.measurements.at(meas_idx).measurement_id;
+                track_states.measurements.at(meas_idx).identifier();
 
             // If the same measurement is found multiple times in a single
             // track: remove duplicates.

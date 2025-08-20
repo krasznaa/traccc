@@ -8,7 +8,7 @@
 #pragma once
 
 // Library include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/utils/algorithm.hpp"
@@ -30,10 +30,10 @@ namespace traccc::host {
 class silicon_pixel_spacepoint_formation_algorithm
     : public algorithm<edm::spacepoint_collection::host(
           const default_detector::host&,
-          const measurement_collection_types::const_view&)>,
+          const edm::measurement_collection<default_algebra>::const_view&)>,
       public algorithm<edm::spacepoint_collection::host(
           const telescope_detector::host&,
-          const measurement_collection_types::const_view&)>,
+          const edm::measurement_collection<default_algebra>::const_view&)>,
       public messaging {
 
     public:
@@ -57,7 +57,8 @@ class silicon_pixel_spacepoint_formation_algorithm
     ///
     output_type operator()(
         const default_detector::host& det,
-        const measurement_collection_types::const_view&) const override;
+        const edm::measurement_collection<default_algebra>::const_view&)
+        const override;
 
     /// Construct spacepoints from 2D silicon pixel measurements
     ///
@@ -68,7 +69,8 @@ class silicon_pixel_spacepoint_formation_algorithm
     ///
     output_type operator()(
         const telescope_detector::host& det,
-        const measurement_collection_types::const_view&) const override;
+        const edm::measurement_collection<default_algebra>::const_view&)
+        const override;
 
     private:
     /// Memory resource to use for the output container

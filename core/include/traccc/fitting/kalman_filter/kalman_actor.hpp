@@ -9,7 +9,7 @@
 
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_fit_collection.hpp"
 #include "traccc/edm/track_state_collection.hpp"
 #include "traccc/fitting/kalman_filter/gain_matrix_updater.hpp"
@@ -42,7 +42,8 @@ struct kalman_actor_state {
             track,
         const typename edm::track_state_collection<algebra_t>::device&
             track_states,
-        const measurement_collection_types::const_device& measurements)
+        const typename edm::measurement_collection<algebra_t>::const_device&
+            measurements)
         : m_track{track},
           m_track_states{track_states},
           m_measurements{measurements} {
@@ -95,7 +96,8 @@ struct kalman_actor_state {
     /// All track states in the event
     typename edm::track_state_collection<algebra_t>::device m_track_states;
     /// All measurements in the event
-    measurement_collection_types::const_device m_measurements;
+    typename edm::measurement_collection<algebra_t>::const_device
+        m_measurements;
 
     /// Iterator for forward filtering over the track states
     vecmem::device_vector<unsigned int>::iterator m_it;
@@ -145,7 +147,7 @@ struct kalman_actor : detray::actor {
             // measurement
             if (navigation.barcode() !=
                 actor_state.m_measurements.at(trk_state.measurement_index())
-                    .surface_link) {
+                    .surface_link()) {
                 if (!actor_state.backward_mode) {
                     actor_state.n_holes++;
                 }

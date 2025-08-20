@@ -9,7 +9,6 @@
 
 // Project include(s).
 #include "traccc/bfield/magnetic_field.hpp"
-#include "traccc/edm/measurement.hpp"
 #include "traccc/edm/track_candidate_container.hpp"
 #include "traccc/edm/track_fit_container.hpp"
 #include "traccc/fitting/fitting_config.hpp"

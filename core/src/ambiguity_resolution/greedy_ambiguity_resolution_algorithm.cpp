@@ -17,14 +17,12 @@ namespace traccc::host {
 
 auto greedy_ambiguity_resolution_algorithm::operator()(
     const edm::track_candidate_container<default_algebra>::const_view&
-        track_container) const -> output_type {
+        track_container_view) const -> output_type {
 
-    const edm::track_candidate_collection<default_algebra>::const_device
-        track_candidates(track_container.tracks);
-    const measurement_collection_types::const_device measurements{
-        track_container.measurements};
+    const edm::track_candidate_container<default_algebra>::const_device
+        track_container(track_container_view);
 
-    const std::size_t n_tracks = track_candidates.size();
+    const std::size_t n_tracks = track_container.tracks.size();
 
     // Make the output container
     edm::track_candidate_collection<default_algebra>::host output{m_mr.get()};
@@ -47,10 +45,10 @@ auto greedy_ambiguity_resolution_algorithm::operator()(
 
     for (unsigned int i = 0; i < n_tracks; i++) {
         // Fill the pval vectors
-        pvals[i] = track_candidates.at(i).pval();
+        pvals[i] = track_container.tracks.at(i).pval();
 
         const auto measurement_indices =
-            track_candidates.at(i).measurement_indices();
+            track_container.tracks.at(i).measurement_indices();
         const unsigned int n_cands = measurement_indices.size();
 
         if (n_cands < m_config.min_meas_per_track) {
@@ -63,7 +61,8 @@ auto greedy_ambiguity_resolution_algorithm::operator()(
             // Fill measurement ids and n_measurements
             meas_ids[i].reserve(n_cands);
             for (const auto idx : measurement_indices) {
-                meas_ids[i].push_back(measurements.at(idx).measurement_id);
+                meas_ids[i].push_back(
+                    track_container.measurements.at(idx).identifier());
             }
             n_meas[i] = n_cands;
             assert(n_cands == meas_ids[i].size());
@@ -74,9 +73,10 @@ auto greedy_ambiguity_resolution_algorithm::operator()(
     std::unordered_set<std::size_t> unique_meas_set;
     for (const auto& i : accepted_ids) {
         const auto measurement_indices =
-            track_candidates.at(i).measurement_indices();
+            track_container.tracks.at(i).measurement_indices();
         for (const auto idx : measurement_indices) {
-            unique_meas_set.insert(measurements.at(idx).measurement_id);
+            unique_meas_set.insert(
+                track_container.measurements.at(idx).identifier());
         }
     }
 
@@ -230,7 +230,7 @@ auto greedy_ambiguity_resolution_algorithm::operator()(
     output.reserve(accepted_ids.size());
     for (const auto& i : accepted_ids) {
         // Get the track candidate proxy.
-        const auto tcand = track_candidates.at(i);
+        const auto tcand = track_container.tracks.at(i);
         // Add it to the output container. In such a complicated way, because
         // the input container is a "device" container, and the output is a
         // "host" one. So pushing back the device proxy doesn't work directly.

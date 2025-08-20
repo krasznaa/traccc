@@ -7,7 +7,7 @@
 #pragma once
 
 // Project include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_candidate_collection.hpp"
 #include "traccc/edm/track_state_helpers.hpp"
 #include "traccc/finding/actors/ckf_aborter.hpp"
@@ -22,7 +22,6 @@
 #include "traccc/utils/logging.hpp"
 #include "traccc/utils/particle.hpp"
 #include "traccc/utils/prob.hpp"
-#include "traccc/utils/projections.hpp"
 #include "traccc/utils/propagation.hpp"
 
 // VecMem include(s).
@@ -60,7 +59,8 @@ template <typename detector_t, typename bfield_t>
 edm::track_candidate_collection<default_algebra>::host
 combinatorial_kalman_filter(
     const detector_t& det, const bfield_t& field,
-    const measurement_collection_types::const_view& measurements_view,
+    const typename edm::measurement_collection<
+        typename detector_t::algebra_type>::const_view& measurements_view,
     const bound_track_parameters_collection_types::const_view& seeds_view,
     const finding_config& config, vecmem::memory_resource& mr,
     const Logger& log) {
@@ -84,43 +84,40 @@ combinatorial_kalman_filter(
      *****************************************************************/
 
     // Create the measurement container.
-    measurement_collection_types::const_device measurements{measurements_view};
+    typename edm::measurement_collection<algebra_type>::const_device
+        measurements{measurements_view};
 
     // Check contiguity of the measurements
-    assert(is_contiguous_on(measurement_module_projection(), measurements));
+    assert(is_contiguous_on([](const auto value) { return value; },
+                            measurements.surface_link()));
 
-    // Get copy of barcode uniques
-    std::vector<measurement> uniques;
-    uniques.resize(measurements.size());
-
-    std::vector<measurement>::iterator uniques_end =
-        std::unique_copy(measurements.begin(), measurements.end(),
-                         uniques.begin(), measurement_equal_comp());
-    const auto n_modules =
-        static_cast<unsigned int>(uniques_end - uniques.begin());
+    // Get the unique barcodes of all of the measurements.
+    std::vector<detray::geometry::barcode> unique_barcodes(measurements.size());
+    {
+        const auto uniques_end = std::unique_copy(
+            measurements.surface_link().begin(),
+            measurements.surface_link().end(), unique_barcodes.begin());
+        unique_barcodes.resize(static_cast<std::size_t>(
+            std::distance(unique_barcodes.begin(), uniques_end)));
+    }
+    const auto n_modules = static_cast<unsigned int>(unique_barcodes.size());
 
     // Get upper bounds of unique elements
     std::vector<unsigned int> upper_bounds;
     upper_bounds.reserve(n_modules);
     for (unsigned int i = 0; i < n_modules; i++) {
-        measurement_collection_types::const_device::iterator up =
-            std::upper_bound(measurements.begin(), measurements.end(),
-                             uniques[i], measurement_sort_comp());
-        upper_bounds.push_back(
-            static_cast<unsigned int>(std::distance(measurements.begin(), up)));
+        const auto up = std::upper_bound(measurements.surface_link().begin(),
+                                         measurements.surface_link().end(),
+                                         unique_barcodes[i]);
+        upper_bounds.push_back(static_cast<unsigned int>(
+            std::distance(measurements.surface_link().begin(), up)));
     }
-    const measurement_collection_types::const_device::size_type n_meas =
-        measurements.size();
+    const auto n_meas = measurements.size();
 
     // Get the number of measurements of each module
     std::vector<unsigned int> sizes(n_modules);
     std::adjacent_difference(upper_bounds.begin(), upper_bounds.end(),
                              sizes.begin());
-
-    // Create barcode sequence
-    std::vector<detray::geometry::barcode> barcodes(n_modules);
-    std::transform(uniques.begin(), uniques_end, barcodes.begin(),
-                   [](const measurement& m) { return m.surface_link; });
 
     std::vector<std::vector<candidate_link>> links;
     links.resize(config.max_track_candidates_per_track);
@@ -232,15 +229,15 @@ combinatorial_kalman_filter(
 
             // Find the corresponding index of bcd in barcode vector
 
-            const auto lo2 =
-                std::lower_bound(barcodes.begin(), barcodes.end(), bcd);
+            const auto lo2 = std::lower_bound(unique_barcodes.begin(),
+                                              unique_barcodes.end(), bcd);
 
-            const auto bcd_id = std::distance(barcodes.begin(), lo2);
+            const auto bcd_id = std::distance(unique_barcodes.begin(), lo2);
 
-            if (lo2 == barcodes.begin()) {
+            if (lo2 == unique_barcodes.begin()) {
                 range.first = 0u;
                 range.second = upper_bounds[static_cast<std::size_t>(bcd_id)];
-            } else if (lo2 == barcodes.end()) {
+            } else if (lo2 == unique_barcodes.end()) {
                 range.first = 0u;
                 range.second = 0u;
             } else {
@@ -262,7 +259,7 @@ combinatorial_kalman_filter(
                  item_id++) {
 
                 // The measurement on surface to handle.
-                const measurement& meas = measurements.at(item_id);
+                const auto meas = measurements.at(item_id);
 
                 // Create a standalone track state object.
                 auto trk_state =
@@ -289,7 +286,7 @@ combinatorial_kalman_filter(
                           .n_skipped = skip_counter,
                           .chi2 = chi2,
                           .chi2_sum = prev_chi2_sum + chi2,
-                          .ndf_sum = prev_ndf_sum + meas.meas_dim},
+                          .ndf_sum = prev_ndf_sum + meas.dimensions()},
                          trk_state.filtered_params()});
                 }
             }
@@ -594,7 +591,7 @@ combinatorial_kalman_filter(
             assert(L.chi2 < std::numeric_limits<traccc::scalar>::max());
             assert(L.chi2 >= 0.f);
 
-            ndf_sum += static_cast<scalar>(measurements.at(*it).meas_dim);
+            ndf_sum += static_cast<scalar>(measurements.at(*it).dimensions());
             chi2_sum += L.chi2;
 
             // Break the loop if the iterator is at the first candidate and

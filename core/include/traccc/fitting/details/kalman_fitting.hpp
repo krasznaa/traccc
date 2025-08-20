@@ -8,7 +8,7 @@
 #pragma once
 
 // Project include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_candidate_container.hpp"
 #include "traccc/edm/track_fit_collection.hpp"
 #include "traccc/edm/track_fit_container.hpp"
@@ -48,8 +48,8 @@ typename edm::track_fit_container<algebra_t>::host kalman_fitting(
     vecmem::memory_resource& mr, vecmem::copy& copy) {
 
     // Create the input container(s).
-    const measurement_collection_types::const_device measurements{
-        track_container.measurements};
+    const typename edm::measurement_collection<algebra_t>::const_device
+        measurements{track_container.measurements};
     const typename edm::track_candidate_collection<
         typename fitter_t::algebra_type>::const_device track_candidates{
         track_container.tracks};

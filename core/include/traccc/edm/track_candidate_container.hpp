@@ -9,7 +9,7 @@
 
 // Local include(s).
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_candidate_collection.hpp"
 
 // VecMem include(s).
@@ -26,14 +26,14 @@ struct track_candidate_container {
         /// The track candidates
         track_candidate_collection<ALGEBRA>::view tracks;
         /// Measurements referenced by the tracks
-        measurement_collection_types::const_view measurements;
+        measurement_collection<ALGEBRA>::const_view measurements;
     };
 
     struct const_view {
         /// The track candidates
         track_candidate_collection<ALGEBRA>::const_view tracks;
         /// Measurements referenced by the tracks
-        measurement_collection_types::const_view measurements;
+        measurement_collection<ALGEBRA>::const_view measurements;
     };
 
     struct host {
@@ -41,35 +41,35 @@ struct track_candidate_container {
         host(vecmem::memory_resource& mr) : tracks{mr}, measurements{&mr} {}
         /// Move constructor
         host(track_candidate_collection<ALGEBRA>::host&& other_tracks,
-             measurement_collection_types::host&& other_measurements)
+             measurement_collection<ALGEBRA>::host&& other_measurements)
             : tracks{std::move(other_tracks)},
               measurements{std::move(other_measurements)} {}
 
         /// The track candidates
         track_candidate_collection<ALGEBRA>::host tracks;
         /// Measurements referenced by the tracks
-        measurement_collection_types::host measurements;
+        measurement_collection<ALGEBRA>::host measurements;
     };
 
     struct buffer {
         /// The track candidates
         track_candidate_collection<ALGEBRA>::buffer tracks;
         /// Measurements referenced by the tracks
-        measurement_collection_types::buffer measurements;
+        measurement_collection<ALGEBRA>::buffer measurements;
     };
 
     struct data {
         /// The track candidates
         track_candidate_collection<ALGEBRA>::data tracks;
         /// Measurements referenced by the tracks
-        measurement_collection_types::view measurements;
+        measurement_collection<ALGEBRA>::view measurements;
     };
 
     struct const_data {
         /// The track candidates
         track_candidate_collection<ALGEBRA>::const_data tracks;
         /// Measurements referenced by the tracks
-        measurement_collection_types::const_view measurements;
+        measurement_collection<ALGEBRA>::const_view measurements;
     };
 
     struct device {
@@ -80,7 +80,7 @@ struct track_candidate_container {
         /// The track candidates
         track_candidate_collection<ALGEBRA>::device tracks;
         /// Measurements referenced by the tracks
-        measurement_collection_types::const_device measurements;
+        measurement_collection<ALGEBRA>::const_device measurements;
     };
 
     struct const_device {
@@ -91,7 +91,7 @@ struct track_candidate_container {
         /// The track candidates
         track_candidate_collection<ALGEBRA>::const_device tracks;
         /// Measurements referenced by the tracks
-        measurement_collection_types::const_device measurements;
+        measurement_collection<ALGEBRA>::const_device measurements;
     };
 
 };  // struct track_candidate_container
