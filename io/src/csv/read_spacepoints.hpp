@@ -8,7 +8,7 @@
 #pragma once
 
 // Project include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/geometry/detector.hpp"
 
@@ -27,12 +27,12 @@ namespace traccc::io::csv {
 ///                                   measurements to hits from
 /// @param[in]  detector  detray detector
 ///
-void read_spacepoints(edm::spacepoint_collection::host& spacepoints,
-                      measurement_collection_types::host& measurements,
-                      std::string_view hit_filename,
-                      std::string_view meas_filename,
-                      std::string_view meas_hit_map_filename,
-                      const traccc::default_detector::host* detector = nullptr,
-                      const bool sort_measurements = true);
+void read_spacepoints(
+    edm::spacepoint_collection::host& spacepoints,
+    edm::measurement_collection<default_algebra>::host& measurements,
+    std::string_view hit_filename, std::string_view meas_filename,
+    std::string_view meas_hit_map_filename,
+    const traccc::default_detector::host* detector = nullptr,
+    const bool sort_measurements = true);
 
 }  // namespace traccc::io::csv

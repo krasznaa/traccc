@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2024 CERN for the benefit of the ACTS project
+ * (c) 2024-2025 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -8,8 +8,7 @@
 #pragma once
 
 // Project include(s).
-#include "traccc/edm/measurement.hpp"
-#include "traccc/edm/track_candidate_collection.hpp"
+#include "traccc/edm/track_candidate_container.hpp"
 #include "traccc/geometry/detector.hpp"
 
 // System include(s).
@@ -26,8 +25,7 @@ namespace traccc::io::obj {
 ///
 void write_track_candidates(
     std::string_view filename,
-    edm::track_candidate_collection<default_algebra>::const_view tracks,
-    measurement_collection_types::const_view measurements,
+    edm::track_candidate_container<default_algebra>::const_view tracks,
     const traccc::default_detector::host& detector);
 
 }  // namespace traccc::io::obj

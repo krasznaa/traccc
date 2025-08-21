@@ -11,7 +11,7 @@
 #include "traccc/io/data_format.hpp"
 
 // Project include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/geometry/detector.hpp"
 
@@ -33,11 +33,12 @@ namespace traccc::io {
 /// @param[in]  detector  detray detector
 /// @param[in]  format    The format of the data files (to read)
 ///
-void read_spacepoints(edm::spacepoint_collection::host& spacepoints,
-                      measurement_collection_types::host& measurements,
-                      std::size_t event, std::string_view directory,
-                      const traccc::default_detector::host* detector = nullptr,
-                      data_format format = data_format::csv);
+void read_spacepoints(
+    edm::spacepoint_collection::host& spacepoints,
+    edm::measurement_collection<default_algebra>::host& measurements,
+    std::size_t event, std::string_view directory,
+    const traccc::default_detector::host* detector = nullptr,
+    data_format format = data_format::csv);
 
 /// Read spacepoint data into memory
 ///
@@ -52,12 +53,12 @@ void read_spacepoints(edm::spacepoint_collection::host& spacepoints,
 /// @param[in]  detector  detray detector
 /// @param[in]  format The format of the data files (to read)
 ///
-void read_spacepoints(edm::spacepoint_collection::host& spacepoints,
-                      measurement_collection_types::host& measurements,
-                      std::string_view hit_filename,
-                      std::string_view meas_filename,
-                      std::string_view meas_hit_map_filename,
-                      const traccc::default_detector::host* detector = nullptr,
-                      data_format format = data_format::csv);
+void read_spacepoints(
+    edm::spacepoint_collection::host& spacepoints,
+    edm::measurement_collection<default_algebra>::host& measurements,
+    std::string_view hit_filename, std::string_view meas_filename,
+    std::string_view meas_hit_map_filename,
+    const traccc::default_detector::host* detector = nullptr,
+    data_format format = data_format::csv);
 
 }  // namespace traccc::io

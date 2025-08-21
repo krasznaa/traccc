@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022-2024 CERN for the benefit of the ACTS project
+ * (c) 2022-2025 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -11,7 +11,7 @@
 #include "traccc/io/data_format.hpp"
 
 // Project include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/geometry/detector.hpp"
 
 // System include(s).
@@ -33,8 +33,8 @@ namespace traccc::io {
 /// @param[in]  format    The format of the measurement data files (to read)
 ///
 std::vector<measurement_id_type> read_measurements(
-    measurement_collection_types::host& measurements, std::size_t event,
-    std::string_view directory,
+    edm::measurement_collection<default_algebra>::host& measurements,
+    std::size_t event, std::string_view directory,
     const traccc::default_detector::host* detector = nullptr,
     const bool sort_measurements = true, data_format format = data_format::csv);
 
@@ -48,7 +48,8 @@ std::vector<measurement_id_type> read_measurements(
 /// @param[in]  format   The format of the measurement data files (to read)
 ///
 std::vector<measurement_id_type> read_measurements(
-    measurement_collection_types::host& measurements, std::string_view filename,
+    edm::measurement_collection<default_algebra>::host& measurements,
+    std::string_view filename,
     const traccc::default_detector::host* detector = nullptr,
     const bool sort_measurements = true, data_format format = data_format::csv);
 

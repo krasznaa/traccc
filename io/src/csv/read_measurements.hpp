@@ -9,7 +9,7 @@
 
 // Project include(s).
 #include "traccc/definitions/primitives.hpp"
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/geometry/detector.hpp"
 
 // System include(s).
@@ -26,7 +26,8 @@ namespace traccc::io::csv {
 /// @param[in]  do_sort      Whether to sort the measurements or not
 ///
 std::vector<measurement_id_type> read_measurements(
-    measurement_collection_types::host& measurements, std::string_view filename,
+    edm::measurement_collection<default_algebra>::host& measurements,
+    std::string_view filename,
     const traccc::default_detector::host* detector = nullptr,
     const bool do_sort = true);
 

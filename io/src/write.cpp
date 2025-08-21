@@ -50,10 +50,10 @@ void write(std::size_t event, std::string_view directory,
     }
 }
 
-void write(std::size_t event, std::string_view directory,
-           traccc::data_format format,
-           edm::spacepoint_collection::const_view spacepoints,
-           measurement_collection_types::const_view measurements) {
+void write(
+    std::size_t event, std::string_view directory, traccc::data_format format,
+    edm::spacepoint_collection::const_view spacepoints,
+    edm::measurement_collection<default_algebra>::const_view measurements) {
 
     switch (format) {
         case data_format::binary:
@@ -63,12 +63,12 @@ void write(std::size_t event, std::string_view directory,
                                        get_event_filename(event, "-hits.dat")))
                                       .native()),
                 edm::spacepoint_collection::const_device{spacepoints});
-            details::write_binary_collection(
+            details::write_binary_soa(
                 get_absolute_path((std::filesystem::path(directory) /
                                    std::filesystem::path(get_event_filename(
                                        event, "-measurements.dat")))
                                       .native()),
-                traccc::measurement_collection_types::const_device{
+                edm::measurement_collection<default_algebra>::const_device{
                     measurements});
             break;
         case data_format::obj:
@@ -84,18 +84,18 @@ void write(std::size_t event, std::string_view directory,
     }
 }
 
-void write(std::size_t event, std::string_view directory,
-           traccc::data_format format,
-           measurement_collection_types::const_view measurements) {
+void write(
+    std::size_t event, std::string_view directory, traccc::data_format format,
+    edm::measurement_collection<default_algebra>::const_view measurements) {
 
     switch (format) {
         case data_format::binary:
-            details::write_binary_collection(
+            details::write_binary_soa(
                 get_absolute_path((std::filesystem::path(directory) /
                                    std::filesystem::path(get_event_filename(
                                        event, "-measurements.dat")))
                                       .native()),
-                traccc::measurement_collection_types::const_device{
+                edm::measurement_collection<default_algebra>::const_device{
                     measurements});
             break;
         default:
@@ -123,8 +123,7 @@ void write(std::size_t event, std::string_view directory,
 
 void write(std::size_t event, std::string_view directory,
            traccc::data_format format,
-           edm::track_candidate_collection<default_algebra>::const_view tracks,
-           measurement_collection_types::const_view measurements,
+           edm::track_candidate_container<default_algebra>::const_view tracks,
            const traccc::default_detector::host& detector) {
 
     switch (format) {
@@ -134,7 +133,7 @@ void write(std::size_t event, std::string_view directory,
                                    std::filesystem::path(get_event_filename(
                                        event, "-track-candidates.obj")))
                                       .native()),
-                tracks, measurements, detector);
+                tracks, detector);
             break;
         default:
             throw std::invalid_argument("Unsupported data format");
