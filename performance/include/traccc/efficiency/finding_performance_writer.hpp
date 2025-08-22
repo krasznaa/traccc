@@ -15,6 +15,7 @@
 #include "traccc/utils/truth_matching_config.hpp"
 
 // Project include(s).
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_candidate_container.hpp"
 #include "traccc/edm/track_fit_container.hpp"
 #include "traccc/utils/event_data.hpp"
@@ -87,8 +88,9 @@ class finding_performance_writer : public messaging {
     std::unique_ptr<details::finding_performance_writer_data> m_data;
 
     /// Common method to both track finding and ambiguity resolution
-    void write_common(const std::vector<std::vector<measurement>>& tracks,
-                      const event_data& evt_data);
+    void write_common(
+        const std::vector<std::vector<event_data::measurement_proxy>>& tracks,
+        const event_data& evt_data);
 
 };  // class finding_performance_writer
 

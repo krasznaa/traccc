@@ -8,7 +8,7 @@
 #pragma once
 
 // Project include(s).
-#include "traccc/edm/measurement.hpp"
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_fit_collection.hpp"
 #include "traccc/edm/track_state_collection.hpp"
 
@@ -24,8 +24,10 @@ class is_same_object<edm::track_fit<T>> {
     public:
     /// Constructor with a reference object, and an allowed uncertainty
     is_same_object(
-        const measurement_collection_types::const_view& ref_meas,
-        const measurement_collection_types::const_view& test_meas,
+        const edm::measurement_collection<default_algebra>::const_view&
+            ref_meas,
+        const edm::measurement_collection<default_algebra>::const_view&
+            test_meas,
         const edm::track_state_collection<default_algebra>::const_view&
             ref_states,
         const edm::track_state_collection<default_algebra>::const_view&
@@ -87,9 +89,9 @@ class is_same_object<edm::track_fit<T>> {
 
     private:
     /// Measurements for the reference object
-    const measurement_collection_types::const_view m_ref_meas;
+    const edm::measurement_collection<default_algebra>::const_view m_ref_meas;
     /// Measurements for the test object
-    const measurement_collection_types::const_view m_test_meas;
+    const edm::measurement_collection<default_algebra>::const_view m_test_meas;
     /// States for the reference object
     const edm::track_state_collection<default_algebra>::const_view m_ref_states;
     /// States for the test object
