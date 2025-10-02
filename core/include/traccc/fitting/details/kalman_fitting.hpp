@@ -10,8 +10,8 @@
 // Project include(s).
 #include "traccc/edm/measurement.hpp"
 #include "traccc/edm/track_candidate_container.hpp"
-#include "traccc/edm/track_fit_collection.hpp"
-#include "traccc/edm/track_fit_container.hpp"
+#include "traccc/edm/track_collection.hpp"
+#include "traccc/edm/track_container.hpp"
 #include "traccc/edm/track_state_collection.hpp"
 #include "traccc/edm/track_state_helpers.hpp"
 #include "traccc/fitting/status_codes.hpp"
@@ -41,7 +41,7 @@ namespace traccc::host::details {
 /// @return A container of the fitted track states
 ///
 template <typename algebra_t, typename fitter_t>
-typename edm::track_fit_container<algebra_t>::host kalman_fitting(
+typename edm::track_container<algebra_t>::host kalman_fitting(
     fitter_t& fitter,
     const typename edm::track_candidate_container<algebra_t>::const_view&
         track_container,
@@ -55,7 +55,7 @@ typename edm::track_fit_container<algebra_t>::host kalman_fitting(
         track_container.tracks};
 
     // Create the output containers.
-    typename edm::track_fit_container<algebra_t>::host result{mr};
+    typename edm::track_container<algebra_t>::host result{mr};
 
     // Iterate over the tracks,
     for (typename edm::track_candidate_collection<
@@ -63,13 +63,13 @@ typename edm::track_fit_container<algebra_t>::host kalman_fitting(
          i < track_candidates.size(); ++i) {
 
         // Create the objects that will describe this track fit.
-        result.tracks.push_back(
-            {track_fit_outcome::UNKNOWN, {}, 0.f, 0.f, 0.f, 0u, {}});
+        result.tracks.push_back({});
         auto fitted_track = result.tracks.at(result.tracks.size() - 1);
         for (unsigned int measurement_index :
              track_candidates.measurement_indices().at(i)) {
-            fitted_track.state_indices().push_back(
-                static_cast<unsigned int>(result.states.size()));
+            fitted_track.constituent_links().push_back(
+                {edm::track_constituent_link::track_state,
+                 static_cast<unsigned int>(result.states.size())});
             result.states.push_back(edm::make_track_state<algebra_t>(
                 measurements, measurement_index));
         }
@@ -77,7 +77,7 @@ typename edm::track_fit_container<algebra_t>::host kalman_fitting(
         vecmem::data::vector_buffer<detray::geometry::barcode> seqs_buffer{
             static_cast<vecmem::data::vector_buffer<
                 detray::geometry::barcode>::size_type>(
-                std::max(fitted_track.state_indices().size() *
+                std::max(fitted_track.constituent_links().size() *
                              fitter.config().barcode_sequence_size_factor,
                          fitter.config().min_barcode_sequence_capacity)),
             mr, vecmem::data::buffer_type::resizable};
@@ -85,8 +85,8 @@ typename edm::track_fit_container<algebra_t>::host kalman_fitting(
 
         // Make a fitter state
         auto result_tracks_view = vecmem::get_data(result.tracks);
-        typename edm::track_fit_collection<algebra_t>::device
-            result_tracks_device{result_tracks_view};
+        typename edm::track_collection<algebra_t>::device result_tracks_device{
+            result_tracks_view};
         typename fitter_t::state fitter_state(
             result_tracks_device.at(result_tracks_device.size() - 1),
             typename edm::track_state_collection<algebra_t>::device{

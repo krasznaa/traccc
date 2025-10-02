@@ -42,6 +42,10 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/edm/impl/track_state_helpers.ipp"
   "include/traccc/edm/track_fit_outcome.hpp"
   "include/traccc/edm/track_fit_collection.hpp"
+  "include/traccc/edm/track_constituent_link.hpp"
+  "include/traccc/edm/track_collection.hpp"
+  "include/traccc/edm/impl/track_collection.ipp"
+  "include/traccc/edm/track_container.hpp"
   # Magnetic field description.
   "include/traccc/bfield/magnetic_field_types.hpp"
   "include/traccc/bfield/magnetic_field.hpp"
