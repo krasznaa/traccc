@@ -11,7 +11,7 @@
 #include "traccc/bfield/magnetic_field.hpp"
 #include "traccc/edm/measurement.hpp"
 #include "traccc/edm/track_candidate_container.hpp"
-#include "traccc/edm/track_fit_container.hpp"
+#include "traccc/edm/track_container.hpp"
 #include "traccc/fitting/fitting_config.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
@@ -32,7 +32,7 @@ namespace traccc::host {
 
 /// Kalman filter based track fitting algorithm
 class kalman_fitting_algorithm
-    : public algorithm<edm::track_fit_container<default_algebra>::host(
+    : public algorithm<edm::track_container<default_algebra>::host(
           const host_detector&, const magnetic_field&,
           const edm::track_candidate_container<default_algebra>::const_view&)>,
       public messaging {
@@ -41,7 +41,7 @@ class kalman_fitting_algorithm
     /// Configuration type
     using config_type = fitting_config;
     /// Output type
-    using output_type = edm::track_fit_container<default_algebra>::host;
+    using output_type = edm::track_container<default_algebra>::host;
 
     /// Constructor with the algorithm's configuration
     ///
