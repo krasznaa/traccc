@@ -51,11 +51,13 @@ traccc_add_library( traccc_performance performance TYPE SHARED
    "include/traccc/performance/impl/is_same_track_fit.ipp"
    "include/traccc/performance/impl/is_same_track_parameters.ipp"
    "include/traccc/performance/impl/is_same_track_state.ipp"
+   "include/traccc/performance/impl/is_same_track.ipp"
    "src/performance/details/is_same_object.cpp"
    "include/traccc/performance/details/comparator_factory.hpp"
    "include/traccc/performance/impl/comparator_factory.ipp"
    "include/traccc/performance/impl/seed_comparator_factory.ipp"
    "include/traccc/performance/impl/track_candidate_comparator_factory.ipp"
+   "include/traccc/performance/impl/track_comparator_factory.ipp"
    "include/traccc/performance/impl/track_fit_comparator_factory.ipp"
    # Collection/container comparison code.
    "include/traccc/performance/collection_comparator.hpp"

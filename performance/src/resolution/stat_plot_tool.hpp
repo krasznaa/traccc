@@ -13,7 +13,7 @@
 
 // Project include(s).
 #include "traccc/edm/track_candidate_collection.hpp"
-#include "traccc/edm/track_fit_collection.hpp"
+#include "traccc/edm/track_collection.hpp"
 #include "traccc/edm/track_state_collection.hpp"
 
 namespace traccc {
@@ -70,13 +70,13 @@ class stat_plot_tool {
 
     /// @brief fill the cache
     ///
-    /// @tparam track_fit_backend_t the backend type for @c fit_res
+    /// @tparam track_backend_t the backend type for @c fit_res
     ///
     /// @param cache the cache for statistics plots
     /// @param fit_res fitting information that contains statistics
-    template <typename track_fit_backend_t>
+    template <typename track_backend_t>
     void fill(stat_plot_cache& cache,
-              const edm::track_fit<track_fit_backend_t>& fit_res) const;
+              const edm::track<track_backend_t>& fit_res) const;
 
     /// @brief fill the cache
     ///
