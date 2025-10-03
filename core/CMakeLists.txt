@@ -41,7 +41,6 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/edm/track_state_helpers.hpp"
   "include/traccc/edm/impl/track_state_helpers.ipp"
   "include/traccc/edm/track_fit_outcome.hpp"
-  "include/traccc/edm/track_fit_collection.hpp"
   "include/traccc/edm/track_constituent_link.hpp"
   "include/traccc/edm/track_collection.hpp"
   "include/traccc/edm/impl/track_collection.ipp"

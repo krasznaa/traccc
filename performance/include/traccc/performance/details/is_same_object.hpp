@@ -50,6 +50,5 @@ class is_same_object {
 #include "traccc/performance/impl/is_same_spacepoint.ipp"
 #include "traccc/performance/impl/is_same_track.ipp"
 #include "traccc/performance/impl/is_same_track_candidate.ipp"
-#include "traccc/performance/impl/is_same_track_fit.ipp"
 #include "traccc/performance/impl/is_same_track_parameters.ipp"
 #include "traccc/performance/impl/is_same_track_state.ipp"
