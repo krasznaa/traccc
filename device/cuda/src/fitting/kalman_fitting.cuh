@@ -19,7 +19,7 @@
 // Project include(s).
 #include "traccc/edm/device/sort_key.hpp"
 #include "traccc/edm/track_candidate_container.hpp"
-#include "traccc/edm/track_fit_container.hpp"
+#include "traccc/edm/track_container.hpp"
 #include "traccc/fitting/details/kalman_fitting_types.hpp"
 #include "traccc/fitting/device/fill_fitting_sort_keys.hpp"
 #include "traccc/fitting/fitting_config.hpp"
@@ -53,7 +53,7 @@ namespace traccc::cuda::details {
 /// @return A container of the fitted track states
 ///
 template <typename detector_t, typename bfield_t>
-typename edm::track_fit_container<typename detector_t::algebra_type>::buffer
+typename edm::track_container<typename detector_t::algebra_type>::buffer
 kalman_fitting(
     const typename detector_t::const_view_type& det_view,
     const bfield_t& field_view,
@@ -77,7 +77,7 @@ kalman_fitting(
         std::accumulate(candidate_sizes.begin(), candidate_sizes.end(), 0u);
 
     // Create the result buffer.
-    typename edm::track_fit_container<typename detector_t::algebra_type>::buffer
+    typename edm::track_container<typename detector_t::algebra_type>::buffer
         track_states_buffer{
             {candidate_sizes, mr.main, mr.host,
              vecmem::data::buffer_type::resizable},
