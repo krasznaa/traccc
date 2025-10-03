@@ -12,7 +12,7 @@
 #include "traccc/definitions/common.hpp"
 #include "traccc/edm/measurement.hpp"
 #include "traccc/edm/track_candidate_collection.hpp"
-#include "traccc/edm/track_fit_collection.hpp"
+#include "traccc/edm/track_collection.hpp"
 #include "traccc/edm/track_state_collection.hpp"
 #include "traccc/fitting/kalman_filter/kalman_fitter.hpp"
 #include "traccc/geometry/detector.hpp"
@@ -87,8 +87,8 @@ class KalmanFittingTests : public testing::Test {
     /// @param measurements All measurements in the event
     ///
     void ndf_tests(
-        const edm::track_fit_collection<
-            default_algebra>::host::const_proxy_type& track,
+        const edm::track_collection<default_algebra>::host::const_proxy_type&
+            track,
         const edm::track_state_collection<default_algebra>::host& track_states,
         const measurement_collection_types::host& measurements);
 
@@ -98,7 +98,7 @@ class KalmanFittingTests : public testing::Test {
     /// @return The number of tracks that were successfully fitted
     ///
     std::size_t count_successfully_fitted_tracks(
-        const edm::track_fit_collection<default_algebra>::host& tracks) const;
+        const edm::track_collection<default_algebra>::host& tracks) const;
 
     // The number of tracks successful with KF
     std::size_t n_success{0u};

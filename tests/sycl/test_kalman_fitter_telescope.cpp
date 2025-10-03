@@ -9,7 +9,7 @@
 #include "traccc/bfield/construct_const_bfield.hpp"
 #include "traccc/bfield/magnetic_field_types.hpp"
 #include "traccc/device/container_d2h_copy_alg.hpp"
-#include "traccc/edm/track_fit_container.hpp"
+#include "traccc/edm/track_container.hpp"
 #include "traccc/io/utils.hpp"
 #include "traccc/performance/details/is_same_object.hpp"
 #include "traccc/resolution/fitting_performance_writer.hpp"
@@ -186,7 +186,7 @@ TEST_P(KalmanFittingTelescopeTests, Run) {
                            {track_candidates_buffer.tracks,
                             track_candidates_buffer.measurements});
 
-        traccc::edm::track_fit_container<traccc::default_algebra>::host
+        traccc::edm::track_container<traccc::default_algebra>::host
             track_states_sycl{host_mr};
         copy(track_states_sycl_buffer.tracks, track_states_sycl.tracks,
              vecmem::copy::type::device_to_host)
