@@ -12,7 +12,7 @@
 
 // Project include(s).
 #include "traccc/edm/track_candidate_container.hpp"
-#include "traccc/edm/track_fit_container.hpp"
+#include "traccc/edm/track_container.hpp"
 #include "traccc/edm/track_state_helpers.hpp"
 #include "traccc/fitting/status_codes.hpp"
 
@@ -27,10 +27,10 @@ TRACCC_HOST_DEVICE inline void fit_prelude(
     vecmem::data::vector_view<const unsigned int> param_ids_view,
     typename edm::track_candidate_container<algebra_t>::const_view
         track_candidates_view,
-    typename edm::track_fit_container<algebra_t>::view tracks_view,
+    typename edm::track_container<algebra_t>::view tracks_view,
     vecmem::data::vector_view<unsigned int> param_liveness_view) {
 
-    typename edm::track_fit_collection<algebra_t>::device tracks(
+    typename edm::track_collection<algebra_t>::device tracks(
         tracks_view.tracks);
 
     if (globalIndex >= tracks.size()) {
@@ -57,7 +57,8 @@ TRACCC_HOST_DEVICE inline void fit_prelude(
     for (unsigned int meas_idx : track_candidate_measurement_indices) {
         const unsigned int track_state_index = track_states.push_back(
             edm::make_track_state<algebra_t>(measurements, meas_idx));
-        track.state_indices().push_back(track_state_index);
+        track.constituent_links().push_back(
+            {edm::track_constituent_link::track_state, track_state_index});
     }
 
     // TODO: Set other stuff in the header?

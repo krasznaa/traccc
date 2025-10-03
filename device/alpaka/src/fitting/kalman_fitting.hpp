@@ -14,7 +14,7 @@
 // Project include(s).
 #include "traccc/edm/device/sort_key.hpp"
 #include "traccc/edm/track_candidate_container.hpp"
-#include "traccc/edm/track_fit_container.hpp"
+#include "traccc/edm/track_container.hpp"
 #include "traccc/fitting/details/kalman_fitting_types.hpp"
 #include "traccc/fitting/device/fill_fitting_sort_keys.hpp"
 #include "traccc/fitting/device/fit.hpp"
@@ -55,7 +55,7 @@ struct fit_prelude {
         vecmem::data::vector_view<const unsigned int> param_ids_view,
         edm::track_candidate_container<default_algebra>::const_view
             track_candidates_view,
-        edm::track_fit_container<default_algebra>::view track_states_view,
+        edm::track_container<default_algebra>::view track_states_view,
         vecmem::data::vector_view<unsigned int> param_liveness_view) const {
 
         const device::global_index_t globalThreadIdx =
@@ -112,7 +112,7 @@ struct fit_backward {
 /// @return A container of the fitted track states
 ///
 template <typename detector_t, typename bfield_t>
-typename edm::track_fit_container<typename detector_t::algebra_type>::buffer
+typename edm::track_container<typename detector_t::algebra_type>::buffer
 kalman_fitting(
     const typename detector_t::const_view_type& det_view,
     const bfield_t& field_view,
@@ -136,7 +136,7 @@ kalman_fitting(
         std::accumulate(candidate_sizes.begin(), candidate_sizes.end(), 0u);
 
     // Create the result buffer.
-    typename edm::track_fit_container<typename detector_t::algebra_type>::buffer
+    typename edm::track_container<typename detector_t::algebra_type>::buffer
         track_states_buffer{
             {candidate_sizes, mr.main, mr.host,
              vecmem::data::buffer_type::resizable},
@@ -198,7 +198,7 @@ kalman_fitting(
                          param_ids_device.begin());
 
     // Run the fitting, using the sorted parameter IDs.
-    typename edm::track_fit_container<typename detector_t::algebra_type>::view
+    typename edm::track_container<typename detector_t::algebra_type>::view
         track_states_view{track_states_buffer.tracks,
                           track_states_buffer.states,
                           track_candidates_view.measurements};
