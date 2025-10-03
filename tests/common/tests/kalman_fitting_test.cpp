@@ -151,17 +151,18 @@ void KalmanFittingTests::ndf_tests(
 }
 
 void KalmanFittingTests::ndf_tests(
-    const edm::track_fit_collection<default_algebra>::host::const_proxy_type&
-        track,
+    const edm::track_collection<default_algebra>::host::const_proxy_type& track,
     const edm::track_state_collection<default_algebra>::host& track_states,
     const measurement_collection_types::host& measurements) {
 
     scalar dim_sum = 0;
     std::size_t n_effective_states = 0;
 
-    for (unsigned int state_idx : track.state_indices()) {
+    for (const edm::track_constituent_link& state_link :
+         track.constituent_links()) {
 
-        auto state = track_states.at(state_idx);
+        assert(state_link.type == edm::track_constituent_link::track_state);
+        auto state = track_states.at(state_link.index);
 
         if (!state.is_hole() && state.is_smoothed()) {
 
@@ -178,13 +179,13 @@ void KalmanFittingTests::ndf_tests(
 
     // The number of track states is supposed to be eqaul to the number
     // of measurements unless KF failes in the middle of propagation
-    if (n_effective_states == track.state_indices().size()) {
+    if (n_effective_states == track.constituent_links().size()) {
         n_success++;
     }
 }
 
 std::size_t KalmanFittingTests::count_successfully_fitted_tracks(
-    const edm::track_fit_collection<default_algebra>::host& tracks) const {
+    const edm::track_collection<default_algebra>::host& tracks) const {
 
     const std::size_t n_tracks = tracks.size();
     std::size_t n_fitted_tracks = 0u;

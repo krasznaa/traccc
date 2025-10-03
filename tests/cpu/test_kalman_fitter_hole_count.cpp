@@ -178,7 +178,7 @@ TEST_P(KalmanFittingHoleCountTests, Run) {
     // Some sanity checks
     ASSERT_FLOAT_EQ(
         static_cast<float>(track.ndf()),
-        static_cast<float>(track.state_indices().size()) * 2.f - 5.f);
+        static_cast<float>(track.constituent_links().size()) * 2.f - 5.f);
 }
 
 INSTANTIATE_TEST_SUITE_P(
