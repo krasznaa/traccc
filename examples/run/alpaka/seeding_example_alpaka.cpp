@@ -195,7 +195,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         traccc::host::track_params_estimation::output_type params;
         traccc::edm::track_candidate_collection<traccc::default_algebra>::host
             track_candidates{host_mr};
-        traccc::edm::track_fit_container<traccc::default_algebra>::host
+        traccc::edm::track_container<traccc::default_algebra>::host
             track_states{host_mr};
 
         traccc::edm::seed_collection::buffer seeds_alpaka_buffer;
@@ -205,7 +205,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         traccc::edm::track_candidate_collection<traccc::default_algebra>::buffer
             track_candidates_alpaka_buffer;
 
-        traccc::edm::track_fit_container<traccc::default_algebra>::buffer
+        traccc::edm::track_container<traccc::default_algebra>::buffer
             track_states_alpaka_buffer;
 
         {  // Start measuring wall time
@@ -352,7 +352,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         copy(track_candidates_alpaka_buffer, track_candidates_alpaka)->wait();
 
         // Copy track states from device to host
-        traccc::edm::track_fit_container<traccc::default_algebra>::host
+        traccc::edm::track_container<traccc::default_algebra>::host
             track_states_alpaka{host_mr};
         async_copy(track_states_alpaka_buffer.tracks,
                    track_states_alpaka.tracks)

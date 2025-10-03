@@ -229,7 +229,7 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
             ->wait();
 
         // Instantiate cuda containers/collections
-        traccc::edm::track_fit_container<traccc::default_algebra>::buffer
+        traccc::edm::track_container<traccc::default_algebra>::buffer
             track_states_cuda_buffer;
 
         {
@@ -240,7 +240,7 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
                 detector_buffer, device_field,
                 {track_candidates_cuda_buffer, measurements_cuda_buffer});
         }
-        traccc::edm::track_fit_container<traccc::default_algebra>::host
+        traccc::edm::track_container<traccc::default_algebra>::host
             track_states_cuda{host_mr};
         async_copy(track_states_cuda_buffer.tracks, track_states_cuda.tracks,
                    vecmem::copy::type::device_to_host)
