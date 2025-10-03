@@ -31,10 +31,9 @@ void stat_plot_tool::fill(
 #endif  // TRACCC_HAVE_ROOT
 }
 
-template <typename track_fit_backend_t>
-void stat_plot_tool::fill(
-    stat_plot_cache& cache,
-    const edm::track_fit<track_fit_backend_t>& fit_res) const {
+template <typename track_backend_t>
+void stat_plot_tool::fill(stat_plot_cache& cache,
+                          const edm::track<track_backend_t>& fit_res) const {
 
     // Avoid unused variable warnings when building the code without ROOT.
     (void)cache;
