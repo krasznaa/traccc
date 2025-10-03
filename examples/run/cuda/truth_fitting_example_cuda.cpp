@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
                     mr.main, vecmem::copy::type::host_to_device)};
 
         // Instantiate cuda containers/collections
-        traccc::edm::track_fit_container<traccc::default_algebra>::buffer
+        traccc::edm::track_container<traccc::default_algebra>::buffer
             track_states_cuda_buffer;
 
         {
@@ -188,7 +188,7 @@ int main(int argc, char* argv[]) {
                                 truth_track_candidates_buffer.measurements});
         }
 
-        traccc::edm::track_fit_container<traccc::default_algebra>::host
+        traccc::edm::track_container<traccc::default_algebra>::host
             track_states_cuda{host_mr};
         async_copy(track_states_cuda_buffer.tracks, track_states_cuda.tracks,
                    vecmem::copy::type::device_to_host)
@@ -221,13 +221,12 @@ int main(int argc, char* argv[]) {
 
             // Compare the track parameters made on the host and on the device.
             traccc::soa_comparator<
-                traccc::edm::track_fit_collection<traccc::default_algebra>>
+                traccc::edm::track_collection<traccc::default_algebra>>
                 compare_track_fits{
                     "track fits",
                     traccc::details::comparator_factory<
-                        traccc::edm::track_fit_collection<
-                            traccc::default_algebra>::const_device::
-                            const_proxy_type>{
+                        traccc::edm::track_collection<traccc::default_algebra>::
+                            const_device::const_proxy_type>{
                         vecmem::get_data(truth_track_candidates.measurements),
                         vecmem::get_data(truth_track_candidates.measurements),
                         vecmem::get_data(track_states.states),

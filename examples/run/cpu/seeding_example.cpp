@@ -190,7 +190,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
             track_candidates{host_mr};
         traccc::edm::track_candidate_collection<traccc::default_algebra>::host
             track_candidates_ar{host_mr};
-        traccc::edm::track_fit_container<traccc::default_algebra>::host
+        traccc::edm::track_container<traccc::default_algebra>::host
             track_states{host_mr};
 
         /*------------------------
