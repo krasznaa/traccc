@@ -120,31 +120,33 @@ std::vector<std::vector<measurement>> prepare_data(
  * @brief For ambiguity resolution only. Associates each reconstructed track
  * with its measurements.
  *
- * @param track_candidates_view the track candidates found by the finding
- * algorithm.
+ * @param track_view the track candidates found by the finding algorithm.
  * @return std::vector<std::vector<measurement>> Associates each track index
  * with its corresponding measurements.
  */
 std::vector<std::vector<measurement>> prepare_data(
-    const edm::track_fit_container<default_algebra>::const_view&
-        track_fit_view) {
+    const edm::track_container<default_algebra>::const_view& track_view) {
     std::vector<std::vector<measurement>> result;
 
     // Set up the input containers.
-    const edm::track_fit_container<default_algebra>::const_device track_fits(
-        track_fit_view);
+    const edm::track_container<default_algebra>::const_device tracks(
+        track_view);
 
     // Iterate over the tracks.
-    const unsigned int n_tracks = track_fits.tracks.size();
+    const unsigned int n_tracks = tracks.tracks.size();
     result.reserve(n_tracks);
 
     for (unsigned int i = 0; i < n_tracks; i++) {
         std::vector<measurement> result_measurements;
-        result_measurements.reserve(
-            track_fits.tracks.at(i).state_indices().size());
-        for (unsigned int st_idx : track_fits.tracks.state_indices().at(i)) {
-            result_measurements.push_back(track_fits.measurements.at(
-                track_fits.states.at(st_idx).measurement_index()));
+        for (const edm::track_constituent_link& link :
+             tracks.tracks.constituent_links().at(i)) {
+            if (link.type == edm::track_constituent_link::measurement) {
+                result_measurements.push_back(
+                    tracks.measurements.at(link.index));
+            } else if (link.type == edm::track_constituent_link::track_state) {
+                result_measurements.push_back(tracks.measurements.at(
+                    tracks.states.at(link.index).measurement_index()));
+            }
         }
         result.push_back(std::move(result_measurements));
     }
@@ -349,10 +351,10 @@ void finding_performance_writer::write(
 
 /// For ambiguity resolution
 void finding_performance_writer::write(
-    const edm::track_fit_container<default_algebra>::const_view& track_fit_view,
+    const edm::track_container<default_algebra>::const_view& track_view,
     const event_data& evt_data) {
 
-    std::vector<std::vector<measurement>> tracks = prepare_data(track_fit_view);
+    std::vector<std::vector<measurement>> tracks = prepare_data(track_view);
     write_common(tracks, evt_data);
 }
 
