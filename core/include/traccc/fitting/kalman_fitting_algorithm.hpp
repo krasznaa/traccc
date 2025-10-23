@@ -10,7 +10,6 @@
 // Project include(s).
 #include "traccc/bfield/magnetic_field.hpp"
 #include "traccc/edm/measurement.hpp"
-#include "traccc/edm/track_candidate_container.hpp"
 #include "traccc/edm/track_container.hpp"
 #include "traccc/fitting/fitting_config.hpp"
 #include "traccc/geometry/detector.hpp"
@@ -34,14 +33,12 @@ namespace traccc::host {
 class kalman_fitting_algorithm
     : public algorithm<edm::track_container<default_algebra>::host(
           const host_detector&, const magnetic_field&,
-          const edm::track_candidate_container<default_algebra>::const_view&)>,
+          const edm::track_container<default_algebra>::const_view&)>,
       public messaging {
 
     public:
     /// Configuration type
     using config_type = fitting_config;
-    /// Output type
-    using output_type = edm::track_container<default_algebra>::host;
 
     /// Constructor with the algorithm's configuration
     ///
@@ -62,7 +59,7 @@ class kalman_fitting_algorithm
     ///
     output_type operator()(
         const host_detector& det, const magnetic_field& bfield,
-        const edm::track_candidate_container<default_algebra>::const_view&
+        const edm::track_container<default_algebra>::const_view&
             track_candidates) const override;
 
     private:

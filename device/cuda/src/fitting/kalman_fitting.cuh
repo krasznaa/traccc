@@ -18,7 +18,6 @@
 
 // Project include(s).
 #include "traccc/edm/device/sort_key.hpp"
-#include "traccc/edm/track_candidate_container.hpp"
 #include "traccc/edm/track_container.hpp"
 #include "traccc/fitting/details/kalman_fitting_types.hpp"
 #include "traccc/fitting/device/fill_fitting_sort_keys.hpp"
@@ -57,7 +56,7 @@ typename edm::track_container<typename detector_t::algebra_type>::buffer
 kalman_fitting(
     const typename detector_t::const_view_type& det_view,
     const bfield_t& field_view,
-    const typename edm::track_candidate_container<
+    const typename edm::track_container<
         typename detector_t::algebra_type>::const_view& track_candidates_view,
     const fitting_config& config, const memory_resource& mr, vecmem::copy& copy,
     stream& str, unsigned int warp_size) {
@@ -66,9 +65,7 @@ kalman_fitting(
     cudaStream_t stream = details::get_stream(str);
 
     // Get the number of tracks.
-    const edm::track_candidate_collection<
-        default_algebra>::const_device::size_type n_tracks =
-        copy.get_size(track_candidates_view.tracks);
+    const unsigned int n_tracks = copy.get_size(track_candidates_view.tracks);
 
     // Get the sizes of the track candidates in each track.
     const std::vector<unsigned int> candidate_sizes =

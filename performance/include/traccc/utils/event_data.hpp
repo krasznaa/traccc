@@ -12,7 +12,7 @@
 #include "traccc/edm/particle.hpp"
 #include "traccc/edm/silicon_cell_collection.hpp"
 #include "traccc/edm/silicon_cluster_collection.hpp"
-#include "traccc/edm/track_candidate_container.hpp"
+#include "traccc/edm/track_container.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
 #include "traccc/geometry/silicon_detector_description.hpp"
@@ -77,7 +77,7 @@ struct event_data {
     ///
     template <typename detector_type>
     void generate_truth_candidates(
-        edm::track_candidate_container<default_algebra>::host& truth_candidates,
+        edm::track_container<default_algebra>::host& truth_candidates,
         seed_generator<detector_type>& sg, vecmem::memory_resource& resource,
         float pt_cut = 0.f) {
         for (auto const& [ptc, measurements] : m_ptc_to_meas_map) {
