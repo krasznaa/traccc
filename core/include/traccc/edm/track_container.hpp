@@ -42,12 +42,16 @@ struct track_container {
 
     struct host {
         /// Constructor using a memory resource
-        explicit host(vecmem::memory_resource& mr) : tracks{mr}, states{mr} {}
+        explicit host(vecmem::memory_resource& mr,
+                      measurement_collection_types::const_view meas = {})
+            : tracks{mr}, states{mr}, measurements{meas} {}
 
         /// The tracks
         track_collection<ALGEBRA>::host tracks;
         /// The track states used by the tracks
         track_state_collection<ALGEBRA>::host states;
+        /// The measurements used by the tracks
+        measurement_collection_types::const_view measurements;
     };
 
     struct buffer {
@@ -55,6 +59,8 @@ struct track_container {
         track_collection<ALGEBRA>::buffer tracks;
         /// The track states used by the tracks
         track_state_collection<ALGEBRA>::buffer states;
+        /// The measurements used by the tracks
+        measurement_collection_types::const_view measurements;
     };
 
     struct data {
@@ -62,6 +68,8 @@ struct track_container {
         track_collection<ALGEBRA>::data tracks;
         /// The track states used by the tracks
         track_state_collection<ALGEBRA>::data states;
+        /// The measurements used by the tracks
+        measurement_collection_types::const_view measurements;
     };
 
     struct const_data {
@@ -69,6 +77,8 @@ struct track_container {
         track_collection<ALGEBRA>::const_data tracks;
         /// The track states used by the tracks
         track_state_collection<ALGEBRA>::const_data states;
+        /// The measurements used by the tracks
+        measurement_collection_types::const_view measurements;
     };
 
     struct device {

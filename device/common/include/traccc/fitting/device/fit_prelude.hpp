@@ -11,7 +11,6 @@
 #include "traccc/device/global_index.hpp"
 
 // Project include(s).
-#include "traccc/edm/track_candidate_container.hpp"
 #include "traccc/edm/track_container.hpp"
 #include "traccc/edm/track_state_helpers.hpp"
 #include "traccc/fitting/status_codes.hpp"
@@ -25,8 +24,7 @@ template <typename algebra_t>
 TRACCC_HOST_DEVICE inline void fit_prelude(
     const global_index_t globalIndex,
     vecmem::data::vector_view<const unsigned int> param_ids_view,
-    typename edm::track_candidate_container<algebra_t>::const_view
-        track_candidates_view,
+    typename edm::track_container<algebra_t>::const_view track_candidates_view,
     typename edm::track_container<algebra_t>::view tracks_view,
     vecmem::data::vector_view<unsigned int> param_liveness_view) {
 
@@ -47,16 +45,18 @@ TRACCC_HOST_DEVICE inline void fit_prelude(
 
     auto track = tracks.at(param_id);
 
-    const typename edm::track_candidate_collection<algebra_t>::const_device
+    const typename edm::track_collection<algebra_t>::const_device
         track_candidates{track_candidates_view.tracks};
     const auto track_candidate = track_candidates.at(param_id);
-    const auto track_candidate_measurement_indices =
-        track_candidate.measurement_indices();
+    const auto track_candidate_constituent_links =
+        track_candidate.constituent_links();
     const measurement_collection_types::const_device measurements{
         track_candidates_view.measurements};
-    for (unsigned int meas_idx : track_candidate_measurement_indices) {
+    for (const edm::track_constituent_link& link :
+         track_candidate_constituent_links) {
+        assert(link.type == edm::track_constituent_link::measurement);
         const unsigned int track_state_index = track_states.push_back(
-            edm::make_track_state<algebra_t>(measurements, meas_idx));
+            edm::make_track_state<algebra_t>(measurements, link.index));
         track.constituent_links().push_back(
             {edm::track_constituent_link::track_state, track_state_index});
     }

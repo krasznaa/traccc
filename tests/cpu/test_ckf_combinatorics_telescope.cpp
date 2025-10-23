@@ -173,10 +173,11 @@ TEST_P(CpuCkfCombinatoricsTelescopeTests, Run) {
             host_finding_limit(detector, field, measurements_view, seeds_view);
 
         // Make sure that the number of found tracks = n_track ^ (n_planes + 1)
-        ASSERT_TRUE(track_candidates.size() > track_candidates_limit.size());
-        ASSERT_EQ(track_candidates.size(),
+        ASSERT_TRUE(track_candidates.tracks.size() >
+                    track_candidates_limit.tracks.size());
+        ASSERT_EQ(track_candidates.tracks.size(),
                   std::pow(n_truth_tracks, std::get<11>(GetParam()) + 1));
-        ASSERT_EQ(track_candidates_limit.size(),
+        ASSERT_EQ(track_candidates_limit.tracks.size(),
                   n_truth_tracks * cfg_limit.max_num_branches_per_seed);
     }
 }
