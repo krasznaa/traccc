@@ -89,7 +89,8 @@ kalman_fitting(
         track_states_buffer{
             {candidate_sizes, mr.main, mr.host,
              vecmem::data::buffer_type::resizable},
-            {n_states, mr.main, vecmem::data::buffer_type::resizable}};
+            {n_states, mr.main, vecmem::data::buffer_type::resizable},
+            track_candidates_view.measurements};
     vecmem::copy::event_type tracks_setup_event =
         copy.setup(track_states_buffer.tracks);
     vecmem::copy::event_type track_states_setup_event =
