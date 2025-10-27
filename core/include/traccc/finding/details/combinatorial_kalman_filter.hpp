@@ -530,7 +530,8 @@ combinatorial_kalman_filter(
      **********************/
 
     // Number of found tracks = number of tips
-    typename edm::track_container<algebra_type>::host output_candidates{mr};
+    typename edm::track_container<algebra_type>::host output_candidates{
+        mr, measurements_view};
     output_candidates.tracks.reserve(tips.size());
 
     for (const auto& tip : tips) {

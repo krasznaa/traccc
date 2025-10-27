@@ -16,6 +16,9 @@
 #include "traccc/performance/impl/is_same_measurement.ipp"
 #include "traccc/performance/impl/is_same_track_state.ipp"
 
+// System include(s).
+#include <stdexcept>
+
 namespace traccc::details {
 
 /// @c traccc::is_same_object specialisation for @c traccc::edm::track<T>
@@ -48,13 +51,14 @@ class is_same_object<edm::track<T>> {
         }
         // Compare the parameters.
         if (!is_same_object<bound_track_parameters<>>(m_ref.params(),
-                                                      m_unc)(obj.params())) {
+                                                      m_unc)(obj.params()) ||
+            !is_same_scalar(obj.ndf(), m_ref.ndf(), m_unc)) {
             return false;
         }
-        // Compare the scalar values.
-        if (!is_same_scalar(obj.ndf(), m_ref.ndf(), m_unc) ||
-            !is_same_scalar(obj.chi2(), m_ref.chi2(), m_unc) ||
-            !is_same_scalar(obj.pval(), m_ref.pval(), m_unc)) {
+        // Compare the fitted parameters. But only in case of a successful fit.
+        if ((m_ref.fit_outcome() == track_fit_outcome::SUCCESS) &&
+            (!is_same_scalar(obj.chi2(), m_ref.chi2(), m_unc) ||
+             !is_same_scalar(obj.pval(), m_ref.pval(), m_unc))) {
             return false;
         }
         // Compare the number of holes.
@@ -105,8 +109,9 @@ class is_same_object<edm::track<T>> {
                 }
 
             } else {
-                // Unknown constituent type.
-                return false;
+                // Unknown constituent type!
+                throw std::runtime_error(
+                    "Unknown track constituent link type encountered!");
             }
         }
 

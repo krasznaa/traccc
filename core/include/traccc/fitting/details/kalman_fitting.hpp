@@ -52,7 +52,8 @@ typename edm::track_container<algebra_t>::host kalman_fitting(
         track_candidates{track_container.tracks};
 
     // Create the output containers.
-    typename edm::track_container<algebra_t>::host result{mr};
+    typename edm::track_container<algebra_t>::host result{
+        mr, track_container.measurements};
 
     // Iterate over the tracks,
     for (unsigned int i = 0; i < track_candidates.size(); ++i) {
