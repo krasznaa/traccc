@@ -78,7 +78,8 @@ kalman_fitting(
         track_states_buffer{
             {candidate_sizes, mr.main, mr.host,
              vecmem::data::buffer_type::resizable},
-            {n_states, mr.main, vecmem::data::buffer_type::resizable}};
+            {n_states, mr.main, vecmem::data::buffer_type::resizable},
+            track_candidates_view.measurements};
     copy.setup(track_states_buffer.tracks)->ignore();
     copy.setup(track_states_buffer.states)->ignore();
 
@@ -134,7 +135,7 @@ kalman_fitting(
     fit_prelude(nBlocks, nThreads, 0, stream, param_ids_buffer,
                 track_candidates_view,
                 {track_states_buffer.tracks, track_states_buffer.states,
-                 track_candidates_view.measurements},
+                 track_states_buffer.measurements},
                 param_liveness_buffer);
     TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
     str.synchronize();
@@ -147,7 +148,7 @@ kalman_fitting(
         .param_ids_view = param_ids_buffer,
         .param_liveness_view = param_liveness_buffer,
         .tracks_view = {track_states_buffer.tracks, track_states_buffer.states,
-                        track_candidates_view.measurements},
+                        track_states_buffer.measurements},
         .barcodes_view = seqs_buffer};
 
     for (std::size_t i = 0; i < config.n_iterations; ++i) {
