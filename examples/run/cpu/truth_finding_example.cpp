@@ -171,11 +171,10 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
                   << track_candidates.tracks.size() << std::endl;
 
         // Run fitting
-        auto track_states =
-            host_fitting(polymorphic_detector, field,
-                         {vecmem::get_data(track_candidates.tracks),
-                          vecmem::get_data(track_candidates.states),
-                          vecmem::get_data(measurements_per_event)});
+        auto track_states = host_fitting(
+            polymorphic_detector, field,
+            traccc::edm::track_container<traccc::default_algebra>::const_data(
+                track_candidates));
 
         details::print_fitted_tracks_statistics(track_states, logger());
 
@@ -183,9 +182,8 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
 
         if (performance_opts.run) {
             find_performance_writer.write(
-                {vecmem::get_data(track_candidates.tracks),
-                 vecmem::get_data(track_candidates.states),
-                 track_candidates.measurements},
+                traccc::edm::track_container<
+                    traccc::default_algebra>::const_data(track_candidates),
                 evt_data);
 
             for (std::size_t i = 0; i < n_fitted_tracks; i++) {

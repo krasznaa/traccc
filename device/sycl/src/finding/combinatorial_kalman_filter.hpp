@@ -520,18 +520,17 @@ combinatorial_kalman_filter(
             .submit([&](::sycl::handler& h) {
                 h.parallel_for<kernels::build_tracks<kernel_t>>(
                     calculate1DimNdRange(n_tips_total, 64),
-                    [measurements, seeds,
-                     links = vecmem::get_data(links_buffer),
+                    [seeds, links = vecmem::get_data(links_buffer),
                      tips = vecmem::get_data(tips_buffer),
-                     tracks = vecmem::get_data(track_candidates_buffer.tracks),
-                     states = vecmem::get_data(track_candidates_buffer.states)](
+                     tracks = typename edm::track_container<
+                         typename detector_t::algebra_type>::
+                         view(track_candidates_buffer)](
                         ::sycl::nd_item<1> item) {
-                        device::build_tracks(
-                            details::global_index(item),
-                            {.seeds_view = seeds,
-                             .links_view = links,
-                             .tips_view = tips,
-                             .tracks_view = {tracks, states, measurements}});
+                        device::build_tracks(details::global_index(item),
+                                             {.seeds_view = seeds,
+                                              .links_view = links,
+                                              .tips_view = tips,
+                                              .tracks_view = tracks});
                     });
             })
             .wait_and_throw();

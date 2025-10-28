@@ -175,10 +175,10 @@ TEST_P(KalmanFittingMomentumResolutionTests, Run) {
         }
 
         // Run fitting
-        auto track_states = fitting(detector, field,
-                                    {vecmem::get_data(track_candidates.tracks),
-                                     vecmem::get_data(track_candidates.states),
-                                     track_candidates.measurements});
+        auto track_states = fitting(
+            detector, field,
+            traccc::edm::track_container<traccc::default_algebra>::const_data(
+                track_candidates));
 
         // Iterator over tracks
         const std::size_t n_tracks = track_states.tracks.size();

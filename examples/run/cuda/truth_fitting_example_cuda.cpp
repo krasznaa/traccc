@@ -187,11 +187,8 @@ int main(int argc, char* argv[]) {
             traccc::performance::timer t("Track fitting  (cuda)", elapsedTimes);
 
             // Run fitting
-            track_states_cuda_buffer =
-                device_fitting(detector_buffer, device_field,
-                               {truth_track_candidates_buffer.tracks,
-                                truth_track_candidates_buffer.states,
-                                truth_track_candidates_buffer.measurements});
+            track_states_cuda_buffer = device_fitting(
+                detector_buffer, device_field, truth_track_candidates_buffer);
         }
 
         traccc::edm::track_container<traccc::default_algebra>::host
@@ -216,9 +213,8 @@ int main(int argc, char* argv[]) {
                 // Run fitting
                 track_states = host_fitting(
                     polymorphic_detector, host_field,
-                    {vecmem::get_data(truth_track_candidates.tracks),
-                     vecmem::get_data(truth_track_candidates.states),
-                     truth_track_candidates.measurements});
+                    traccc::edm::track_container<traccc::default_algebra>::
+                        const_data(truth_track_candidates));
             }
         }
 

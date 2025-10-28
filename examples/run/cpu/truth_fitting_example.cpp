@@ -135,11 +135,10 @@ int main(int argc, char* argv[]) {
             vecmem::get_data(truth_measurements);
 
         // Run fitting
-        auto track_states =
-            host_fitting(polymorphic_detector, field,
-                         {vecmem::get_data(truth_track_candidates.tracks),
-                          vecmem::get_data(truth_track_candidates.states),
-                          truth_track_candidates.measurements});
+        auto track_states = host_fitting(
+            polymorphic_detector, field,
+            traccc::edm::track_container<traccc::default_algebra>::const_data(
+                truth_track_candidates));
 
         details::print_fitted_tracks_statistics(track_states, logger());
 

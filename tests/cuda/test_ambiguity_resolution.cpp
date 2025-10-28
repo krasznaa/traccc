@@ -29,52 +29,53 @@
 
 using namespace traccc;
 
-void fill_measurements(
-    edm::track_candidate_container<default_algebra>::host& track_candidates,
-    const measurement_id_type max_meas_id) {
+void fill_measurements(measurement_collection_types::host& measurements,
+                       const measurement_id_type max_meas_id) {
 
-    track_candidates.measurements.reserve(max_meas_id + 1);
+    measurements.reserve(max_meas_id + 1);
     for (measurement_id_type i = 0; i <= max_meas_id; i++) {
-        track_candidates.measurements.emplace_back();
-        track_candidates.measurements.back().measurement_id = i;
+        measurements.emplace_back();
+        measurements.back().measurement_id = i;
     }
 }
 
-void fill_pattern(
-    edm::track_candidate_container<default_algebra>::host& track_candidates,
-    const traccc::scalar pval,
-    const std::vector<measurement_id_type>& pattern) {
+void fill_pattern(edm::track_container<default_algebra>::host& track_candidates,
+                  const traccc::scalar pval,
+                  const std::vector<measurement_id_type>& pattern) {
 
     track_candidates.tracks.resize(track_candidates.tracks.size() + 1u);
     track_candidates.tracks.pval().back() = pval;
 
+    measurement_collection_types::const_device measurements{
+        track_candidates.measurements};
+
     for (const auto& meas_id : pattern) {
         const auto meas_iter = std::lower_bound(
-            track_candidates.measurements.begin(),
-            track_candidates.measurements.end(), meas_id,
+            measurements.begin(), measurements.end(), meas_id,
             [](const measurement& m, const measurement_id_type id) {
                 return m.measurement_id < id;
             });
 
-        const auto meas_idx =
-            std::distance(track_candidates.measurements.begin(), meas_iter);
-        track_candidates.tracks.measurement_indices().back().push_back(
-            static_cast<measurement_id_type>(meas_idx));
+        const auto meas_idx = std::distance(measurements.begin(), meas_iter);
+        track_candidates.tracks.constituent_links().back().push_back(
+            {edm::track_constituent_link::measurement,
+             static_cast<measurement_id_type>(meas_idx)});
     }
 }
 
 bool find_pattern(
-    const edm::track_candidate_collection<default_algebra>::const_device&
-        track_candidates,
-    const measurement_collection_types::const_device& measurements,
+    const edm::track_container<default_algebra>::const_view& tracks_view,
     const std::vector<measurement_id_type>& pattern) {
 
-    const auto n_tracks = track_candidates.size();
+    const edm::track_container<default_algebra>::const_device tracks(
+        tracks_view);
+    const auto n_tracks = tracks.tracks.size();
     for (unsigned int i = 0; i < n_tracks; i++) {
         std::vector<measurement_id_type> ids;
-        for (unsigned int meas_idx :
-             track_candidates.measurement_indices().at(i)) {
-            ids.push_back(measurements.at(meas_idx).measurement_id);
+        for (const auto& [type, meas_idx] :
+             tracks.tracks.constituent_links().at(i)) {
+            assert(type == edm::track_constituent_link::measurement);
+            ids.push_back(tracks.measurements.at(meas_idx).measurement_id);
         }
         if (pattern == ids) {
             return true;
@@ -83,15 +84,18 @@ bool find_pattern(
     return false;
 }
 
-std::vector<measurement_id_type> get_pattern(
-    const edm::track_candidate_collection<default_algebra>::const_device&
-        track_candidates,
-    const measurement_collection_types::const_device& measurements,
-    const unsigned int idx) {
+std::vector<std::size_t> get_pattern(
+    const edm::track_container<default_algebra>::host& track_candidates,
+    const std::size_t idx) {
 
-    std::vector<measurement_id_type> ret;
-    for (unsigned int meas_idx :
-         track_candidates.measurement_indices().at(idx)) {
+    measurement_collection_types::const_device measurements{
+        track_candidates.measurements};
+    std::vector<std::size_t> ret;
+    // A const reference would be fine here. But GCC fears that that would lead
+    // to a dangling reference...
+    const auto meas_links = track_candidates.tracks.at(idx).constituent_links();
+    for (const auto& [type, meas_idx] : meas_links) {
+        assert(type == measurement_link_type::measurement_index);
         ret.push_back(measurements.at(meas_idx).measurement_id);
     }
 
@@ -109,9 +113,11 @@ TEST(CUDAAmbiguitySolverTests, GreedyResolverTest0) {
     // Cuda copy objects
     vecmem::cuda::async_copy copy{stream.cudaStream()};
 
-    edm::track_candidate_container<default_algebra>::host trk_cands{mng_mr};
+    measurement_collection_types::host measurements{&mng_mr};
+    fill_measurements(measurements, 100);
 
-    fill_measurements(trk_cands, 100);
+    edm::track_container<default_algebra>::host trk_cands{
+        mng_mr, vecmem::get_data(measurements)};
     fill_pattern(trk_cands, 0.23f, {5, 1, 11, 3});
     fill_pattern(trk_cands, 0.85f, {12, 10, 9, 8, 7, 6});
     fill_pattern(trk_cands, 0.42f, {4, 2, 13});
@@ -123,11 +129,11 @@ TEST(CUDAAmbiguitySolverTests, GreedyResolverTest0) {
         resolution_config, {mng_mr}, copy, stream);
     {
         resolution_alg_cuda.get_config().min_meas_per_track = 3;
-        auto res_trk_cands_buffer =
-            resolution_alg_cuda({vecmem::get_data(trk_cands.tracks),
-                                 vecmem::get_data(trk_cands.measurements)});
+        auto res_trk_cands_buffer = resolution_alg_cuda(
+            {vecmem::get_data(trk_cands.tracks),
+             vecmem::get_data(trk_cands.states), trk_cands.measurements});
         stream.synchronize();
-        edm::track_candidate_collection<default_algebra>::const_device
+        edm::track_container<default_algebra>::const_device
             res_trk_cands(res_trk_cands_buffer);
         measurement_collection_types::const_device measurements_device(
             vecmem::get_data(trk_cands.measurements));

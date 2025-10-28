@@ -25,6 +25,12 @@ struct track_constituent_link {
     unsigned short type;  ///< The type of the constituent
     unsigned int index;   ///< The index of the constituent in its collection
 
+    /// Equality operator
+    ///
+    /// For some reason Clang fails to generate it automatically for this type.
+    ///
+    bool operator==(const track_constituent_link&) const = default;
+
 };  // struct track_constituent_link
 
 }  // namespace traccc::edm

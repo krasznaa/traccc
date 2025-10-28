@@ -144,6 +144,17 @@ class track : public BASE {
     TRACCC_HOST_DEVICE
     void reset_quality();
 
+    /// Equality operator
+    ///
+    /// @note This function must only be used on proxy objects, not on
+    ///       containers!
+    ///
+    /// @param[in] other The object to compare with
+    /// @return @c true if the objects are equal, @c false otherwise
+    ///
+    template <typename T>
+    TRACCC_HOST_DEVICE bool operator==(const track<T>& other) const;
+
     /// @}
 
 };  // class track_fit

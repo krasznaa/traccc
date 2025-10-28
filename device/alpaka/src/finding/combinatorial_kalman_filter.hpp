@@ -574,14 +574,12 @@ combinatorial_kalman_filter(
             (n_tips_total + threadsPerBlock - 1) / threadsPerBlock;
         const auto workDiv = makeWorkDiv<Acc>(blocksPerGrid, threadsPerBlock);
 
-        ::alpaka::exec<Acc>(
-            queue, workDiv, kernels::build_tracks{},
-            device::build_tracks_payload{
-                .seeds_view = seeds,
-                .links_view = links_buffer,
-                .tips_view = tips_buffer,
-                .tracks_view = {track_candidates_buffer.tracks,
-                                track_candidates_buffer.states, measurements}});
+        ::alpaka::exec<Acc>(queue, workDiv, kernels::build_tracks{},
+                            device::build_tracks_payload{
+                                .seeds_view = seeds,
+                                .links_view = links_buffer,
+                                .tips_view = tips_buffer,
+                                .tracks_view = track_candidates_buffer});
         ::alpaka::wait(queue);
     }
 

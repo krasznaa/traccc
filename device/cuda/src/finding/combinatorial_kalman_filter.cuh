@@ -463,8 +463,7 @@ combinatorial_kalman_filter(
             .seeds_view = seeds,
             .links_view = links_buffer,
             .tips_view = tips_buffer,
-            .tracks_view = {track_candidates_buffer.tracks,
-                            track_candidates_buffer.states, measurements}};
+            .tracks_view = {track_candidates_buffer}};
         kernels::build_tracks<<<nBlocks, nThreads, 0, stream>>>(payload);
         TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 

@@ -319,20 +319,16 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
                                              elapsedTimes);
 
                 track_states_alpaka_buffer = device_fitting(
-                    detector_buffer, field,
-                    {track_candidates_alpaka_buffer.tracks,
-                     track_candidates_alpaka_buffer.states,
-                     track_candidates_alpaka_buffer.measurements});
+                    detector_buffer, field, track_candidates_alpaka_buffer);
             }
 
             if (accelerator_opts.compare_with_cpu) {
                 traccc::performance::timer t("Track fitting with KF (cpu)",
                                              elapsedTimes);
-                track_states =
-                    host_fitting(host_det, field,
-                                 {vecmem::get_data(track_candidates.tracks),
-                                  vecmem::get_data(track_candidates.states),
-                                  track_candidates.measurements});
+                track_states = host_fitting(
+                    host_det, field,
+                    traccc::edm::track_container<
+                        traccc::default_algebra>::const_data(track_candidates));
             }
 
         }  // Stop measuring wall time
