@@ -133,9 +133,12 @@ TEST_P(KalmanFittingHoleCountTests, Run) {
     traccc::event_data evt_data(path, 0u, host_mr);
 
     // Truth Track Candidates
+    traccc::measurement_collection_types::host measurements(&host_mr);
     traccc::edm::track_container<traccc::default_algebra>::host
         track_candidates{host_mr};
-    evt_data.generate_truth_candidates(track_candidates, sg, host_mr);
+    evt_data.generate_truth_candidates(track_candidates, measurements, sg,
+                                       host_mr);
+    track_candidates.measurements = vecmem::get_data(measurements);
     // Measurement index vector
     auto& cands = track_candidates.tracks.at(0u).constituent_links();
 
@@ -160,11 +163,10 @@ TEST_P(KalmanFittingHoleCountTests, Run) {
     ASSERT_EQ(cands.size(), n_planes - 8u);
 
     // Run fitting
-    auto track_states =
-        fitting(detector, field,
-                {vecmem::get_data(track_candidates.tracks),
-                 vecmem::get_data(track_candidates.states),
-                 vecmem::get_data(track_candidates.measurements)});
+    auto track_states = fitting(detector, field,
+                                {vecmem::get_data(track_candidates.tracks),
+                                 vecmem::get_data(track_candidates.states),
+                                 track_candidates.measurements});
 
     // A sanity check
     const std::size_t n_tracks = track_states.tracks.size();
