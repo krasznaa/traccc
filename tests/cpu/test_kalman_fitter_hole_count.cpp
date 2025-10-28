@@ -163,10 +163,10 @@ TEST_P(KalmanFittingHoleCountTests, Run) {
     ASSERT_EQ(cands.size(), n_planes - 8u);
 
     // Run fitting
-    auto track_states = fitting(detector, field,
-                                {vecmem::get_data(track_candidates.tracks),
-                                 vecmem::get_data(track_candidates.states),
-                                 track_candidates.measurements});
+    auto track_states = fitting(
+        detector, field,
+        traccc::edm::track_container<traccc::default_algebra>::const_data(
+            track_candidates));
 
     // A sanity check
     const std::size_t n_tracks = track_states.tracks.size();

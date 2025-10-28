@@ -123,10 +123,7 @@ BENCHMARK_DEFINE_F(ToyDetectorBenchmark, CUDA)(benchmark::State& state) {
 
             // Run track fitting
             auto track_states_cuda_buffer =
-                device_fitting(det_buffer, field,
-                               {track_candidates_cuda_buffer.tracks,
-                                track_candidates_cuda_buffer.states,
-                                track_candidates_cuda_buffer.measurements});
+                device_fitting(det_buffer, field, track_candidates_cuda_buffer);
 
             // Create a temporary buffer that will receive the device memory.
             /*auto size = track_states_cuda_buffer.headers.size();

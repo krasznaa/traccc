@@ -22,24 +22,6 @@ namespace traccc::edm {
 template <typename ALGEBRA>
 struct track_container {
 
-    struct view {
-        /// The tracks
-        track_collection<ALGEBRA>::view tracks;
-        /// The track states used by the tracks
-        track_state_collection<ALGEBRA>::view states;
-        /// The measurements used by the tracks
-        measurement_collection_types::const_view measurements;
-    };
-
-    struct const_view {
-        /// The tracks
-        track_collection<ALGEBRA>::const_view tracks;
-        /// The track states used by the tracks
-        track_state_collection<ALGEBRA>::const_view states;
-        /// The measurements used by the tracks
-        measurement_collection_types::const_view measurements;
-    };
-
     struct host {
         /// Constructor using a memory resource
         explicit host(vecmem::memory_resource& mr,
@@ -64,6 +46,11 @@ struct track_container {
     };
 
     struct data {
+        /// Constructor from a host container
+        explicit data(host& h)
+            : tracks{vecmem::get_data(h.tracks)},
+              states{vecmem::get_data(h.states)},
+              measurements{h.measurements} {}
         /// The tracks
         track_collection<ALGEBRA>::data tracks;
         /// The track states used by the tracks
@@ -73,10 +60,57 @@ struct track_container {
     };
 
     struct const_data {
+        /// Constructor from a host container
+        explicit const_data(const host& h)
+            : tracks{vecmem::get_data(h.tracks)},
+              states{vecmem::get_data(h.states)},
+              measurements{h.measurements} {}
         /// The tracks
         track_collection<ALGEBRA>::const_data tracks;
         /// The track states used by the tracks
         track_state_collection<ALGEBRA>::const_data states;
+        /// The measurements used by the tracks
+        measurement_collection_types::const_view measurements;
+    };
+
+    struct view {
+        /// Constructor from a buffer
+        TRACCC_HOST_DEVICE
+        view(const buffer& b)
+            : tracks{b.tracks},
+              states{b.states},
+              measurements{b.measurements} {}
+        /// Constructor from a data object
+        TRACCC_HOST_DEVICE
+        view(const data& d)
+            : tracks{d.tracks},
+              states{d.states},
+              measurements{d.measurements} {}
+        /// The tracks
+        track_collection<ALGEBRA>::view tracks;
+        /// The track states used by the tracks
+        track_state_collection<ALGEBRA>::view states;
+        /// The measurements used by the tracks
+        measurement_collection_types::const_view measurements;
+    };
+
+    struct const_view {
+        /// Constructor from a buffer
+        TRACCC_HOST_DEVICE
+        const_view(const buffer& b)
+            : tracks{b.tracks},
+              states{b.states},
+              measurements{b.measurements} {}
+        /// Constructor from a const_data object
+        TRACCC_HOST_DEVICE
+        const_view(const const_data& d)
+            : tracks{d.tracks},
+              states{d.states},
+              measurements{d.measurements} {}
+        /// The tracks
+        track_collection<ALGEBRA>::const_view tracks;
+        /// The track states used by the tracks
+        track_state_collection<ALGEBRA>::const_view states;
         /// The measurements used by the tracks
         measurement_collection_types::const_view measurements;
     };

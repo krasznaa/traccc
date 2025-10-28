@@ -133,9 +133,7 @@ kalman_fitting(
 
     // Run the fitting, using the sorted parameter IDs.
     fit_prelude(nBlocks, nThreads, 0, stream, param_ids_buffer,
-                track_candidates_view,
-                {track_states_buffer.tracks, track_states_buffer.states,
-                 track_states_buffer.measurements},
+                track_candidates_view, track_states_buffer,
                 param_liveness_buffer);
     TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
     str.synchronize();
@@ -147,8 +145,7 @@ kalman_fitting(
         .field_data = field_view,
         .param_ids_view = param_ids_buffer,
         .param_liveness_view = param_liveness_buffer,
-        .tracks_view = {track_states_buffer.tracks, track_states_buffer.states,
-                        track_states_buffer.measurements},
+        .tracks_view = track_states_buffer,
         .barcodes_view = seqs_buffer};
 
     for (std::size_t i = 0; i < config.n_iterations; ++i) {

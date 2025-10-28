@@ -182,18 +182,18 @@ TEST_P(CkfSparseTrackTelescopeTests, Run) {
 
         for (unsigned int i_trk = 0; i_trk < n_truth_tracks; i_trk++) {
 
-            consistency_tests(track_candidates.tracks.at(i_trk));
+            consistency_tests(track_candidates.tracks.at(i_trk),
+                              track_candidates.states);
 
             ndf_tests(track_candidates.tracks.at(i_trk),
-                      measurements_per_event);
+                      track_candidates.states, measurements_per_event);
         }
 
         // Run fitting
-        auto track_states =
-            host_fitting(detector, field,
-                         {vecmem::get_data(track_candidates.tracks),
-                          vecmem::get_data(track_candidates.states),
-                          vecmem::get_data(measurements_per_event)});
+        auto track_states = host_fitting(
+            detector, field,
+            traccc::edm::track_container<traccc::default_algebra>::const_data(
+                track_candidates));
         const std::size_t n_fitted_tracks =
             count_successfully_fitted_tracks(track_states.tracks);
 

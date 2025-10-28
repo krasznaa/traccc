@@ -196,9 +196,7 @@ kalman_fitting(
 
     // Run the fitting, using the sorted parameter IDs.
     typename edm::track_container<typename detector_t::algebra_type>::view
-        track_states_view{track_states_buffer.tracks,
-                          track_states_buffer.states,
-                          track_candidates_view.measurements};
+        track_states_view{track_states_buffer};
     tracks_setup_event->wait();
     track_states_setup_event->wait();
 

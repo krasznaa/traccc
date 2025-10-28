@@ -11,7 +11,6 @@
 #include "traccc/bfield/magnetic_field_types.hpp"
 #include "traccc/definitions/common.hpp"
 #include "traccc/edm/measurement.hpp"
-#include "traccc/edm/track_candidate_collection.hpp"
 #include "traccc/edm/track_collection.hpp"
 #include "traccc/edm/track_state_collection.hpp"
 #include "traccc/fitting/kalman_filter/kalman_fitter.hpp"
@@ -70,15 +69,6 @@ class KalmanFittingTests : public testing::Test {
     /// @param file_name The name of the file holding the distributions
     ///
     void p_value_tests(std::string_view file_name) const;
-
-    /// Validadte the NDF for track finding output
-    ///
-    /// @param track_candidate The track candidate to test
-    /// @param measurements All measurements in the event
-    ///
-    void ndf_tests(const edm::track_candidate_collection<default_algebra>::
-                       host::const_proxy_type& track_candidate,
-                   const measurement_collection_types::host& measurements);
 
     /// Validadte the NDF for track fitting output
     ///
