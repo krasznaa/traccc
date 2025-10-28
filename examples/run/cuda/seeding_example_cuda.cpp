@@ -204,7 +204,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
             &host_mr};
         traccc::host::seeding_algorithm::output_type seeds{host_mr};
         traccc::host::track_params_estimation::output_type params;
-        traccc::edm::track_candidate_collection<traccc::default_algebra>::host
+        traccc::edm::track_container<traccc::default_algebra>::host
             track_candidates{host_mr};
         traccc::edm::track_container<traccc::default_algebra>::host
             track_states{host_mr};
@@ -213,7 +213,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         traccc::bound_track_parameters_collection_types::buffer
             params_cuda_buffer(0, *mr.host);
 
-        traccc::edm::track_candidate_collection<traccc::default_algebra>::buffer
+        traccc::edm::track_container<traccc::default_algebra>::buffer
             track_candidates_cuda_buffer;
 
         traccc::edm::track_container<traccc::default_algebra>::buffer
@@ -330,9 +330,11 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
                 traccc::performance::timer t("Track fitting with KF (cuda)",
                                              elapsedTimes);
 
-                track_states_cuda_buffer = device_fitting(
-                    detector_buffer, device_field,
-                    {track_candidates_cuda_buffer, measurements_cuda_buffer});
+                track_states_cuda_buffer =
+                    device_fitting(detector_buffer, device_field,
+                                   {track_candidates_cuda_buffer.tracks,
+                                    track_candidates_cuda_buffer.states,
+                                    track_candidates_cuda_buffer.measurements});
             }
 
             if (accelerator_opts.compare_with_cpu) {
@@ -340,8 +342,9 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
                                              elapsedTimes);
                 track_states =
                     host_fitting(host_det, host_field,
-                                 {vecmem::get_data(track_candidates),
-                                  vecmem::get_data(measurements_per_event)});
+                                 {vecmem::get_data(track_candidates.tracks),
+                                  vecmem::get_data(track_candidates.states),
+                                  track_candidates.measurements});
             }
 
         }  // Stop measuring wall time
@@ -357,9 +360,10 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         async_copy(params_cuda_buffer, params_cuda)->wait();
 
         // Copy track candidates from device to host
-        traccc::edm::track_candidate_collection<traccc::default_algebra>::host
+        traccc::edm::track_collection<traccc::default_algebra>::host
             track_candidates_cuda{host_mr};
-        async_copy(track_candidates_cuda_buffer, track_candidates_cuda)->wait();
+        async_copy(track_candidates_cuda_buffer.tracks, track_candidates_cuda)
+            ->wait();
 
         // Copy track states from device to host
         traccc::edm::track_container<traccc::default_algebra>::host
@@ -391,17 +395,18 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
 
             // Compare the track candidates made on the host and on the
             // device
-            traccc::soa_comparator<traccc::edm::track_candidate_collection<
-                traccc::default_algebra>>
+            traccc::soa_comparator<
+                traccc::edm::track_collection<traccc::default_algebra>>
                 compare_track_candidates{
                     "track candidates",
                     traccc::details::comparator_factory<
-                        traccc::edm::track_candidate_collection<
-                            traccc::default_algebra>::const_device::
-                            const_proxy_type>{
+                        traccc::edm::track_collection<traccc::default_algebra>::
+                            const_device::const_proxy_type>{
                         vecmem::get_data(measurements_per_event),
-                        vecmem::get_data(measurements_per_event)}};
-            compare_track_candidates(vecmem::get_data(track_candidates),
+                        vecmem::get_data(measurements_per_event),
+                        {},
+                        {}}};
+            compare_track_candidates(vecmem::get_data(track_candidates.tracks),
                                      vecmem::get_data(track_candidates_cuda));
         }
 
@@ -413,7 +418,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         n_seeds_cuda += seeds_cuda.size();
         n_seeds += seeds.size();
         n_found_tracks_cuda += track_candidates_cuda.size();
-        n_found_tracks += track_candidates.size();
+        n_found_tracks += track_candidates.tracks.size();
         n_fitted_tracks_cuda += track_states_cuda.tracks.size();
         n_fitted_tracks += track_states.tracks.size();
 
@@ -434,6 +439,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
 
             find_performance_writer.write(
                 {vecmem::get_data(track_candidates_cuda),
+                 {},
                  vecmem::get_data(measurements_per_event)},
                 evt_data);
 
