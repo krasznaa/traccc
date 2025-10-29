@@ -45,7 +45,8 @@ auto greedy_ambiguity_resolution_algorithm::operator()(
 
     // Copy the tracks to be retained in the return value
 
-    edm::track_container<default_algebra>::host res{m_mr.get()};
+    edm::track_container<default_algebra>::host res{m_mr.get(),
+                                                    track_states.measurements};
     res.tracks.reserve(state.selected_tracks.size());
 
     TRACCC_DEBUG(

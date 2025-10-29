@@ -187,10 +187,8 @@ TEST_P(KalmanFittingTelescopeTests, Run) {
                 measurements_buffer};
 
         // Run fitting
-        auto track_states_sycl_buffer = device_fitting(
-            detector_buffer, field,
-            {track_candidates_buffer.tracks, track_candidates_buffer.states,
-             track_candidates_buffer.measurements});
+        auto track_states_sycl_buffer =
+            device_fitting(detector_buffer, field, track_candidates_buffer);
 
         traccc::edm::track_container<traccc::default_algebra>::host
             track_states_sycl{host_mr};
