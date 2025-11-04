@@ -93,7 +93,7 @@ std::vector<measurement_id_type> get_pattern(
     // to a dangling reference...
     const auto meas_links = track_candidates.tracks.at(idx).constituent_links();
     for (const auto& [type, meas_idx] : meas_links) {
-        assert(type == measurement_link_type::measurement_index);
+        assert(type == edm::track_constituent_link::measurement);
         ret.push_back(measurements.at(meas_idx).measurement_id);
     }
 

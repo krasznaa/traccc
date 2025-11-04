@@ -450,7 +450,8 @@ combinatorial_kalman_filter(
 
     // Create track candidate buffer
     typename edm::track_container<typename detector_t::algebra_type>::buffer
-        track_candidates_buffer{{tips_length_host, mr.main, mr.host}, {}};
+        track_candidates_buffer{
+            {tips_length_host, mr.main, mr.host}, {}, measurements};
     copy.setup(track_candidates_buffer.tracks)->ignore();
 
     // @Note: nBlocks can be zero in case there is no tip. This happens when

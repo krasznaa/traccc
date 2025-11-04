@@ -46,7 +46,7 @@ __global__ void fill_vectors(const ambiguity_resolution_config cfg,
     } else {
         for (const auto& [type, meas_idx] :
              track_candidates.tracks.constituent_links().at(globalIndex)) {
-            assert(type == edm::track_constituent_type::measurement);
+            assert(type == edm::track_constituent_link::measurement);
             meas_ids.at(globalIndex)
                 .push_back(
                     track_candidates.measurements.at(meas_idx).measurement_id);

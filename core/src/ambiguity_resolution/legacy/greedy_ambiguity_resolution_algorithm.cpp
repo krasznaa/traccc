@@ -83,7 +83,7 @@ void greedy_ambiguity_resolution_algorithm::compute_initial_state(
         std::unordered_map<std::size_t, std::size_t> already_added_mes;
 
         for (const auto& [type, meas_idx] : track.constituent_links()) {
-            assert(type == edm::track::constituent_type::measurement);
+            assert(type == edm::track_constituent_link::measurement);
 
             std::size_t mid = measurements.at(meas_idx).measurement_id;
 
