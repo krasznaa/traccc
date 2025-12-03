@@ -97,10 +97,4 @@ using itk_detector =
 using odd_detector =
     detector_traits<detray::odd_metadata<traccc::default_algebra>>;
 
-// The metadata list is generated during build configuration
-// using detector_type_list = std::tuple<TRACCC_METADATA_LIST>;
-
-using detector_type_list = std::tuple<default_detector, toy_detector,
-                                      telescope_detector, odd_detector>;
-
 }  // namespace traccc

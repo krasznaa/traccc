@@ -88,18 +88,11 @@ endif()
 # a working Python interpreter, and a list of supported detectors.
 find_package (Python COMPONENTS Interpreter REQUIRED)
 
-# Need at least one detector type
-if (NOT TRACCC_SUPPORTED_DETECTORS OR TRACCC_BUILD_EXAMPLES)
-   list(APPEND TRACCC_SUPPORTED_DETECTORS default_detector)
-endif()
-
-# Add the test detector types (default_detector is used for wire chamber)
-if (TRACCC_BUILD_TESTING)
-   list(APPEND TRACCC_SUPPORTED_DETECTORS default_detector;telescope_detector;toy_detector;odd_detector)
-endif()
-
-list(REMOVE_DUPLICATES TRACCC_SUPPORTED_DETECTORS)
-list(JOIN TRACCC_SUPPORTED_DETECTORS ", " TRACCC_METADATA_LIST)
+# The detector types supported by this build of traccc.
+set( TRACCC_SUPPORTED_DETECTORS
+   "default_detector;telescope_detector;toy_detector;odd_detector;itk_detector"
+   CACHE STRING
+   "Semicolon-separated list of detector types to support in this build" )
 
 # Set up build profiling for the project.
 if( CTEST_USE_LAUNCHERS )

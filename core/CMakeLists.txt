@@ -150,5 +150,14 @@ message(STATUS "Building with plugin type: " ${TRACCC_ALGEBRA_PLUGINS})
 target_compile_definitions(traccc_core PUBLIC ALGEBRA_PLUGINS_INCLUDE_${TRACCC_ALGEBRA_PLUGINS})
 
 # Define the detector types to be built
-message(STATUS "Building with detector types: " ${TRACCC_METADATA_LIST})
-#target_compile_definitions(traccc_core PUBLIC TRACCC_METADATA_LIST=${TRACCC_METADATA_LIST})
+string(REPLACE ";" ", " TRACCC_DETECTOR_TYPES "${TRACCC_SUPPORTED_DETECTORS}")
+message(STATUS "Building with detector types: ${TRACCC_DETECTOR_TYPES}")
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/traccc/geometry/detector_type_list.hpp.in"
+  "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include/traccc/geometry/detector_type_list.hpp"
+  @ONLY)
+target_include_directories(traccc_core
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include> )
+install(
+  DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include/"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" )
