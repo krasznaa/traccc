@@ -137,7 +137,7 @@ gbts_seeding_algorithm::output_type gbts_seeding_algorithm::operator()(
                     sizeof(m_config.algo_params), cudaMemcpyHostToDevice);
 
     // 0. bin spacepoints by the maping supplied to config.m_surfaceToLayerMap
-    ctx.nSp = m_copy.get().get_size(spacepoints);
+    ctx.nSp = m_copy.get().get_size(spacepoints, m_mr.host);
     if (ctx.nSp == 0)
         return {0, m_mr.main};
 

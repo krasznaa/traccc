@@ -88,7 +88,8 @@ greedy_ambiguity_resolution_algorithm::operator()(
     const edm::measurement_collection<default_algebra>::const_device
         measurements(tracks_view.measurements);
 
-    auto n_meas_total = m_copy.get().get_size(tracks_view.measurements);
+    auto n_meas_total =
+        m_copy.get().get_size(tracks_view.measurements, m_mr.host);
 
     // Make sure that max_measurement_id = number_of_measurement -1
     // @TODO: More robust way is to assert that measurement id ranges from 0, 1,
@@ -136,7 +137,7 @@ greedy_ambiguity_resolution_algorithm::operator()(
 
     // Get the sizes of the measurement index vector in each track
     const std::vector<unsigned int> candidate_sizes =
-        m_copy.get().get_sizes(tracks_view.tracks);
+        m_copy.get().get_sizes(tracks_view.tracks, m_mr.host);
 
     // Declare the buffer for meas_ids which is a jagged vector
     // Each sub-vector of meas_ids represent measurement IDs of each track

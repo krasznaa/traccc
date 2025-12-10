@@ -11,7 +11,6 @@
 #include "../sanity/contiguous_on.cuh"
 #include "../utils/barrier.hpp"
 #include "../utils/cuda_error_handling.hpp"
-#include "../utils/get_size.hpp"
 #include "../utils/thread_id.hpp"
 #include "../utils/utils.hpp"
 #include "./kernels/apply_interaction.hpp"
@@ -118,7 +117,7 @@ combinatorial_kalman_filter(
      * Measurement Operations
      *****************************************************************/
 
-    const auto n_measurements = copy.get_size(measurements_view);
+    const auto n_measurements = copy.get_size(measurements_view, mr.host);
 
     // Access the detector view as a detector object
     detector_t device_det(det);
@@ -139,7 +138,7 @@ combinatorial_kalman_filter(
                         device_det.surfaces().end(), measurement_ranges.begin(),
                         device::barcode_surface_comparator{});
 
-    const unsigned int n_seeds = copy.get_size(seeds);
+    const unsigned int n_seeds = copy.get_size(seeds, mr.host);
 
     // Prepare input parameters with seeds
     bound_track_parameters_collection_types::buffer in_params_buffer(n_seeds,
@@ -528,7 +527,7 @@ combinatorial_kalman_filter(
      *****************************************************************/
 
     // Get the number of tips
-    auto n_tips_total = get_size(tips_buffer, size_staging_ptr.get(), stream);
+    auto n_tips_total = copy.get_size(tips_buffer, mr.host);
 
     vecmem::vector<unsigned int> tips_length_host(mr.host);
     vecmem::unique_alloc_ptr<unsigned int[]> tip_to_output_map = nullptr;

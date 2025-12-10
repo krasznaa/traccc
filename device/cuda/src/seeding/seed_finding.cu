@@ -177,13 +177,14 @@ edm::seed_collection::buffer seed_finding::operator()(
     cudaStream_t stream = details::get_stream(m_stream);
 
     // Get the sizes from the grid view
-    auto grid_sizes = m_copy.get_sizes(g2_view._data_view);
+    auto grid_sizes = m_copy.get_sizes(g2_view._data_view, m_mr.host);
 
     // Create prefix sum buffer
     vecmem::data::vector_buffer sp_grid_prefix_sum_buff =
         make_prefix_sum_buff(grid_sizes, m_copy, m_mr, m_stream);
 
-    const auto num_spacepoints = m_copy.get_size(sp_grid_prefix_sum_buff);
+    const auto num_spacepoints =
+        m_copy.get_size(sp_grid_prefix_sum_buff, m_mr.host);
     if (num_spacepoints == 0) {
         return {0, m_mr.main};
     }

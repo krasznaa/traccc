@@ -89,7 +89,7 @@ clusterization_algorithm::execute_impl(
 
     // Get the number of cells
     const edm::silicon_cell_collection::const_view::size_type num_cells =
-        m_copy.get().get_size(cells);
+        m_copy.get().get_size(cells, m_mr.host);
 
     // Create the result object, overestimating the number of measurements.
     edm::measurement_collection<default_algebra>::buffer measurements{
@@ -151,7 +151,7 @@ clusterization_algorithm::execute_impl(
     if (keep_disjoint_set) {
         assert(m_mr.host != nullptr);
 
-        auto num_measurements = m_copy.get().get_size(measurements);
+        auto num_measurements = m_copy.get().get_size(measurements, m_mr.host);
 
         // This could be further optimized by only copying the number of
         // elements necessary. But since cluster making is mainly meant for
