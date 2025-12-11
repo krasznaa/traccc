@@ -52,7 +52,7 @@ track_params_estimation::output_type track_params_estimation::operator()(
     const vector3& bfield) const {
 
     // Get the size of the seeds view
-    auto seeds_size = m_copy.get_size(seeds_view);
+    auto seeds_size = m_copy.get_size(seeds_view, m_mr.host);
 
     // Create device buffer for the parameters
     bound_track_parameters_collection_types::buffer params_buffer(seeds_size,

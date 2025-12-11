@@ -216,13 +216,14 @@ edm::seed_collection::buffer seed_finding::operator()(
     Idx threadsPerBlock = std::min(getWarpSize<Acc>() * 2, maxThreads);
 
     // Get the sizes from the grid view
-    auto grid_sizes = m_copy.get_sizes(g2_view._data_view);
+    auto grid_sizes = m_copy.get_sizes(g2_view._data_view, m_mr.host);
 
     // Create prefix sum buffer
     vecmem::data::vector_buffer sp_grid_prefix_sum_buff =
         make_prefix_sum_buff(grid_sizes, m_copy, m_mr, m_queue);
 
-    const auto num_spacepoints = m_copy.get_size(sp_grid_prefix_sum_buff);
+    const auto num_spacepoints =
+        m_copy.get_size(sp_grid_prefix_sum_buff, m_mr.host);
     if (num_spacepoints == 0) {
         return {0, m_mr.main};
     }
@@ -276,7 +277,7 @@ edm::seed_collection::buffer seed_finding::operator()(
     // Calculate the number of threads and thread blocks to run the doublet
     // finding kernel for.
     const unsigned int doublet_counter_buffer_size =
-        m_copy.get_size(doublet_counter_buffer);
+        m_copy.get_size(doublet_counter_buffer, m_mr.host);
     blocksPerGrid =
         (doublet_counter_buffer_size + threadsPerBlock - 1) / threadsPerBlock;
     workDiv = makeWorkDiv<Acc>(blocksPerGrid, threadsPerBlock);
@@ -340,9 +341,9 @@ edm::seed_collection::buffer seed_finding::operator()(
 
     // Calculate the number of threads and thread blocks to run the triplet
     // finding kernel for.
-    blocksPerGrid =
-        (m_copy.get_size(triplet_counter_midBot_buffer) + threadsPerBlock - 1) /
-        threadsPerBlock;
+    blocksPerGrid = (m_copy.get_size(triplet_counter_midBot_buffer, m_mr.host) +
+                     threadsPerBlock - 1) /
+                    threadsPerBlock;
     workDiv = makeWorkDiv<Acc>(blocksPerGrid, threadsPerBlock);
 
     // Find all of the spacepoint triplets.
