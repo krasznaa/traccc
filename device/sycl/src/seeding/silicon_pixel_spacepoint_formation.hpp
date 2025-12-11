@@ -16,6 +16,7 @@
 #include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/seeding/device/form_spacepoints.hpp"
+#include "traccc/utils/memory_resource.hpp"
 
 // VecMem include(s).
 #include <vecmem/memory/memory_resource.hpp>
@@ -43,17 +44,18 @@ edm::spacepoint_collection::buffer silicon_pixel_spacepoint_formation(
     const typename edm::measurement_collection<
         typename detector_t::device::algebra_type>::const_view&
         measurements_view,
-    vecmem::memory_resource& mr, vecmem::copy& copy, ::sycl::queue& queue) {
+    const traccc::memory_resource& mr, vecmem::copy& copy,
+    ::sycl::queue& queue) {
 
     // Get the number of measurements.
-    const auto n_measurements = copy.get_size(measurements_view);
+    const auto n_measurements = copy.get_size(measurements_view, mr.host);
     if (n_measurements == 0) {
         return {};
     }
 
     // Create the result buffer.
     edm::spacepoint_collection::buffer result(
-        n_measurements, mr, vecmem::data::buffer_type::resizable);
+        n_measurements, mr.main, vecmem::data::buffer_type::resizable);
     vecmem::copy::event_type spacepoints_setup_event = copy.setup(result);
 
     // Calculate the range to run the spacepoint formation for.
@@ -61,8 +63,8 @@ edm::spacepoint_collection::buffer silicon_pixel_spacepoint_formation(
     auto countRange = calculate1DimNdRange(n_measurements, localSize);
 
     // Put the detector view into device memory.
-    vecmem::data::vector_buffer<typename detector_t::view> device_det_view(1u,
-                                                                           mr);
+    vecmem::data::vector_buffer<typename detector_t::view> device_det_view(
+        1u, mr.main);
     copy.setup(device_det_view)->wait();
     vecmem::copy::event_type detector_setup_event =
         copy(vecmem::data::vector_view<const typename detector_t::view>(

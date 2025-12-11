@@ -115,7 +115,7 @@ combinatorial_kalman_filter(
      * Measurement Operations
      *****************************************************************/
 
-    const auto n_measurements = copy.get_size(measurements_view);
+    const auto n_measurements = copy.get_size(measurements_view, mr.host);
 
     // Access the detector view as a detector object
     detector_t device_det(det);
@@ -137,7 +137,7 @@ combinatorial_kalman_filter(
         measurement_ranges.begin(), device::barcode_surface_comparator{});
     queue.wait_and_throw();
 
-    const unsigned int n_seeds = copy.get_size(seeds);
+    const unsigned int n_seeds = copy.get_size(seeds, mr.host);
 
     // Prepare input parameters with seeds
     bound_track_parameters_collection_types::buffer in_params_buffer(n_seeds,
@@ -223,7 +223,7 @@ combinatorial_kalman_filter(
         // Reset the number of tracks per seed
         copy.memset(n_tracks_per_seed_buffer, 0)->wait();
 
-        const unsigned int links_size = copy.get_size(links_buffer);
+        const unsigned int links_size = copy.get_size(links_buffer, mr.host);
 
         if (links_size + n_max_candidates > link_buffer_capacity) {
             const unsigned int new_link_buffer_capacity = std::max(
@@ -325,7 +325,8 @@ combinatorial_kalman_filter(
             std::swap(in_params_buffer, updated_params_buffer);
             std::swap(param_liveness_buffer, updated_liveness_buffer);
 
-            step_to_link_idx_map[step + 1] = copy.get_size(links_buffer);
+            step_to_link_idx_map[step + 1] =
+                copy.get_size(links_buffer, mr.host);
             n_candidates =
                 step_to_link_idx_map[step + 1] - step_to_link_idx_map[step];
         }
@@ -523,7 +524,7 @@ combinatorial_kalman_filter(
      *****************************************************************/
 
     // Get the number of tips
-    auto n_tips_total = copy.get_size(tips_buffer);
+    auto n_tips_total = copy.get_size(tips_buffer, mr.host);
 
     std::vector<unsigned int> tips_length_host;
 

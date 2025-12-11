@@ -23,7 +23,7 @@ silicon_pixel_spacepoint_formation_algorithm::operator()(
         det, [&]<typename detector_traits_t>(
                  const typename detector_traits_t::view& det_view) {
             return details::silicon_pixel_spacepoint_formation<
-                detector_traits_t>(det_view, meas, m_mr.main, m_copy,
+                detector_traits_t>(det_view, meas, m_mr, m_copy,
                                    details::get_queue(m_queue));
         });
 }

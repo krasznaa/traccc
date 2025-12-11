@@ -76,11 +76,12 @@ kalman_fitting(
     ::sycl::queue& queue) {
 
     // Get the number of tracks.
-    const unsigned int n_tracks = copy.get_size(track_candidates_view.tracks);
+    const unsigned int n_tracks =
+        copy.get_size(track_candidates_view.tracks, mr.host);
 
     // Get the sizes of the track candidates in each track.
     const std::vector<unsigned int> candidate_sizes =
-        copy.get_sizes(track_candidates_view.tracks);
+        copy.get_sizes(track_candidates_view.tracks, mr.host);
     const unsigned int n_states =
         std::accumulate(candidate_sizes.begin(), candidate_sizes.end(), 0u);
 
