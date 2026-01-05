@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2024-2025 CERN for the benefit of the ACTS project
+ * (c) 2024-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -49,7 +49,17 @@ edm::spacepoint_collection::buffer spacepoint_formation_algorithm::operator()(
     auto queue = details::get_queue(m_queue);
 
     // Get the number of measurements.
-    const auto num_measurements = m_copy.get().get_size(measurements_view);
+    edm::measurement_collection<default_algebra>::const_view::size_type
+        num_measurements = 0u;
+    if (m_mr.host) {
+        const vecmem::async_size size =
+            m_copy.get().get_size(measurements_view, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        num_measurements = size.get();
+    } else {
+        num_measurements = m_copy.get().get_size(measurements_view);
+    }
 
     // Create the result buffer.
     edm::spacepoint_collection::buffer spacepoints(

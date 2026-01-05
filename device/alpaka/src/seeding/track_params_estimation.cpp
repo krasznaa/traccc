@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
+ * (c) 2023-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -52,7 +52,16 @@ track_params_estimation::output_type track_params_estimation::operator()(
     const vector3& bfield) const {
 
     // Get the size of the seeds view
-    auto seeds_size = m_copy.get_size(seeds_view);
+    edm::seed_collection::const_view::size_type seeds_size = 0u;
+    if (m_mr.host) {
+        const vecmem::async_size size =
+            m_copy.get_size(seeds_view, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        seeds_size = size.get();
+    } else {
+        seeds_size = m_copy.get_size(seeds_view);
+    }
 
     // Create device buffer for the parameters
     bound_track_parameters_collection_types::buffer params_buffer(seeds_size,

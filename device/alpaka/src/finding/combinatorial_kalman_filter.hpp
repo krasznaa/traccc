@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2024-2025 CERN for the benefit of the ACTS project
+ * (c) 2024-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -35,6 +35,9 @@
 
 // VecMem include(s).
 #include <vecmem/utils/copy.hpp>
+
+// System include(s).
+#include <cassert>
 
 namespace traccc::alpaka::details {
 namespace kernels {
@@ -212,7 +215,17 @@ combinatorial_kalman_filter(
      * Measurement Operations
      *****************************************************************/
 
-    const auto n_measurements = copy.get_size(measurements_view);
+    typename edm::measurement_collection<typename detector_t::algebra_type>::
+        const_view::size_type n_measurements = 0u;
+    if (mr.host) {
+        const vecmem::async_size size =
+            copy.get_size(measurements_view, *(mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        n_measurements = size.get();
+    } else {
+        n_measurements = copy.get_size(measurements_view);
+    }
 
     // Access the detector view as a detector object
     detector_t device_det(det);
@@ -234,7 +247,15 @@ combinatorial_kalman_filter(
         device_det.surfaces().begin(), device_det.surfaces().end(),
         measurement_ranges.begin(), device::barcode_surface_comparator{});
 
-    const unsigned int n_seeds = copy.get_size(seeds);
+    bound_track_parameters_collection_types::const_view::size_type n_seeds = 0u;
+    if (mr.host) {
+        const vecmem::async_size size = copy.get_size(seeds, *(mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        n_seeds = size.get();
+    } else {
+        n_seeds = copy.get_size(seeds);
+    }
 
     // Prepare input parameters with seeds
     bound_track_parameters_collection_types::buffer in_params_buffer(n_seeds,
@@ -318,7 +339,16 @@ combinatorial_kalman_filter(
         // Reset the number of tracks per seed
         copy.memset(n_tracks_per_seed_buffer, 0)->wait();
 
-        const unsigned int links_size = copy.get_size(links_buffer);
+        vecmem::data::vector_buffer<candidate_link>::size_type links_size = 0u;
+        if (mr.host) {
+            const vecmem::async_size size =
+                copy.get_size(links_buffer, *(mr.host));
+            // Here we could give control back to the caller, once our code
+            // allows for it. (coroutines...)
+            links_size = size.get();
+        } else {
+            links_size = copy.get_size(links_buffer);
+        }
 
         if (links_size + n_max_candidates > link_buffer_capacity) {
             const unsigned int new_link_buffer_capacity = std::max(
@@ -398,7 +428,16 @@ combinatorial_kalman_filter(
             std::swap(in_params_buffer, updated_params_buffer);
             std::swap(param_liveness_buffer, updated_liveness_buffer);
 
-            step_to_link_idx_map[step + 1] = copy.get_size(links_buffer);
+            step_to_link_idx_map[step + 1] = 0u;
+            if (mr.host) {
+                const vecmem::async_size size =
+                    copy.get_size(links_buffer, *(mr.host));
+                // Here we could give control back to the caller, once our code
+                // allows for it. (coroutines...)
+                step_to_link_idx_map[step + 1] = size.get();
+            } else {
+                step_to_link_idx_map[step + 1] = copy.get_size(links_buffer);
+            }
             n_candidates =
                 step_to_link_idx_map[step + 1] - step_to_link_idx_map[step];
         }
@@ -575,9 +614,16 @@ combinatorial_kalman_filter(
      *****************************************************************/
 
     // Get the number of tips
-    auto n_tips_total = copy.get_size(tips_buffer);
-
     std::vector<unsigned int> tips_length_host;
+    vecmem::data::vector_buffer<unsigned int>::size_type n_tips_total = 0u;
+    if (mr.host) {
+        const vecmem::async_size size = copy.get_size(tips_buffer, *(mr.host));
+        // Here we could give control back to the caller, once our code
+        // allows for it. (coroutines...)
+        n_tips_total = size.get();
+    } else {
+        n_tips_total = copy.get_size(tips_buffer);
+    }
 
     if (n_tips_total > 0) {
         copy(tip_length_buffer, tips_length_host)->wait();

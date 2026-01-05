@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2025 CERN for the benefit of the ACTS project
+ * (c) 2025-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -122,12 +122,23 @@ kalman_fitting(
     // Number of threads per block to use.
     const Idx threadsPerBlock = getWarpSize<Acc>() * 2;
 
-    // Get the number of tracks.
+    // Get the number of tracks. Note that there is no need to be asynchronous
+    // here. As a resizable track collection means that the constituents of the
+    // tracks are resizable. The size of the track collection can always be
+    // accessed directly.
     const unsigned int n_tracks = copy.get_size(track_candidates_view.tracks);
 
     // Get the sizes of the track candidates in each track.
-    const std::vector<unsigned int> candidate_sizes =
-        copy.get_sizes(track_candidates_view.tracks);
+    std::vector<unsigned int> candidate_sizes;
+    if (mr.host) {
+        const vecmem::async_sizes sizes =
+            copy.get_sizes(track_candidates_view.tracks, *(mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        candidate_sizes = {sizes.get().begin(), sizes.get().end()};
+    } else {
+        candidate_sizes = copy.get_sizes(track_candidates_view.tracks);
+    }
     const unsigned int n_states =
         std::accumulate(candidate_sizes.begin(), candidate_sizes.end(), 0u);
 

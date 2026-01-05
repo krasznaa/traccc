@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
+ * (c) 2023-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -216,15 +216,34 @@ edm::seed_collection::buffer seed_finding::operator()(
     Idx threadsPerBlock = std::min(getWarpSize<Acc>() * 2, maxThreads);
 
     // Get the sizes from the grid view
-    auto grid_sizes = m_copy.get_sizes(g2_view._data_view);
+    std::vector<unsigned int> grid_sizes;
+    if (m_mr.host) {
+        const vecmem::async_sizes sizes =
+            m_copy.get_sizes(g2_view._data_view, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        grid_sizes = {sizes.get().begin(), sizes.get().end()};
+    } else {
+        grid_sizes = m_copy.get_sizes(g2_view._data_view);
+    }
 
     // Create prefix sum buffer
     vecmem::data::vector_buffer sp_grid_prefix_sum_buff =
         make_prefix_sum_buff(grid_sizes, m_copy, m_mr, m_queue);
 
-    const auto num_spacepoints = m_copy.get_size(sp_grid_prefix_sum_buff);
+    // Get the number of spacepoints and exit early if possible.
+    unsigned int num_spacepoints = 0u;
+    if (m_mr.host) {
+        const vecmem::async_size size =
+            m_copy.get_size(sp_grid_prefix_sum_buff, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        num_spacepoints = size.get();
+    } else {
+        num_spacepoints = m_copy.get_size(sp_grid_prefix_sum_buff);
+    }
     if (num_spacepoints == 0) {
-        return {0, m_mr.main};
+        return {};
     }
 
     // Set up the doublet counter buffer.
@@ -275,8 +294,17 @@ edm::seed_collection::buffer seed_finding::operator()(
 
     // Calculate the number of threads and thread blocks to run the doublet
     // finding kernel for.
-    const unsigned int doublet_counter_buffer_size =
-        m_copy.get_size(doublet_counter_buffer);
+    device::doublet_counter_collection_types::buffer::size_type
+        doublet_counter_buffer_size = 0u;
+    if (m_mr.host) {
+        const vecmem::async_size size =
+            m_copy.get_size(doublet_counter_buffer, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        doublet_counter_buffer_size = size.get();
+    } else {
+        doublet_counter_buffer_size = m_copy.get_size(doublet_counter_buffer);
+    }
     blocksPerGrid =
         (doublet_counter_buffer_size + threadsPerBlock - 1) / threadsPerBlock;
     workDiv = makeWorkDiv<Acc>(blocksPerGrid, threadsPerBlock);
@@ -340,9 +368,17 @@ edm::seed_collection::buffer seed_finding::operator()(
 
     // Calculate the number of threads and thread blocks to run the triplet
     // finding kernel for.
-    blocksPerGrid =
-        (m_copy.get_size(triplet_counter_midBot_buffer) + threadsPerBlock - 1) /
-        threadsPerBlock;
+    if (m_mr.host) {
+        const vecmem::async_size size =
+            m_copy.get_size(triplet_counter_midBot_buffer, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        blocksPerGrid = (size.get() + threadsPerBlock - 1) / threadsPerBlock;
+    } else {
+        blocksPerGrid = (m_copy.get_size(triplet_counter_midBot_buffer) +
+                         threadsPerBlock - 1) /
+                        threadsPerBlock;
+    }
     workDiv = makeWorkDiv<Acc>(blocksPerGrid, threadsPerBlock);
 
     // Find all of the spacepoint triplets.

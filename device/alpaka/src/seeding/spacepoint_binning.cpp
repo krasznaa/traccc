@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
+ * (c) 2023-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -73,8 +73,16 @@ traccc::details::spacepoint_grid_types::buffer spacepoint_binning::operator()(
     auto queue = details::get_queue(m_queue);
 
     // Get the spacepoint sizes from the view
-    auto sp_size = m_copy.get_size(spacepoints_view);
-
+    edm::spacepoint_collection::const_view::size_type sp_size = 0u;
+    if (m_mr.host) {
+        const vecmem::async_size size =
+            m_copy.get_size(spacepoints_view, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        sp_size = size.get();
+    } else {
+        sp_size = m_copy.get_size(spacepoints_view);
+    }
     if (sp_size == 0) {
         return {m_axes.first, m_axes.second, {}, m_mr.main, m_mr.host};
     }
