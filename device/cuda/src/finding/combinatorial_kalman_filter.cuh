@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2024-2025 CERN for the benefit of the ACTS project
+ * (c) 2024-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -11,7 +11,6 @@
 #include "../sanity/contiguous_on.cuh"
 #include "../utils/barrier.hpp"
 #include "../utils/cuda_error_handling.hpp"
-#include "../utils/get_size.hpp"
 #include "../utils/thread_id.hpp"
 #include "../utils/utils.hpp"
 #include "./kernels/apply_interaction.hpp"
@@ -106,9 +105,6 @@ combinatorial_kalman_filter(
     /// Access the underlying CUDA stream.
     cudaStream_t stream = get_stream(str);
 
-    vecmem::unique_alloc_ptr<unsigned int> size_staging_ptr =
-        vecmem::make_unique_alloc<unsigned int>(*(mr.host));
-
     /// Thrust policy to use.
     auto thrust_policy =
         thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr.main)))
@@ -118,7 +114,17 @@ combinatorial_kalman_filter(
      * Measurement Operations
      *****************************************************************/
 
-    const auto n_measurements = copy.get_size(measurements_view);
+    typename edm::measurement_collection<typename detector_t::algebra_type>::
+        const_view::size_type n_measurements = 0u;
+    if (mr.host) {
+        const vecmem::async_size size =
+            copy.get_size(measurements_view, *(mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        n_measurements = size.get();
+    } else {
+        n_measurements = copy.get_size(measurements_view);
+    }
 
     // Access the detector view as a detector object
     detector_t device_det(det);
@@ -139,7 +145,15 @@ combinatorial_kalman_filter(
                         device_det.surfaces().end(), measurement_ranges.begin(),
                         device::barcode_surface_comparator{});
 
-    const unsigned int n_seeds = copy.get_size(seeds);
+    bound_track_parameters_collection_types::const_view::size_type n_seeds = 0u;
+    if (mr.host) {
+        const vecmem::async_size size = copy.get_size(seeds, *(mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        n_seeds = size.get();
+    } else {
+        n_seeds = copy.get_size(seeds);
+    }
 
     // Prepare input parameters with seeds
     bound_track_parameters_collection_types::buffer in_params_buffer(n_seeds,
@@ -353,13 +367,16 @@ combinatorial_kalman_filter(
             std::swap(in_params_buffer, updated_params_buffer);
             std::swap(param_liveness_buffer, updated_liveness_buffer);
 
-            TRACCC_CUDA_ERROR_CHECK(cudaMemcpyAsync(
-                size_staging_ptr.get(), links_buffer.size_ptr(),
-                sizeof(unsigned int), cudaMemcpyDeviceToHost, stream));
-
-            str.synchronize();
-
-            step_to_link_idx_map[step + 1] = *size_staging_ptr;
+            step_to_link_idx_map[step + 1] = 0u;
+            if (mr.host) {
+                const vecmem::async_size size =
+                    copy.get_size(links_buffer, *(mr.host));
+                // Here we could give control back to the caller, once our code
+                // allows for it. (coroutines...)
+                step_to_link_idx_map[step + 1] = size.get();
+            } else {
+                step_to_link_idx_map[step + 1] = copy.get_size(links_buffer);
+            }
             n_candidates =
                 step_to_link_idx_map[step + 1] - step_to_link_idx_map[step];
         }
@@ -528,7 +545,15 @@ combinatorial_kalman_filter(
      *****************************************************************/
 
     // Get the number of tips
-    auto n_tips_total = get_size(tips_buffer, size_staging_ptr.get(), stream);
+    vecmem::data::vector_buffer<unsigned int>::size_type n_tips_total = 0u;
+    if (mr.host) {
+        const vecmem::async_size size = copy.get_size(tips_buffer, *(mr.host));
+        // Here we could give control back to the caller, once our code
+        // allows for it. (coroutines...)
+        n_tips_total = size.get();
+    } else {
+        n_tips_total = copy.get_size(tips_buffer);
+    }
 
     vecmem::vector<unsigned int> tips_length_host(mr.host);
     vecmem::unique_alloc_ptr<unsigned int[]> tip_to_output_map = nullptr;

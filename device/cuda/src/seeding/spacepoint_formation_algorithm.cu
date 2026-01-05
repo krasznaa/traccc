@@ -1,13 +1,12 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2024-2025 CERN for the benefit of the ACTS project
+ * (c) 2024-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
 
 // Local include(s).
 #include "../utils/cuda_error_handling.hpp"
-#include "../utils/get_size.hpp"
 #include "../utils/global_index.hpp"
 #include "../utils/utils.hpp"
 #include "traccc/cuda/seeding/spacepoint_formation_algorithm.hpp"
@@ -46,12 +45,18 @@ edm::spacepoint_collection::buffer spacepoint_formation_algorithm::operator()(
     // Get a convenience variable for the stream that we'll be using.
     cudaStream_t stream = details::get_stream(m_stream);
 
-    // Staging area for copying sizes from device to host
-    vecmem::unique_alloc_ptr<unsigned int> size_staging_ptr =
-        vecmem::make_unique_alloc<unsigned int>(*(m_mr.host));
-
     // Get the number of measurements.
-    const auto num_measurements = m_copy.get().get_size(measurements_view);
+    edm::measurement_collection<default_algebra>::const_view::size_type
+        num_measurements = 0u;
+    if (m_mr.host) {
+        const vecmem::async_size size =
+            m_copy.get().get_size(measurements_view, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        num_measurements = size.get();
+    } else {
+        num_measurements = m_copy.get().get_size(measurements_view);
+    }
 
     // Create the result buffer.
     edm::spacepoint_collection::buffer spacepoints(

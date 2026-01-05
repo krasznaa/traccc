@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2021-2025 CERN for the benefit of the ACTS project
+ * (c) 2021-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -169,21 +169,35 @@ edm::seed_collection::buffer seed_finding::operator()(
     const edm::spacepoint_collection::const_view& spacepoints_view,
     const traccc::details::spacepoint_grid_types::const_view& g2_view) const {
 
-    // Pointer to stage device-to-host copies for container sizes
-    vecmem::unique_alloc_ptr<unsigned int> size_staging_ptr =
-        vecmem::make_unique_alloc<unsigned int>(*(m_mr.host));
-
     // Get a convenience variable for the stream that we'll be using.
     cudaStream_t stream = details::get_stream(m_stream);
 
     // Get the sizes from the grid view
-    auto grid_sizes = m_copy.get_sizes(g2_view._data_view);
+    std::vector<unsigned int> grid_sizes;
+    if (m_mr.host) {
+        const vecmem::async_sizes sizes =
+            m_copy.get_sizes(g2_view._data_view, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        grid_sizes = {sizes.get().begin(), sizes.get().end()};
+    } else {
+        grid_sizes = m_copy.get_sizes(g2_view._data_view);
+    }
 
     // Create prefix sum buffer
     vecmem::data::vector_buffer sp_grid_prefix_sum_buff =
         make_prefix_sum_buff(grid_sizes, m_copy, m_mr, m_stream);
 
-    const auto num_spacepoints = m_copy.get_size(sp_grid_prefix_sum_buff);
+    unsigned int num_spacepoints = 0u;
+    if (m_mr.host) {
+        const vecmem::async_size size =
+            m_copy.get_size(sp_grid_prefix_sum_buff, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        num_spacepoints = size.get();
+    } else {
+        num_spacepoints = m_copy.get_size(sp_grid_prefix_sum_buff);
+    }
     if (num_spacepoints == 0) {
         return {0, m_mr.main};
     }
@@ -217,9 +231,17 @@ edm::seed_collection::buffer seed_finding::operator()(
     TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 
     // Transfer the doublet count to the host.
-    TRACCC_CUDA_ERROR_CHECK(cudaMemcpyAsync(
-        size_staging_ptr.get(), doublet_counter_buffer.size_ptr(),
-        sizeof(unsigned int), cudaMemcpyDeviceToHost, stream));
+    device::doublet_counter_collection_types::buffer::size_type
+        doublet_counter_buffer_size = 0u;
+    if (m_mr.host) {
+        const vecmem::async_size size =
+            m_copy.get_size(doublet_counter_buffer, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        doublet_counter_buffer_size = size.get();
+    } else {
+        doublet_counter_buffer_size = m_copy.get_size(doublet_counter_buffer);
+    }
 
     // Get the summary values.
     vecmem::unique_alloc_ptr<device::seeding_global_counter>
@@ -248,7 +270,6 @@ edm::seed_collection::buffer seed_finding::operator()(
     // Calculate the number of threads and thread blocks to run the doublet
     // finding kernel for.
     const unsigned int nDoubletFindThreads = m_warp_size * 2;
-    const unsigned int doublet_counter_buffer_size = *size_staging_ptr;
     const unsigned int nDoubletFindBlocks =
         (doublet_counter_buffer_size + nDoubletFindThreads - 1) /
         nDoubletFindThreads;
@@ -304,9 +325,6 @@ edm::seed_collection::buffer seed_finding::operator()(
         cudaMemcpyAsync(globalCounter_host.get(), globalCounter_device.get(),
                         sizeof(device::seeding_global_counter),
                         cudaMemcpyDeviceToHost, stream));
-    TRACCC_CUDA_ERROR_CHECK(cudaMemcpyAsync(
-        size_staging_ptr.get(), triplet_counter_midBot_buffer.size_ptr(),
-        sizeof(unsigned int), cudaMemcpyDeviceToHost, stream));
     m_stream.synchronize();
 
     if (globalCounter_host->m_nTriplets == 0) {
@@ -321,8 +339,19 @@ edm::seed_collection::buffer seed_finding::operator()(
     // Calculate the number of threads and thread blocks to run the triplet
     // finding kernel for.
     const unsigned int nTripletFindThreads = m_warp_size * 2;
-    const unsigned int nTripletFindBlocks =
-        (*size_staging_ptr + nTripletFindThreads - 1) / nTripletFindThreads;
+    unsigned int nTripletFindBlocks = 0u;
+    if (m_mr.host) {
+        const vecmem::async_size size =
+            m_copy.get_size(triplet_counter_midBot_buffer, *(m_mr.host));
+        // Here we could give control back to the caller, once our code allows
+        // for it. (coroutines...)
+        nTripletFindBlocks =
+            (size.get() + nTripletFindThreads - 1) / nTripletFindThreads;
+    } else {
+        nTripletFindBlocks = (m_copy.get_size(triplet_counter_midBot_buffer) +
+                              nTripletFindThreads - 1) /
+                             nTripletFindThreads;
+    }
 
     // Find all of the spacepoint triplets.
     kernels::
