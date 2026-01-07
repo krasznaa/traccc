@@ -116,6 +116,8 @@ void KalmanFittingMomentumResolutionTests::momentum_resolution_tests(
 
 void KalmanFittingMomentumResolutionTests::SetUp() {
 
+    vecmem::host_memory_resource host_mr;
+
     const scalar offset = std::get<10>(GetParam());
     const unsigned int n_planes = std::get<11>(GetParam());
     const scalar spacing = std::get<12>(GetParam());
@@ -149,7 +151,13 @@ void KalmanFittingMomentumResolutionTests::SetUp() {
     // Create telescope detector
     auto [det, name_map] = build_telescope_detector(host_mr, tel_cfg);
 
-    detector.set<traccc::telescope_detector>(std::move(det));
+    // Write detector file
+    auto writer_cfg = detray::io::detector_writer_config{}
+                          .format(detray::io::format::json)
+                          .replace_files(true)
+                          .write_material(true)
+                          .path(std::get<0>(GetParam()));
+    detray::io::write_detector(det, name_map, writer_cfg);
 }
 
 }  // namespace traccc
