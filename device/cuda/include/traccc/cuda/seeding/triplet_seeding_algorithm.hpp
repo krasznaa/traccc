@@ -11,7 +11,7 @@
 #include "traccc/cuda/utils/algorithm_base.hpp"
 
 // Project include(s).
-#include "traccc/seeding/device/seeding_algorithm.hpp"
+#include "traccc/seeding/device/triplet_seeding_algorithm.hpp"
 
 namespace traccc::cuda {
 
@@ -20,8 +20,8 @@ namespace traccc::cuda {
 /// This algorithm returns a buffer which is not necessarily filled yet. A
 /// synchronisation statement is required before destroying this buffer.
 ///
-class seeding_algorithm : public device::seeding_algorithm,
-                          public cuda::algorithm_base {
+class triplet_seeding_algorithm : public device::triplet_seeding_algorithm,
+                                  public cuda::algorithm_base {
 
     public:
     /// Constructor for the seed finding algorithm
@@ -32,7 +32,7 @@ class seeding_algorithm : public device::seeding_algorithm,
     ///             and host memory blocks
     /// @param str The CUDA stream to perform the operations in
     ///
-    seeding_algorithm(
+    triplet_seeding_algorithm(
         const seedfinder_config& finder_config,
         const spacepoint_grid_config& grid_config,
         const seedfilter_config& filter_config, const memory_resource& mr,

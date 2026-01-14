@@ -11,13 +11,13 @@
 #include "traccc/alpaka/utils/algorithm_base.hpp"
 
 // Project include(s).
-#include "traccc/seeding/device/seeding_algorithm.hpp"
+#include "traccc/seeding/device/triplet_seeding_algorithm.hpp"
 
 namespace traccc::alpaka {
 
 /// Main algorithm for performing the track seeding using Alpaka
-class seeding_algorithm : public device::seeding_algorithm,
-                          public alpaka::algorithm_base {
+class triplet_seeding_algorithm : public device::triplet_seeding_algorithm,
+                                  public alpaka::algorithm_base {
 
     public:
     /// Constructor for the seed finding algorithm
@@ -28,7 +28,7 @@ class seeding_algorithm : public device::seeding_algorithm,
     ///             and host memory blocks
     /// @param q  The Alpaka queue to perform the operations in
     ///
-    seeding_algorithm(
+    triplet_seeding_algorithm(
         const seedfinder_config& finder_config,
         const spacepoint_grid_config& grid_config,
         const seedfilter_config& filter_config,
@@ -102,6 +102,6 @@ class seeding_algorithm : public device::seeding_algorithm,
     void select_seeds_kernel(
         const select_seeds_kernel_payload& payload) const override;
 
-};  // class seeding_algorithm
+};  // class triplet_seeding_algorithm
 
 }  // namespace traccc::alpaka

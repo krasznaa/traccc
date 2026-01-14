@@ -11,13 +11,13 @@
 #include "traccc/sycl/utils/algorithm_base.hpp"
 
 // Project include(s).
-#include "traccc/seeding/device/seeding_algorithm.hpp"
+#include "traccc/seeding/device/triplet_seeding_algorithm.hpp"
 
 namespace traccc::sycl {
 
 /// Main algorithm for performing the track seeding using oneAPI/SYCL
-class seeding_algorithm : public device::seeding_algorithm,
-                          public sycl::algorithm_base {
+class triplet_seeding_algorithm : public device::triplet_seeding_algorithm,
+                                  public sycl::algorithm_base {
 
     public:
     /// Constructor for the seed finding algorithm
@@ -27,7 +27,7 @@ class seeding_algorithm : public device::seeding_algorithm,
     ///             and host memory blocks
     /// @param queue The SYCL queue to work with
     ///
-    seeding_algorithm(
+    triplet_seeding_algorithm(
         const seedfinder_config& finder_config,
         const spacepoint_grid_config& grid_config,
         const seedfilter_config& filter_config,
