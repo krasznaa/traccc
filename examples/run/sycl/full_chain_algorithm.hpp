@@ -18,9 +18,9 @@
 #include "traccc/sycl/clusterization/measurement_sorting_algorithm.hpp"
 #include "traccc/sycl/finding/combinatorial_kalman_filter_algorithm.hpp"
 #include "traccc/sycl/fitting/kalman_fitting_algorithm.hpp"
-#include "traccc/sycl/seeding/triplet_seeding_algorithm.hpp"
 #include "traccc/sycl/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
 #include "traccc/sycl/seeding/track_params_estimation.hpp"
+#include "traccc/sycl/seeding/triplet_seeding_algorithm.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/propagation.hpp"
 
