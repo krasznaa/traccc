@@ -48,7 +48,7 @@ TRACCC_HOST_DEVICE inline void gather_best_tips_per_measurement(
 
     if (thread_id < tips.size()) {
         link_idx = tips.at(thread_id);
-        const auto link = links.at(link_idx);
+        const candidate_link link = links.at(link_idx);
         pval =
             prob(link.chi2_sum,
                  static_cast<typename algebra_t::scalar>(link.ndf_sum) - 5.f);
@@ -107,6 +107,7 @@ TRACCC_HOST_DEVICE inline void gather_best_tips_per_measurement(
                             std::numeric_limits<
                                 typename algebra_t::scalar>::max();
 
+                        out_idx = std::numeric_limits<unsigned int>::max();
                         for (unsigned int i = 0; i < size; ++i) {
                             if (tip_pval.at(offset + i) < worst_pval) {
                                 worst_pval = tip_pval.at(offset + i);
