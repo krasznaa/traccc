@@ -1,6 +1,6 @@
 # TRACCC library, part of the ACTS project (R&D line)
 #
-# (c) 2022 CERN for the benefit of the ACTS project
+# (c) 2022-2026 CERN for the benefit of the ACTS project
 #
 # Mozilla Public License Version 2.0
 
@@ -21,12 +21,17 @@ endif()
 traccc_add_test( alpaka
    alpaka_basic.cpp
    test_cca.cpp
+   test_ckf_combinatorics_telescope.cpp
+   test_ckf_toy_detector.cpp
    LINK_LIBRARIES
    GTest::gtest_main
    traccc_tests_common
    alpaka::alpaka
    vecmem::core
    traccc::alpaka
+   traccc::io
+   traccc::performance
+   traccc::simulation
    ${DEVICE_LIBRARIES}
 )
 
