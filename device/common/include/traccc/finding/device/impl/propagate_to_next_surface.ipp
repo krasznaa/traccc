@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
+ * (c) 2023-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -21,7 +21,9 @@ namespace traccc::device {
 template <typename propagator_t, typename bfield_t>
 TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
     const global_index_t globalIndex, const finding_config& cfg,
-    const propagate_to_next_surface_payload<propagator_t, bfield_t>& payload) {
+    const typename propagator_t::detector_type::const_view_type& det_data,
+    const bfield_t& field_data,
+    const propagate_to_next_surface_payload& payload) {
 
     using scalar_t = propagator_t::detector_type::scalar_type;
 
@@ -51,7 +53,7 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
     vecmem::device_vector<unsigned int> tip_lengths(payload.tip_lengths_view);
 
     // Detector
-    typename propagator_t::detector_type det(payload.det_data);
+    typename propagator_t::detector_type det(det_data);
 
     // Parameters
     bound_track_parameters_collection_types::device params(payload.params_view);
@@ -69,7 +71,7 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
     propagator_t propagator(prop_cfg);
 
     // Create propagator state
-    typename propagator_t::state propagation(in_par, payload.field_data, det);
+    typename propagator_t::state propagation(in_par, field_data, det);
     propagation.set_particle(
         detail::correct_particle_hypothesis(cfg.ptc_hypothesis, in_par));
     propagation._stepping
@@ -107,11 +109,13 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
      * is set to the multiplicative identity.
      */
     if (cfg.run_mbf_smoother) {
-        assert(payload.tmp_jacobian_ptr != nullptr);
+        assert(payload.tmp_jacobian_view.ptr() != nullptr);
 
-        payload.tmp_jacobian_ptr[param_id] = matrix::identity<
-            bound_matrix<typename propagator_t::detector_type::algebra_type>>();
-        s1._full_jacobian_ptr = &payload.tmp_jacobian_ptr[param_id];
+        vecmem::device_vector<bound_matrix<default_algebra>> tmp_jacobian(
+            payload.tmp_jacobian_view);
+        tmp_jacobian.at(param_id) =
+            matrix::identity<bound_matrix<default_algebra>>();
+        s1._full_jacobian_ptr = &(tmp_jacobian.at(param_id));
     }
 
     s5.min_pT(static_cast<scalar_t>(cfg.min_pT));
