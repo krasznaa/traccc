@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
+ * (c) 2023-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -19,11 +19,12 @@ namespace kernels {
 
 template <typename propagator_t, typename bfield_t>
 __global__ __launch_bounds__(128) void propagate_to_next_surface(
-    const finding_config cfg,
-    device::propagate_to_next_surface_payload<propagator_t, bfield_t> payload) {
+    finding_config cfg,
+    typename propagator_t::detector_type::const_view_type det_data,
+    bfield_t field_data, device::propagate_to_next_surface_payload payload) {
 
-    device::propagate_to_next_surface<propagator_t, bfield_t>(
-        details::global_index1(), cfg, payload);
+    device::propagate_to_next_surface<propagator_t>(
+        details::global_index1(), cfg, det_data, field_data, payload);
 }
 
 }  // namespace kernels
@@ -31,10 +32,13 @@ __global__ __launch_bounds__(128) void propagate_to_next_surface(
 template <typename propagator_t, typename bfield_t>
 void propagate_to_next_surface(
     const dim3& grid_size, const dim3& block_size, std::size_t shared_mem_size,
-    const cudaStream_t& stream, const finding_config cfg,
-    device::propagate_to_next_surface_payload<propagator_t, bfield_t> payload) {
+    const cudaStream_t& stream, const finding_config& cfg,
+    const typename propagator_t::detector_type::const_view_type& det_data,
+    const bfield_t& field_data,
+    const device::propagate_to_next_surface_payload& payload) {
 
-    kernels::propagate_to_next_surface<<<grid_size, block_size, shared_mem_size,
-                                         stream>>>(cfg, payload);
+    kernels::propagate_to_next_surface<propagator_t>
+        <<<grid_size, block_size, shared_mem_size, stream>>>(
+            cfg, det_data, field_data, payload);
 }
 }  // namespace traccc::cuda
