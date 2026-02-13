@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
+ * (c) 2023-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -21,13 +21,7 @@
 namespace traccc::device {
 
 /// (Event Data) Payload for the @c traccc::device::apply_interaction function
-template <typename detector_t>
 struct apply_interaction_payload {
-    /**
-     * @brief View object describing the tracking detector
-     */
-    typename detector_t::const_view_type det_data;
-
     /**
      * @brief Total number of input parameters (including non-live ones)
      */
@@ -50,12 +44,14 @@ struct apply_interaction_payload {
 ///
 /// @param[in] globalIndex     The index of the current thread
 /// @param[in] cfg             Track finding config object
+/// @param[in] det_data        View object describing the tracking detector
 /// @param[inout] payload      The function call payload
 ///
 template <typename detector_t>
 TRACCC_HOST_DEVICE inline void apply_interaction(
     global_index_t globalIndex, const finding_config& cfg,
-    const apply_interaction_payload<detector_t>& payload);
+    const typename detector_t::const_view_type& det_data,
+    const apply_interaction_payload& payload);
 
 }  // namespace traccc::device
 

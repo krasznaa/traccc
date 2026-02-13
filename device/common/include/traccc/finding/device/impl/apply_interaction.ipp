@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
+ * (c) 2023-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -20,14 +20,15 @@ namespace traccc::device {
 template <typename detector_t>
 TRACCC_HOST_DEVICE inline void apply_interaction(
     const global_index_t globalIndex, const finding_config& cfg,
-    const apply_interaction_payload<detector_t>& payload) {
+    const typename detector_t::const_view_type& det_data,
+    const apply_interaction_payload& payload) {
 
     // Type definitions
     using algebra_type = typename detector_t::algebra_type;
     using interactor_type = detray::pointwise_material_interactor<algebra_type>;
 
     // Detector
-    detector_t det(payload.det_data);
+    detector_t det(det_data);
 
     // in param
     bound_track_parameters_collection_types::device params(payload.params_view);
