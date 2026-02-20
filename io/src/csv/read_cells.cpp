@@ -141,9 +141,12 @@ void read_cells(edm::silicon_cell_collection::host& cells,
         }
     }
 
+    // Make a random number generator. In case we need to shuffle the cells.
+    std::mt19937 rng;
+    rng.seed(static_cast<std::mt19937::result_type>(0u));
+
     // Fill the output containers with the ordered cells and modules.
-    std::vector<std::pair<unsigned int, csv::cell> > cellsToAdd;
-    for (const auto& [geometry_id, cellz] : cellsMap) {
+    for (auto& [geometry_id, cellz] : cellsMap) {
 
         // Figure out the index of the detector description object, for this
         // group of cells.
@@ -158,25 +161,18 @@ void read_cells(edm::silicon_cell_collection::host& cells,
             ddIndex = it->second;
         }
 
+        // If the user asked for the cells to be randomized, then let's do so.
+        // But still, in a deterministic way, so that we could compare results
+        // across runs.
+        if (randomize) {
+            std::shuffle(cellz.begin(), cellz.end(), rng);
+        }
+
         // Add the cells to the output.
         for (const csv::cell& cell : cellz) {
-            cellsToAdd.push_back({ddIndex, cell});
+            cells.push_back({cell.channel0, cell.channel1, cell.value,
+                             cell.timestamp, ddIndex});
         }
-    }
-
-    // If the user asked for the cells to be randomized, then let's do so.
-    // But still, in a deterministic way, so that we could compare results
-    // across runs.
-    if (randomize) {
-        std::mt19937 rng;
-        rng.seed(static_cast<std::mt19937::result_type>(cellsToAdd.size()));
-        std::shuffle(cellsToAdd.begin(), cellsToAdd.end(), rng);
-    }
-
-    // Finally, add the cells to the output container.
-    for (const auto& [ddIndex, cell] : cellsToAdd) {
-        cells.push_back({cell.channel0, cell.channel1, cell.value,
-                         cell.timestamp, ddIndex});
     }
 }
 
