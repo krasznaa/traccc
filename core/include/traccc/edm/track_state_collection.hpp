@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
+ * (c) 2022-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -9,16 +9,11 @@
 
 // Local include(s).
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/edm/track_parameters.hpp"
-
-// Detray include(s).
-#include <detray/definitions/algebra.hpp>
 
 // VecMem include(s).
 #include <vecmem/edm/container.hpp>
 
 // System include(s).
-#include <concepts>
 #include <cstdint>
 
 namespace traccc::edm {
@@ -58,20 +53,20 @@ class track_state : public BASE {
 
     /// The "state word" of the track (non-const)
     ///
-    /// @return A (non-const) vector of unsigned integers
+    /// @return A (non-const) vector of @c std::uint8_t values
     ///
     TRACCC_HOST_DEVICE
     auto& state() { return BASE::template get<0>(); }
     /// The "state word" of the track (const)
     ///
-    /// @return A (const) vector of unsigned integers
+    /// @return A (const) vector of @c std::uint8_t values
     ///
     TRACCC_HOST_DEVICE
     const auto& state() const { return BASE::template get<0>(); }
 
     /// Chi^2 of the fitered parameters (non-const)
     ///
-    /// @return A (non-const) vector of scalar values
+    /// @return A (non-const) vector of @c float values
     ///
     TRACCC_HOST_DEVICE
     auto& filtered_chi2() { return BASE::template get<1>(); }
@@ -84,68 +79,94 @@ class track_state : public BASE {
 
     /// Chi^2 of the smoothed parameters (non-const)
     ///
-    /// @return A (non-const) vector of scalar values
+    /// @return A (non-const) vector of @c float values
     ///
     TRACCC_HOST_DEVICE
     auto& smoothed_chi2() { return BASE::template get<2>(); }
     /// Chi^2 of the smoothed parameters (const)
     ///
-    /// @return A (const) vector of scalar values
+    /// @return A (const) vector of @c float values
     ///
     TRACCC_HOST_DEVICE
     const auto& smoothed_chi2() const { return BASE::template get<2>(); }
 
     /// Chi^2 of the backward parameters (non-const)
     ///
-    /// @return A (non-const) vector of scalar values
+    /// @return A (non-const) vector of @c float values
     ///
     TRACCC_HOST_DEVICE
     auto& backward_chi2() { return BASE::template get<3>(); }
     /// Chi^2 of the backward parameters (const)
     ///
-    /// @return A (const) vector of scalar values
+    /// @return A (const) vector of @c float values
     ///
     TRACCC_HOST_DEVICE
     const auto& backward_chi2() const { return BASE::template get<3>(); }
 
     /// The filtered parameters of the track on the surface (non-const)
     ///
-    /// @return A (non-const) vector of bound track parameters
+    /// @return A (non-const) vector of @c std::array<float,6u> values
     ///
     TRACCC_HOST_DEVICE
     auto& filtered_params() { return BASE::template get<4>(); }
     /// The filtered parameters of the track on the surface (const)
     ///
-    /// @return A (const) vector of bound track parameters
+    /// @return A (const) vector of @c std::array<float,6u> values
     ///
     TRACCC_HOST_DEVICE
     const auto& filtered_params() const { return BASE::template get<4>(); }
 
+    /// The filtered covariance of the track on the surface (non-const)
+    ///
+    /// @return A (non-const) vector of @c std::array<float,36u> values
+    ///
+    TRACCC_HOST_DEVICE
+    auto& filtered_covariance() { return BASE::template get<5>(); }
+    /// The filtered covariance of the track on the surface (const)
+    ///
+    /// @return A (const) vector of @c std::array<float,36u> values
+    ///
+    TRACCC_HOST_DEVICE
+    const auto& filtered_covariance() const { return BASE::template get<5>(); }
+
     /// The smoothed parameters of the track on the surface (non-const)
     ///
-    /// @return A (non-const) vector of bound track parameters
+    /// @return A (non-const) vector of @c std::array<float,6u> values
     ///
     TRACCC_HOST_DEVICE
-    auto& smoothed_params() { return BASE::template get<5>(); }
+    auto& smoothed_params() { return BASE::template get<6>(); }
     /// The smoothed parameters of the track on the surface (const)
     ///
-    /// @return A (const) vector of bound track parameters
+    /// @return A (const) vector of @c std::array<float,6u> values
     ///
     TRACCC_HOST_DEVICE
-    const auto& smoothed_params() const { return BASE::template get<5>(); }
+    const auto& smoothed_params() const { return BASE::template get<6>(); }
+
+    /// The smoothed covariance of the track on the surface (non-const)
+    ///
+    /// @return A (non-const) vector of @c std::array<float,36u> values
+    ///
+    TRACCC_HOST_DEVICE
+    auto& smoothed_covariance() { return BASE::template get<7>(); }
+    /// The smoothed covariance of the track on the surface (const)
+    ///
+    /// @return A (const) vector of @c std::array<float,36u> values
+    ///
+    TRACCC_HOST_DEVICE
+    const auto& smoothed_covariance() const { return BASE::template get<7>(); }
 
     /// The index of the track's measurement on the current surface (non-const)
     ///
     /// @return A (non-const) vector of unsigned integers
     ///
     TRACCC_HOST_DEVICE
-    auto& measurement_index() { return BASE::template get<6>(); }
+    auto& measurement_index() { return BASE::template get<8>(); }
     /// The index of the track's measurement on the current surface (const)
     ///
     /// @return A (const) vector of unsigned integers
     ///
     TRACCC_HOST_DEVICE
-    const auto& measurement_index() const { return BASE::template get<6>(); }
+    const auto& measurement_index() const { return BASE::template get<8>(); }
 
     /// @}
 
@@ -195,26 +216,26 @@ class track_state : public BASE {
 };  // class track_state
 
 /// SoA container describing the fit states of tracks on specific measurements
-///
-/// @tparam ALGEBRA The algebra type used to describe the tracks
-///
-template <detray::concepts::algebra ALGEBRA>
-using track_state_collection = vecmem::edm::container<
-    track_state,
-    // state
-    vecmem::edm::type::vector<std::uint8_t>,
-    // filtered_chi2
-    vecmem::edm::type::vector<detray::dscalar<ALGEBRA>>,
-    // smoothed_chi2
-    vecmem::edm::type::vector<detray::dscalar<ALGEBRA>>,
-    // backward_chi2
-    vecmem::edm::type::vector<detray::dscalar<ALGEBRA>>,
-    // filtered_params
-    vecmem::edm::type::vector<bound_track_parameters<ALGEBRA>>,
-    // smoothed_params
-    vecmem::edm::type::vector<bound_track_parameters<ALGEBRA>>,
-    // measurement_index
-    vecmem::edm::type::vector<unsigned int>>;
+using track_state_collection =
+    vecmem::edm::container<track_state,
+                           // state
+                           vecmem::edm::type::vector<std::uint8_t>,
+                           // filtered_chi2
+                           vecmem::edm::type::vector<float>,
+                           // smoothed_chi2
+                           vecmem::edm::type::vector<float>,
+                           // backward_chi2
+                           vecmem::edm::type::vector<float>,
+                           // filtered_params
+                           vecmem::edm::type::vector<std::array<float, 6u>>,
+                           /// filtered_covariance
+                           vecmem::edm::type::vector<std::array<float, 36u>>,
+                           // smoothed_params
+                           vecmem::edm::type::vector<std::array<float, 6u>>,
+                           /// smoothed_covariance
+                           vecmem::edm::type::vector<std::array<float, 36u>>,
+                           // measurement_index
+                           vecmem::edm::type::vector<unsigned int>>;
 
 }  // namespace traccc::edm
 

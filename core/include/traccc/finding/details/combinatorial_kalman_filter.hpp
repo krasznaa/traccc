@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
+ * (c) 2023-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -241,7 +241,7 @@ combinatorial_kalman_filter(
 
                 // Create a standalone track state object.
                 edm::track_state trk_state =
-                    edm::make_track_state<algebra_type>(measurements, meas_id);
+                    edm::make_track_state(measurements, meas_id);
 
                 const bool is_line = detail::is_line(sf);
 

@@ -20,11 +20,10 @@ namespace traccc::edm {
 ///
 /// @return A track state object initialized with default values
 ///
-template <typename algebra_t>
 TRACCC_HOST_DEVICE
-    typename track_state_collection<algebra_t>::device::object_type
-    make_track_state(const measurement_collection::const_device& measurements,
-                     unsigned int mindex);
+typename track_state_collection::device::object_type make_track_state(
+    const measurement_collection::const_device& measurements,
+    unsigned int mindex);
 
 }  // namespace traccc::edm
 

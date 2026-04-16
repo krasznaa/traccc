@@ -31,7 +31,7 @@ struct track_container {
         /// The tracks
         track_collection<ALGEBRA>::host tracks;
         /// The track states used by the tracks
-        track_state_collection<ALGEBRA>::host states;
+        track_state_collection::host states;
         /// The measurements used by the tracks
         measurement_collection::const_view measurements;
     };
@@ -40,7 +40,7 @@ struct track_container {
         /// The tracks
         track_collection<ALGEBRA>::buffer tracks;
         /// The track states used by the tracks
-        track_state_collection<ALGEBRA>::buffer states;
+        track_state_collection::buffer states;
         /// The measurements used by the tracks
         measurement_collection::const_view measurements;
     };
@@ -54,7 +54,7 @@ struct track_container {
         /// The tracks
         track_collection<ALGEBRA>::data tracks;
         /// The track states used by the tracks
-        track_state_collection<ALGEBRA>::data states;
+        track_state_collection::data states;
         /// The measurements used by the tracks
         measurement_collection::const_view measurements;
     };
@@ -68,7 +68,7 @@ struct track_container {
         /// The tracks
         track_collection<ALGEBRA>::const_data tracks;
         /// The track states used by the tracks
-        track_state_collection<ALGEBRA>::const_data states;
+        track_state_collection::const_data states;
         /// The measurements used by the tracks
         measurement_collection::const_view measurements;
     };
@@ -89,7 +89,7 @@ struct track_container {
         /// The tracks
         track_collection<ALGEBRA>::view tracks;
         /// The track states used by the tracks
-        track_state_collection<ALGEBRA>::view states;
+        track_state_collection::view states;
         /// The measurements used by the tracks
         measurement_collection::const_view measurements;
     };
@@ -110,7 +110,7 @@ struct track_container {
         /// The tracks
         track_collection<ALGEBRA>::const_view tracks;
         /// The track states used by the tracks
-        track_state_collection<ALGEBRA>::const_view states;
+        track_state_collection::const_view states;
         /// The measurements used by the tracks
         measurement_collection::const_view measurements;
     };
@@ -125,7 +125,7 @@ struct track_container {
         /// The tracks
         track_collection<ALGEBRA>::device tracks;
         /// The track states used by the tracks
-        track_state_collection<ALGEBRA>::device states;
+        track_state_collection::device states;
         /// The measurements used by the tracks
         measurement_collection::const_device measurements;
     };
@@ -140,7 +140,7 @@ struct track_container {
         /// The tracks
         track_collection<ALGEBRA>::const_device tracks;
         /// The track states used by the tracks
-        track_state_collection<ALGEBRA>::const_device states;
+        track_state_collection::const_device states;
         /// The measurements used by the tracks
         measurement_collection::const_device measurements;
     };
