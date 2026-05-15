@@ -84,10 +84,15 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/finding/device/impl/fill_finding_propagation_sort_keys.ipp"
    "include/traccc/finding/device/impl/propagate_to_next_surface.ipp"
    "include/traccc/finding/device/impl/update_tip_length_buffer.ipp"
-   # Track fitting funtions(s).
+   # Track fitting code.
    "include/traccc/fitting/device/fit.hpp"
+   "include/traccc/fitting/device/fit_prelude.hpp"
+   "include/traccc/fitting/device/fit_backward.hpp"
+   "include/traccc/fitting/device/fit_forward.hpp"
    "include/traccc/fitting/device/fill_fitting_sort_keys.hpp"
    "include/traccc/fitting/device/impl/fill_fitting_sort_keys.ipp"
+   "include/traccc/fitting/device/kalman_fitting_algorithm.hpp"
+   "src/fitting/kalman_fitting_algorithm.cpp"
    )
 target_link_libraries( traccc_device_common
    PUBLIC traccc::core vecmem::core )
