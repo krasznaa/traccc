@@ -16,9 +16,21 @@ elseif(alpaka_ACC_SYCL_ENABLE)
   list(APPEND DEVICE_LIBRARIES vecmem::sycl)
 endif()
 
+# Sources to be compiled by the host compiler, are built into a separate object
+# library. This is to avoid issues about CUDA/HIP not agreeing with vecmem::edm
+# host classes.
+add_library( alpaka_test_host_compiled OBJECT
+   test_cca.cpp
+)
+target_link_libraries( alpaka_test_host_compiled
+   traccc_tests_common
+   vecmem::core
+   traccc::alpaka
+)
+
 traccc_add_alpaka_test( alpaka
    alpaka_basic.cpp
-   test_cca.cpp
+   $<TARGET_OBJECTS:alpaka_test_host_compiled>
    LINK_LIBRARIES
    GTest::gtest_main
    traccc_tests_common
